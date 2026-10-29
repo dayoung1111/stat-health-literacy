@@ -834,3 +834,471 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   1~7교시 화면(lesson-design.tsx): 밝은 베이지 바탕 + 맨 위 제목 카드 + 가운데 그림.
+   그림 칸은 제목 카드 아래, 자막 말풍선 위, 또박이 왼쪽 빈 곳의 정가운데에 둔다. */
+
+.pl-stage.pl-designed {
+  background: #eedfcb;
+}
+.ld-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: #eedfcb;
+  animation: pl-fade 0.4s ease-out both;
+}
+/* 1·2교시: 사진 칸을 화면 가로 약 70%까지 넓히고 또박이를 오른쪽 끝으로 조금 붙인다. */
+.pl-stage.pl-wide .pl-ttobak-box {
+  right: 0.5cqw;
+  width: 28cqw;
+}
+/* 1~7교시 자막은 가운데 정렬 */
+.pl-bubble.is-center .pl-sub {
+  flex: 1;
+  text-align: center;
+}
+
+/* 제목 카드: 왼쪽 아이콘, 제목은 카드 가로 정가운데 한 줄 */
+.ld-title {
+  position: absolute;
+  left: 2.2cqw;
+  right: 2.2cqw;
+  top: 1.8cqw;
+  height: 7.4cqw;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9cqw;
+  border: 0.35cqw solid #15262b;
+  border-radius: 1.8cqw;
+  background: #ffffff;
+}
+.ld-title .ld-icon {
+  position: absolute;
+  left: 1.2cqw;
+  top: 50%;
+  width: 5.4cqw;
+  height: 5.4cqw;
+  transform: translateY(-50%);
+}
+.ld-title-text {
+  margin: 0;
+  color: #15262b;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ld-body {
+  position: absolute;
+  left: 2.2cqw;
+  right: 34cqw;
+  top: 10.6cqw;
+  /* 자막이 두 줄이 되어도 말풍선과 겹치지 않게 */
+  bottom: 14.5cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ld-scene.wide .ld-body {
+  right: 30cqw;
+}
+
+/* 이름: 사진 밖 흰 칸에 크고 굵게 */
+.ld-name {
+  color: #15262b;
+  font-size: 2.6cqw;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+.ld-name.teal {
+  color: #0f6670;
+}
+.ld-caption {
+  margin: 0;
+  color: #15262b;
+  font-size: 3cqw;
+  font-weight: 900;
+  text-align: center;
+}
+.ld-caption.warn {
+  color: #d9363e;
+}
+
+/* 사진 칸: 사진 파일은 그대로, 보여 주는 위치·크기만 맞춘다. */
+.ld-photo {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+.ld-photo-frame {
+  position: absolute;
+  display: block;
+}
+.ld-photo-frame img {
+  object-fit: cover;
+}
+/* 사진 가운데 큰 X / 동그라미(사진 높이의 약 80%) */
+.ld-mark {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  height: 80%;
+  aspect-ratio: 1;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+}
+
+/* 1·2교시: 위 2개, 아래 2개. 왼쪽 사진(가로:세로 1.7:1) + 오른쪽 이름 */
+.ld-food-grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 1.6cqw 2cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ld-food {
+  display: flex;
+  width: 32.6cqw;
+  height: 13.8cqw;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 0.45cqw solid #15262b;
+  border-radius: 1.6cqw;
+  background: #ffffff;
+  animation: pl-pop 0.4s ease-out both;
+}
+.ld-food .ld-photo {
+  height: 100%;
+  flex: none;
+}
+.ld-food .ld-name {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.4cqw;
+  font-size: 2.5cqw;
+}
+.ld-food.is-now {
+  outline: 0.45cqw solid #15262b;
+  outline-offset: 0.35cqw;
+}
+
+/* 세로 카드(3·7교시): 위 사진, 아래 이름 */
+.ld-row {
+  display: flex;
+  gap: 2cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ld-column,
+.ld-food {
+  border-color: #15262b;
+}
+.ld-column {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 0.45cqw solid #15262b;
+  border-radius: 1.6cqw;
+  background: #ffffff;
+  animation: pl-pop 0.4s ease-out both;
+}
+.ld-food.no,
+.ld-column.no {
+  border-color: #d9363e;
+}
+.ld-food.ok,
+.ld-column.ok {
+  border-color: #2e9e6b;
+}
+.ld-column .ld-photo {
+  width: 100%;
+}
+.ld-column .ld-name {
+  padding: 0.7cqw 0.5cqw;
+  font-size: 2.8cqw;
+}
+.ld-row.three .ld-column {
+  width: 19.5cqw;
+}
+
+/* 4교시: ① 대변 받기 → ② 약 먹기, 아래 노란 띠 */
+.ld-stool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6cqw;
+}
+.ld-stool-row {
+  display: flex;
+  align-items: center;
+  gap: 1.6cqw;
+}
+.ld-stool-card {
+  position: relative;
+  display: flex;
+  width: 22cqw;
+  height: 22cqw;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8cqw;
+  border: 0.45cqw solid #15262b;
+  border-radius: 2cqw;
+  background: #ffffff;
+  animation: pl-pop 0.4s ease-out both;
+}
+.ld-stool-card.first {
+  border-color: #2e9e6b;
+}
+.ld-stool-no {
+  position: absolute;
+  left: 1cqw;
+  top: 1cqw;
+  display: flex;
+  width: 4.6cqw;
+  height: 4.6cqw;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #15262b;
+  color: #ffffff;
+  font-size: 3cqw;
+  font-weight: 900;
+}
+.ld-stool-card.first .ld-stool-no {
+  background: #2e9e6b;
+}
+.ld-stool-card .ld-name {
+  font-size: 3cqw;
+}
+.ld-art {
+  display: flex;
+  width: 12cqw;
+  height: 12cqw;
+}
+.ld-art > svg {
+  width: 100%;
+  height: 100%;
+}
+.ld-arrow {
+  flex: none;
+  width: 7cqw;
+  height: 4.7cqw;
+}
+.ld-band {
+  margin: 0;
+  padding: 0.8cqw 2.4cqw;
+  border: 0.3cqw solid #f5c33b;
+  border-radius: 999px;
+  background: #fdf0c4;
+  color: #15262b;
+  font-size: 2.4cqw;
+  font-weight: 900;
+}
+.ld-band.is-now {
+  background: #f5c33b;
+}
+
+/* 5교시: "1 / 7" + 7칸 막대, 아래 단계 그림 */
+.ld-prep-wrap {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  gap: 1cqw;
+}
+.ld-progress {
+  display: flex;
+  align-items: center;
+  gap: 1.6cqw;
+}
+.ld-progress-count {
+  flex: none;
+  color: #0f6670;
+  font-size: 2.6cqw;
+  font-weight: 900;
+}
+.ld-progress-bar {
+  display: flex;
+  flex: 1;
+  gap: 0.5cqw;
+}
+.ld-progress-bar span {
+  height: 1.2cqw;
+  flex: 1;
+  border-radius: 999px;
+  background: #cad6d6;
+}
+.ld-progress-bar span.on {
+  background: #0f6670;
+}
+.ld-prep-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  animation: pl-fade 0.4s ease-out both;
+}
+.ld-supplies {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.4cqw;
+}
+.ld-supplies figure {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6cqw;
+}
+.ld-supplies figure svg {
+  width: auto;
+  height: 15cqw;
+  overflow: visible;
+}
+.ld-supplies figure svg.tall {
+  height: 22cqw;
+}
+.ld-supplies .ld-arrow {
+  align-self: center;
+}
+.ld-supplies .ld-name {
+  font-size: 3cqw;
+}
+.ld-drink {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
+}
+.ld-drink svg {
+  width: 52cqw;
+  height: auto;
+}
+.ld-prep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6cqw;
+}
+.ld-prep-art {
+  display: block;
+  width: 40cqw;
+}
+.ld-prep-art .pp-scene {
+  height: auto;
+}
+
+/* 6교시: 흰 네모 3개를 + 로 잇는다. 그림과 글씨가 한 네모 안에 */
+.ld-second {
+  display: flex;
+  align-items: stretch;
+  gap: 1cqw;
+}
+.ld-plus {
+  align-self: center;
+  color: #15262b;
+  font-size: 4cqw;
+  font-weight: 900;
+}
+.ld-box {
+  display: flex;
+  width: 18cqw;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8cqw;
+  padding: 1.2cqw 0.6cqw;
+  border: 0.4cqw solid #15262b;
+  border-radius: 1.8cqw;
+  background: #ffffff;
+  animation: pl-pop 0.4s ease-out both;
+}
+.ld-box.is-now {
+  border-color: #0f6670;
+  box-shadow: 0 0 0 0.4cqw #0f6670;
+}
+.ld-box-art {
+  display: flex;
+  height: 17cqw;
+  align-items: center;
+  justify-content: center;
+}
+.ld-box-art svg {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+}
+.ld-box-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3cqw;
+}
+.ld-box .ld-name {
+  font-size: 2.9cqw;
+  white-space: nowrap;
+}
+.ld-box .ld-name.teal {
+  font-size: 2.5cqw;
+}
+
+/* 7교시: 빨간 카드 5개 + 같은 너비의 혈압약 칸 */
+.ld-fasting {
+  display: flex;
+  width: 63.8cqw;
+  height: 100%;
+  flex-direction: column;
+  gap: 1.4cqw;
+}
+.ld-row.five {
+  gap: 1.2cqw;
+}
+.ld-row.five .ld-column {
+  width: 11.8cqw;
+}
+.ld-row.five .ld-name {
+  padding: 0.5cqw 0.3cqw;
+  font-size: 2.6cqw;
+}
+.ld-okbox {
+  display: flex;
+  margin: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5cqw;
+  border: 0.5cqw solid #2e9e6b;
+  border-radius: 1.8cqw;
+  background: #ffffff;
+  color: #15262b;
+  font-size: 3.4cqw;
+  font-weight: 900;
+  text-align: center;
+}
+.ld-okbox.is-now {
+  background: #ddf3e8;
+}
+.ld-okbox .ld-icon {
+  width: 5.5cqw;
+  height: 5.5cqw;
+  flex: none;
+}
