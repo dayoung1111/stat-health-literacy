@@ -23,7 +23,13 @@ const labels: Record<SceneName, string> = {
   water: '생수 500밀리리터 병 그림',
 };
 
-function Pouch({
+// 약 봉지(시안 C): 큰 동그라미 배지 + 무늬. A제는 초록 줄무늬, B제는 노랑 물방울.
+const pouchStyle = {
+  A: { fill: '#D6EFE3', ink: '#2E9E6B' },
+  B: { fill: '#FCEBB4', ink: '#C98A00' },
+} as const;
+
+export function Pouch({
   x,
   y,
   letter,
@@ -31,25 +37,68 @@ function Pouch({
 }: {
   x: number;
   y: number;
-  letter: string;
+  letter: 'A' | 'B';
   tilt?: number;
 }) {
+  const style = pouchStyle[letter];
+  const body =
+    'M4 14 L12 4 L20 14 L28 4 L36 14 L44 4 L52 14 L60 4 L68 14 L76 4 L84 14 L92 4 L96 14 L96 132 Q96 140 88 140 L12 140 Q4 140 4 132 Z';
+  const clip = `pp-pouch-${letter}`;
   return (
     <g transform={`translate(${x} ${y}) rotate(${tilt} 50 70)`}>
+      <defs>
+        <clipPath id={clip}>
+          <path d={body} />
+        </clipPath>
+      </defs>
+      <path d={body} fill={style.fill} />
+      <g clipPath={`url(#${clip})`} fill="none" stroke={style.ink}>
+        {letter === 'A'
+          ? [0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <line
+                key={i}
+                x1={-40 + i * 24}
+                y1="150"
+                x2={40 + i * 24}
+                y2="0"
+                strokeWidth="6"
+                opacity="0.35"
+              />
+            ))
+          : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
+              <circle
+                key={i}
+                cx={16 + (i % 4) * 23 + (Math.floor(i / 4) % 2) * 11}
+                cy={28 + Math.floor(i / 4) * 44}
+                r="6"
+                fill={style.ink}
+                stroke="none"
+                opacity="0.35"
+              />
+            ))}
+      </g>
       <path
-        d="M4 14 L12 4 L20 14 L28 4 L36 14 L44 4 L52 14 L60 4 L68 14 L76 4 L84 14 L92 4 L96 14 L96 132 Q96 140 88 140 L12 140 Q4 140 4 132 Z"
-        fill="#DCEDEE"
-        stroke={teal}
+        d={body}
+        fill="none"
+        stroke={ink}
         strokeWidth="5"
         strokeLinejoin="round"
       />
+      <circle
+        cx="50"
+        cy="78"
+        r="34"
+        fill="#FFFFFF"
+        stroke={style.ink}
+        strokeWidth="6"
+      />
       <text
         x="50"
-        y="96"
+        y="97"
         textAnchor="middle"
         fontSize="52"
-        fontWeight="800"
-        fill={teal}
+        fontWeight="900"
+        fill={style.ink}
       >
         {letter}
       </text>
@@ -58,7 +107,7 @@ function Pouch({
 }
 
 // 1L 통. level: 물 높이(0~1), cap: 뚜껑, cloudy: 가루가 덜 녹은 물
-function Bottle({
+export function Bottle({
   x,
   y,
   level,
@@ -135,7 +184,7 @@ function Bottle({
   );
 }
 
-function Cup({ x, y, at }: { x: number; y: number; at: number }) {
+export function Cup({ x, y, at }: { x: number; y: number; at: number }) {
   return (
     // 애니메이션(크기)과 위치(transform)가 겹치지 않게 감싼다.
     <g className="pp-pop" style={delay(at)}>
@@ -215,33 +264,72 @@ function Tag({ x, y, text }: { x: number; y: number; text: string }) {
   );
 }
 
-function Cups({ hour, animate }: { hour: number; animate: boolean }) {
+function Cups({
+  hour,
+  animate,
+  plain,
+}: {
+  hour: number;
+  animate: boolean;
+  plain: boolean;
+}) {
   return (
     <>
       <Clock x={10} y={110} hour={hour} />
       {[0, 1, 2, 3].map((i) => (
         <g key={i}>
           <Cup x={160 + i * 110} y={110} at={animate ? 0.5 + i * 0.6 : 0} />
-          <Tag
-            x={204 + i * 110}
-            y={268}
-            text={
-              i === 0 ? screenTexts.lesson.first : screenTexts.lesson.every15
-            }
-          />
+          {!plain && (
+            <Tag
+              x={204 + i * 110}
+              y={268}
+              text={
+                i === 0 ? screenTexts.lesson.first : screenTexts.lesson.every15
+              }
+            />
+          )}
         </g>
       ))}
     </>
   );
 }
 
+// 생수 500mL 병
+export function WaterBottle({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <rect x="40" y="0" width="40" height="30" rx="6" fill="#3B82C4" />
+      <path
+        d="M36 30 L84 30 L84 54 Q118 66 118 100 L118 280 Q118 296 102 296 L18 296 Q2 296 2 280 L2 100 Q2 66 36 54 Z"
+        fill="#E6F4FA"
+        stroke="#3B82C4"
+        strokeWidth="6"
+      />
+      <rect x="2" y="150" width="116" height="70" fill="#3B82C4" />
+      <text
+        x="60"
+        y="198"
+        textAnchor="middle"
+        fontSize="30"
+        fontWeight="800"
+        fill="#FFFFFF"
+      >
+        500mL
+      </text>
+    </g>
+  );
+}
+
 export function PrepScene({
   scene,
   hour,
+  plain = false,
 }: {
   scene: SceneName;
   /** 컵 장면 시계가 가리키는 시각 */
   hour: number;
+  /** true: 그림 속 글자(표시선 화살표, 컵 아래 시간표)를 빼고 그림만 그린다(수업 화면은 글자를 그림 밖에 쓴다). */
+  plain?: boolean;
 }) {
   return (
     <svg
@@ -297,18 +385,20 @@ export function PrepScene({
             strokeLinecap="round"
             className="pp-stream"
           />
-          <FittedSvgText
-            x="400"
-            y="152"
-            fontSize={30}
-            width={180}
-            fontWeight="800"
-            fill="#D9363E"
-            className="pp-pop"
-            style={delay(2)}
-          >
-            {screenTexts.lesson.markLine}
-          </FittedSvgText>
+          {!plain && (
+            <FittedSvgText
+              x="400"
+              y="152"
+              fontSize={30}
+              width={180}
+              fontWeight="800"
+              fill="#D9363E"
+              className="pp-pop"
+              style={delay(2)}
+            >
+              {screenTexts.lesson.markLine}
+            </FittedSvgText>
+          )}
         </>
       )}
 
@@ -351,12 +441,12 @@ export function PrepScene({
         </>
       )}
 
-      {scene === 'cups' && <Cups hour={hour} animate />}
+      {scene === 'cups' && <Cups hour={hour} animate plain={plain} />}
 
       {scene === 'gasocol' && (
         <>
           <g opacity="0.45">
-            <Cups hour={hour} animate={false} />
+            <Cups hour={hour} animate={false} plain={plain} />
           </g>
           <g className="pp-slide" style={delay(0.4)}>
             <path
@@ -399,26 +489,7 @@ export function PrepScene({
 
       {scene === 'water' && (
         <g className="pp-pop" style={delay(0.3)}>
-          <g transform="translate(240 40)">
-            <rect x="40" y="0" width="40" height="30" rx="6" fill="#3B82C4" />
-            <path
-              d="M36 30 L84 30 L84 54 Q118 66 118 100 L118 280 Q118 296 102 296 L18 296 Q2 296 2 280 L2 100 Q2 66 36 54 Z"
-              fill="#E6F4FA"
-              stroke="#3B82C4"
-              strokeWidth="6"
-            />
-            <rect x="2" y="150" width="116" height="70" fill="#3B82C4" />
-            <text
-              x="60"
-              y="198"
-              textAnchor="middle"
-              fontSize="30"
-              fontWeight="800"
-              fill="#FFFFFF"
-            >
-              500mL
-            </text>
-          </g>
+          <WaterBottle x={240} y={40} />
         </g>
       )}
     </svg>
