@@ -63,10 +63,9 @@ type IssuedCode = {
   confused?: string;
 };
 
-// 대장내시경 질문 이름은 환자 티치백과 같은 데이터에서 가져온다.
-const [firstDose, foods, morningFasting] = demoGuide.questions.map(
-  (q) => q.topic,
-);
+// 대장내시경 질문 이름은 환자 티치백과 같은 데이터(demo-guide.ts)에서 가져온다.
+const [porridgeTime, howToDrink, morningFasting, period] =
+  demoGuide.questions.map((q) => q.topic);
 
 const issuedCodes: IssuedCode[] = [
   {
@@ -76,12 +75,13 @@ const issuedCodes: IssuedCode[] = [
     examDate: '11/5',
     setting: '60대·쉬움',
     results: [
-      { question: firstDose, result: 'correct' },
-      { question: foods, result: 'retry-correct' },
+      { question: porridgeTime, result: 'correct' },
+      { question: howToDrink, result: 'retry-correct' },
       { question: morningFasting, result: 'wrong' },
+      { question: period, result: 'correct' },
     ],
     relearn: `${morningFasting} (2번 틀림)`,
-    confused: '장 비우는 약 만드는 법 (2회)',
+    confused: '약 만드는 법 (2회)',
   },
   {
     code: '305566',
@@ -90,12 +90,13 @@ const issuedCodes: IssuedCode[] = [
     examDate: '11/5',
     setting: '베트남어',
     results: [
-      { question: firstDose, result: 'wrong' },
-      { question: foods, result: 'correct' },
+      { question: porridgeTime, result: 'correct' },
+      { question: howToDrink, result: 'wrong' },
       { question: morningFasting, result: 'wrong' },
+      { question: period, result: 'correct' },
     ],
-    relearn: `${firstDose}, ${morningFasting}`,
-    confused: '대변 검사 (1회)',
+    relearn: `${howToDrink}, ${morningFasting}`,
+    confused: '두 번째 약 (1회)',
   },
   {
     code: '771204',

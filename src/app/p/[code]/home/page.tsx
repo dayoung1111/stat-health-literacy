@@ -64,6 +64,15 @@ async function PatientHome({ code }: { code: string }) {
 
       <nav aria-label="환자 메뉴" className="mt-8 flex flex-col gap-4">
         <Link
+          href={`/p/${code}/video`}
+          className={`${menuClass} min-h-28 bg-stat-green text-3xl text-white`}
+        >
+          <span aria-hidden="true" className="text-5xl">
+            🎬
+          </span>
+          또박이 선생님 수업 보기
+        </Link>
+        <Link
           href={`/p/${code}/guide/1`}
           className={`${menuClass} bg-stat-mint text-stat-green`}
         >
