@@ -986,8 +986,12 @@
   flex: 1;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   padding: 0 0.4cqw;
   font-size: 2.5cqw;
+  line-height: 1.15;
+  /* 일본어·중국어·베트남어처럼 띄어쓰기 없는 긴 이름도 잘리지 않고 줄을 바꾼다. */
+  overflow-wrap: anywhere;
 }
 .ld-food.is-now {
   outline: 0.45cqw solid #15262b;
