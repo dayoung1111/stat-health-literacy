@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { guideSteps } from '@/lib/demo-guide';
 import { requireStaff } from '@/lib/demo-staff';
 import {
   findCodeForStaff,
@@ -9,6 +8,7 @@ import {
   type TeachbackOutcome,
 } from '@/lib/education-store';
 import { guideCatalog, guideNames } from '@/lib/guide-catalog';
+import { confusionLabel } from '@/lib/guide-labels';
 import {
   medicationName,
   verdictLabels,
@@ -38,11 +38,6 @@ const kstTime = (date: Date) =>
     minute: '2-digit',
     hour12: false,
   }).format(date);
-
-// "헷갈려요" 문단 아이디 → 안내문 단계 이름
-const paragraphTitle = (paragraphId: string) =>
-  guideSteps.find((step) => step.id === paragraphId)?.sectionTitle ??
-  paragraphId;
 
 // ⑥ 코드 상세: 묶은 안내, 티치백 결과, "헷갈려요" 누른 곳, 환자가 체크한 약.
 // 다른 간호사의 코드는 "페이지 없음"으로 막는다.
@@ -165,8 +160,8 @@ async function CodeDetail({ code }: { code: string }) {
                     key={`${m.guide}-${m.paragraphId}`}
                     className="rounded-lg bg-amber-50 px-4 py-2"
                   >
-                    {guideCatalog[m.guide].name} ›{' '}
-                    {paragraphTitle(m.paragraphId)} <strong>{m.count}회</strong>
+                    {confusionLabel(m.guide, m.paragraphId)}{' '}
+                    <strong>{m.count}회</strong>
                     <span className="text-base text-zinc-500">
                       {' '}
                       · 마지막 {kstTime(m.lastAt)}

@@ -5,7 +5,8 @@ import { z } from 'zod';
 
 import {
   endStaffSession,
-  isDemoStaff,
+  findDemoAccount,
+  homeFor,
   requireStaff,
   startStaffSession,
 } from '@/lib/demo-staff';
@@ -28,12 +29,16 @@ export async function loginStaff(
     id: String(formData.get('id') ?? ''),
     password: String(formData.get('password') ?? ''),
   });
-  if (!parsed.success || !isDemoStaff(parsed.data.id, parsed.data.password)) {
+  const account = parsed.success
+    ? findDemoAccount(parsed.data.id, parsed.data.password)
+    : null;
+  if (!account) {
     return { message: '아이디나 비밀번호를 다시 확인해 주세요' };
   }
 
-  await startStaffSession();
-  redirect('/staff/new');
+  // 같은 로그인 화면에서 아이디에 따라 간호사·관리자 첫 화면으로 나눈다.
+  await startStaffSession(account.id);
+  redirect(homeFor(account.role));
 }
 
 export async function logoutStaff() {

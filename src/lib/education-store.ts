@@ -169,6 +169,14 @@ export async function checkPatientEntry(
   };
 }
 
+// 관리자 화면: 모든 간호사의 코드(만료된 코드 제외). 역할 확인은 부르는 쪽(requireStaff('admin'))에서 한다.
+export async function listAllCodes() {
+  await removeExpired();
+  return [...codes().values()].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  );
+}
+
 // 의료진은 자기가 발급한 코드만 본다.
 export async function listCodesForStaff(staffId: string) {
   await removeExpired();
