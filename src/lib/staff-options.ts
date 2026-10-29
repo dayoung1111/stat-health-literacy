@@ -18,6 +18,7 @@ export const ages = [
 export const languages = [
   { id: 'ko', label: '한국어' },
   { id: 'en', label: 'English' },
+  { id: 'ja', label: '日本語' },
   { id: 'zh', label: '中文' },
   { id: 'vi', label: 'Tiếng Việt' },
 ] as const;
