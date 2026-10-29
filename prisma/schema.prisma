@@ -16,3 +16,93 @@ model User {
 
   @@map("users")
 }
+
+/// 의료진이 발급한 교육 코드. 고른 안내 여러 개를 코드 1개·QR 1개·링크 1개로 묶는다.
+/// 환자 이름·등록번호·전화번호는 저장하지 않는다.
+model EducationCode {
+  id             String    @id @default(uuid()) @db.Uuid
+  /// 환자에게 주는 6자리 숫자. 만료된 코드는 지운 뒤 다시 쓸 수 있다.
+  code           String    @unique @db.VarChar(6)
+  /// 발급한 간호사 아이디(지금은 시연용 nurse01). 이 간호사만 조회할 수 있게 서버에서 확인한다.
+  staffId        String    @map("staff_id")
+  /// 묶어 보낸 안내: checkup / colonoscopy / gastroscopy / medication
+  guides         String[]
+  /// 맞춤 설정. 나이대: 10-40 / 50 / 60 / 70. 복용약 안내에는 언어·큰 글씨만 적용한다.
+  ageGroup       String    @map("age_group")
+  /// 설명 단계: normal / easy / very-easy
+  level          String
+  language       String
+  /// 추가 도움: large-text / guardian / developmental
+  extras         String[]
+  /// 검사일. 시각 없는 날짜이며 한국 날짜 기준이다.
+  examDate       DateTime  @map("exam_date") @db.Date
+  /// 생년월일 6자리를 되돌릴 수 없게 암호화한 값(scrypt, 코드마다 다른 소금 포함)
+  birthDateHash  String    @map("birth_date_hash")
+  /// 생년월일을 틀린 횟수. 5번이 되면 lockedAt을 기록하고 더는 들어올 수 없다.
+  failedAttempts Int       @default(0) @map("failed_attempts")
+  lockedAt       DateTime? @map("locked_at") @db.Timestamptz
+  /// 발급 7일 뒤(UTC로 저장). 지나면 화면에서 숨기고, 묶인 기록과 함께 지운다.
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  medicationCheck  MedicationCheck?
+  teachbackResults TeachbackResult[]
+  confusionMarks   ConfusionMark[]
+
+  @@index([staffId, expiresAt])
+  @@map("education_codes")
+}
+
+/// 환자가 체크한 "내가 먹는 약". 코드마다 하나이며, 다시 체크하면 최신으로 바꾼다.
+model MedicationCheck {
+  codeId      String        @id @map("code_id") @db.Uuid
+  /// 코드가 지워지면 함께 지워진다.
+  code        EducationCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  /// blood-pressure / diabetes / blood-thinner / iron / supplement / other
+  medications String[]
+  checkedAt   DateTime      @map("checked_at") @db.Timestamptz
+
+  @@map("medication_checks")
+}
+
+/// 티치백 결과. 같은 안내의 같은 질문을 다시 풀면 최신 결과로 바꾼다.
+model TeachbackResult {
+  id         String           @id @default(uuid()) @db.Uuid
+  codeId     String           @map("code_id") @db.Uuid
+  /// 코드가 지워지면 함께 지워진다.
+  code       EducationCode    @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  /// 어느 안내의 질문인지(예: colonoscopy)
+  guide      String
+  /// 질문 주제(예: 첫 번째 약 시간)
+  question   String
+  result     TeachbackOutcome
+  answeredAt DateTime         @map("answered_at") @db.Timestamptz
+
+  @@unique([codeId, guide, question])
+  @@map("teachback_results")
+}
+
+/// "헷갈려요"를 누른 곳. 같은 문단을 다시 누르면 횟수를 늘리고 마지막 시각을 바꾼다.
+model ConfusionMark {
+  id          String        @id @default(uuid()) @db.Uuid
+  codeId      String        @map("code_id") @db.Uuid
+  /// 코드가 지워지면 함께 지워진다.
+  code        EducationCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  /// 어느 안내인지(예: colonoscopy)
+  guide       String
+  /// 안내 안의 문단 아이디(예: prep-first)
+  paragraphId String        @map("paragraph_id")
+  /// 누른 횟수(1부터)
+  count       Int           @default(1)
+  lastAt      DateTime      @map("last_at") @db.Timestamptz
+
+  @@unique([codeId, guide, paragraphId])
+  @@map("confusion_marks")
+}
+
+/// 티치백 결과: 처음에 맞힘 / 다시 설명 후 맞힘 / 틀림
+enum TeachbackOutcome {
+  correct
+  retry_correct
+  wrong
+}
