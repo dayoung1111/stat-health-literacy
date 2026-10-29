@@ -332,7 +332,7 @@ function DetailRow({
   stopDate: { text: string; short: string };
 }) {
   const text =
-    detail.kind === 'stop-date' ? `${stopDate.text} 약 안 먹어요` : detail.text;
+    detail.kind === 'stop-date' ? `${stopDate.text} 중단` : detail.text;
   // 중단 시작일은 날짜가 가려지지 않게 달력은 그대로 두고, 구석에 작은 "약 ✕"만 붙인다.
   const no = detail.kind === 'stop-date' ? false : Boolean(detail.no);
   return (
