@@ -8,7 +8,7 @@ import { T, TranslatedTtobagi } from '../../../../translated';
 import { ButtonLink, CallButton, PatientTopBar } from '../../../ui';
 import { PatientPage } from '../../patient-page';
 
-// 아직 내용이 없는 안내(건강검진 기본 확인사항, 위내시경)를 눌렀을 때.
+// 아직 내용이 없는 안내를 눌렀을 때(지금은 모든 안내에 내용이 있어 쓰이지 않는다).
 export default function PreparingPage({
   params,
 }: PageProps<'/p/[code]/preparing/[kind]'>) {
