@@ -46,13 +46,20 @@ export function reducePlayer(
     case 'play':
       if (state.status === 'playing') return state;
       if (state.status === 'ended') {
-        return { status: 'playing', sceneIndex: 0, lineIndex: 0, cue: state.cue + 1 };
+        return {
+          status: 'playing',
+          sceneIndex: 0,
+          lineIndex: 0,
+          cue: state.cue + 1,
+        };
       }
       // 일시정지 후에는 지금 줄을 처음부터 다시 읽는다.
       return { ...state, status: 'playing', cue: state.cue + 1 };
 
     case 'pause':
-      return state.status === 'playing' ? { ...state, status: 'paused' } : state;
+      return state.status === 'playing'
+        ? { ...state, status: 'paused' }
+        : state;
 
     case 'lineEnded': {
       // 멈춘 뒤 늦게 도착한 종료 알림은 무시한다.

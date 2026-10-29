@@ -27,7 +27,15 @@ function Hand({ x, y }: { x: number; y: number }) {
   );
 }
 
-function Arm({ x2, y2, from = 158 }: { x2: number; y2: number; from?: number }) {
+function Arm({
+  x2,
+  y2,
+  from = 158,
+}: {
+  x2: number;
+  y2: number;
+  from?: number;
+}) {
   return (
     <line
       x1={from}
@@ -82,9 +90,30 @@ function RightArm({ action }: { action: TtobakAction }) {
         <g>
           <Arm x2={184} y2={114} />
           <g className="ttobak__clock">
-            <circle cx="189" cy="81" r="6" fill="#f59e0b" stroke={LINE} strokeWidth="2" />
-            <circle cx="211" cy="81" r="6" fill="#f59e0b" stroke={LINE} strokeWidth="2" />
-            <circle cx="200" cy="98" r="16" fill="#fef3c7" stroke={LINE} strokeWidth="3" />
+            <circle
+              cx="189"
+              cy="81"
+              r="6"
+              fill="#f59e0b"
+              stroke={LINE}
+              strokeWidth="2"
+            />
+            <circle
+              cx="211"
+              cy="81"
+              r="6"
+              fill="#f59e0b"
+              stroke={LINE}
+              strokeWidth="2"
+            />
+            <circle
+              cx="200"
+              cy="98"
+              r="16"
+              fill="#fef3c7"
+              stroke={LINE}
+              strokeWidth="3"
+            />
             <g stroke={LINE} strokeWidth="2.5" strokeLinecap="round">
               <line x1="200" y1="98" x2="200" y2="88" />
               <line x1="200" y1="98" x2="207" y2="101" />
@@ -117,7 +146,15 @@ function RightArm({ action }: { action: TtobakAction }) {
               strokeWidth="2"
             />
           ))}
-          <ellipse cx="197" cy="122" rx="12" ry="11" fill={PAPER} stroke={LINE} strokeWidth="3" />
+          <ellipse
+            cx="197"
+            cy="122"
+            rx="12"
+            ry="11"
+            fill={PAPER}
+            stroke={LINE}
+            strokeWidth="3"
+          />
         </g>
       );
   }
@@ -181,7 +218,14 @@ export function Ttobak({ action, talking, animated, className }: TtobakProps) {
 
         {/* 입 */}
         {talking ? (
-          <ellipse className="ttobak__mouth-talk" cx="100" cy="125" rx="8" ry="6" fill="#9f1239" />
+          <ellipse
+            className="ttobak__mouth-talk"
+            cx="100"
+            cy="125"
+            rx="8"
+            ry="6"
+            fill="#9f1239"
+          />
         ) : (
           <path
             d="M90 121 Q100 131 110 121"

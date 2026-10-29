@@ -291,7 +291,9 @@ export function TtobakPlayer({ title, scenes }: TtobakPlayerProps) {
         <button
           type="button"
           onClick={togglePlay}
-          aria-label={isPlaying ? '일시정지' : isEnded ? '처음부터 다시 재생' : '재생'}
+          aria-label={
+            isPlaying ? '일시정지' : isEnded ? '처음부터 다시 재생' : '재생'
+          }
           className={`${controlClass} border-teal-700 bg-teal-700 text-white hover:bg-teal-800`}
         >
           <span aria-hidden="true">{isPlaying ? icons.pause : icons.play}</span>
@@ -323,7 +325,12 @@ export function TtobakPlayer({ title, scenes }: TtobakPlayerProps) {
         </button>
       </div>
 
-      <ol id={listId} hidden={!listOpen} aria-label="장면 목록" className="mt-3 space-y-2">
+      <ol
+        id={listId}
+        hidden={!listOpen}
+        aria-label="장면 목록"
+        className="mt-3 space-y-2"
+      >
         {scenes.map((item, index) => (
           <li key={item.id}>
             <button

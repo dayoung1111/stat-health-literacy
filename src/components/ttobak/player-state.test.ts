@@ -16,7 +16,11 @@ import {
 const scenes = [{ lines: ['가', '나'] }, { lines: ['다'] }];
 const reduce = (state: PlayerState, action: PlayerAction) =>
   reducePlayer(scenes, state, action);
-const playing: PlayerState = { ...initialPlayerState, status: 'playing', cue: 1 };
+const playing: PlayerState = {
+  ...initialPlayerState,
+  status: 'playing',
+  cue: 1,
+};
 
 describe('자막 표시 시간', () => {
   it('짧은 자막도 최소 시간만큼 보여 준다', () => {
@@ -26,7 +30,10 @@ describe('자막 표시 시간', () => {
   it('긴 자막은 글자 수에 맞춰 길어지고 띄어쓰기는 세지 않는다', () => {
     const text = '가'.repeat(20);
     assert.equal(getLineDuration(text), 20 * MS_PER_CHAR + LINE_GAP_MS);
-    assert.equal(getLineDuration(text.split('').join(' ')), getLineDuration(text));
+    assert.equal(
+      getLineDuration(text.split('').join(' ')),
+      getLineDuration(text),
+    );
   });
 });
 
@@ -67,9 +74,18 @@ describe('재생 상태', () => {
   });
 
   it('장면 이동은 첫 줄로 가고, 멈춤 상태는 그대로 둔다', () => {
-    const moved = reduce({ ...playing, lineIndex: 1 }, { type: 'goToScene', index: 1 });
-    assert.deepEqual([moved.status, moved.sceneIndex, moved.lineIndex], ['playing', 1, 0]);
-    const paused = reduce({ ...playing, status: 'paused' }, { type: 'goToScene', index: 1 });
+    const moved = reduce(
+      { ...playing, lineIndex: 1 },
+      { type: 'goToScene', index: 1 },
+    );
+    assert.deepEqual(
+      [moved.status, moved.sceneIndex, moved.lineIndex],
+      ['playing', 1, 0],
+    );
+    const paused = reduce(
+      { ...playing, status: 'paused' },
+      { type: 'goToScene', index: 1 },
+    );
     assert.equal(paused.status, 'paused');
   });
 
