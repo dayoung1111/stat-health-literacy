@@ -51,6 +51,7 @@ model EducationCode {
   medicationCheck  MedicationCheck?
   teachbackResults TeachbackResult[]
   confusionMarks   ConfusionMark[]
+  guideCompletions GuideCompletion[]
 
   @@index([staffId, expiresAt])
   @@map("education_codes")
@@ -104,6 +105,20 @@ model ConfusionMark {
 
   @@unique([codeId, guide, paragraphId])
   @@map("confusion_marks")
+}
+
+/// 환자가 끝까지 마친 안내(대장내시경: 8교시 끝, 드시는 약: "확인했어요"). 안내마다 한 번만 남기며, 다시 마쳐도 처음 시각을 그대로 둔다.
+model GuideCompletion {
+  id          String        @id @default(uuid()) @db.Uuid
+  codeId      String        @map("code_id") @db.Uuid
+  /// 코드가 지워지면 함께 지워진다.
+  code        EducationCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  /// 마친 안내(checkup / colonoscopy / gastroscopy / medication)
+  guide       String
+  completedAt DateTime      @map("completed_at") @db.Timestamptz
+
+  @@unique([codeId, guide])
+  @@map("guide_completions")
 }
 
 /// 티치백 결과: 처음에 맞힘 / 다시 설명 후 맞힘 / 틀림

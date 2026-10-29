@@ -12,7 +12,7 @@ import { Panel } from '../../ui';
 import { StaffPage } from '../../staff-page';
 
 // 관리자 화면(시연용 간단 버전). 관리자 역할만 들어올 수 있고, 서버에서 매번 확인한다.
-// 데이터는 지금 시연용 임시 저장소(education-store.ts)에서 읽는다. DB 단계에서 그 파일만 바꾼다.
+// 데이터는 Supabase(education-store.ts)에서 읽는다.
 export default function AdminPage() {
   return (
     <StaffPage role="admin">

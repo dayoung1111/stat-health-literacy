@@ -9,7 +9,7 @@ import { matchesSecret } from './password';
 import { isHttpsRequest } from './request-origin';
 import { signToken, verifyToken } from './session-token';
 
-// 시연용 임시 의료진 계정. 발급 기록은 education-store.ts에 있다. DB 단계에서 계정 표로 바꾼다.
+// 시연용 임시 의료진 계정. 발급 기록은 education-store.ts(Supabase)에 있다. DB 단계에서 계정 표로 바꾼다.
 // 비밀번호는 글자 그대로 두지 않고 해시(scrypt)만 저장한다. 시연 비밀번호는 README에 적혀 있다.
 // 쿠키에는 서버 비밀값(SESSION_SECRET)으로 서명한 아이디만 담고, 서명이 맞지 않으면 로그인하지 않은 것으로 본다.
 // 역할(간호사/관리자)은 쿠키가 아니라 아래 계정 정보에서 서버가 매번 다시 찾는다.

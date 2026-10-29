@@ -141,7 +141,7 @@ export async function issueCode(
     };
   }
 
-  // 고른 안내를 코드 1개(QR·링크 1개)로 묶어 발급한다. 지금은 시연용 임시 저장소에 둔다.
+  // 고른 안내를 코드 1개(QR·링크 1개)로 묶어 발급한다. Supabase(education-store.ts)에 저장한다.
   const { age, ...rest } = parsed.data;
   const issued = await createEducationCode({
     ...rest,

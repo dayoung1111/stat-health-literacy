@@ -15,7 +15,7 @@ import { nextGuide } from '@/lib/guide-progress';
 import { medicationIds } from '@/lib/medication-guide';
 
 // 환자 화면에서 남기는 기록. 생년월일을 확인한 같은 코드의 환자만 저장할 수 있다.
-// 저장 위치는 education-store.ts(지금은 시연용 임시 저장소)이며, 의료진 코드 상세에 보인다.
+// 저장 위치는 education-store.ts(Supabase)이며, 의료진 코드 상세에 보인다.
 
 const codeSchema = z.string().regex(/^\d{6}$/);
 

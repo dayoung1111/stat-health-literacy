@@ -13,7 +13,7 @@ import { recordTeachback } from '../../records';
 import { buttonClass, ButtonLink, CallButton } from '../../ui';
 
 // 질문 → (틀리면) 그림으로 다시 설명 → 다른 질문으로 재확인 → 다음 질문.
-// 결과는 질문마다 저장되어 의료진 코드 상세에 보인다(지금은 시연용 임시 저장소).
+// 결과는 질문마다 저장되어 의료진 코드 상세에 보인다(Supabase).
 type Step =
   | { kind: 'ask' }
   | { kind: 'correct' }
