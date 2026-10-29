@@ -53,3 +53,10 @@ export function getSessionSecret() {
   devSecret.statDevSessionSecret ??= randomBytes(32).toString('hex');
   return devSecret.statDevSessionSecret;
 }
+
+// AI 번역용 Anthropic API 키(선택). 서버에서만 읽고 NEXT_PUBLIC_을 붙이지 않는다.
+// 없으면 null을 돌려주고, 이때 화면은 번역하지 않고 한국어로 보여 준다(앱은 정상 작동).
+export function getTranslationEnv() {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  return apiKey ? { apiKey } : null;
+}

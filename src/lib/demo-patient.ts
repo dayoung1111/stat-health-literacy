@@ -42,6 +42,16 @@ export async function getPatientCode(code: string) {
   return row && !row.lockedAt ? row : null;
 }
 
+// 어느 코드든 생년월일을 확인한 환자인지(번역처럼 코드와 상관없는 기능의 로그인 확인용).
+export async function getSessionPatientCode() {
+  const saved = verifyToken(
+    getSessionSecret(),
+    (await cookies()).get(cookieName)?.value,
+    'patient',
+  );
+  return saved ? ((await getPatientCode(saved)) ? saved : null) : null;
+}
+
 export async function hasDemoSession(code: string) {
   return (await getPatientCode(code)) !== null;
 }
