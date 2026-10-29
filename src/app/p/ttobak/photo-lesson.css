@@ -282,6 +282,13 @@
   background: #0f6670;
   color: #ffffff;
 }
+/* 다음 안내로 가는 링크도 버튼과 같은 모양 */
+.pl-next-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
 .pl-stage button:focus-visible {
   outline: 3px solid #0f6670;
   outline-offset: 2px;

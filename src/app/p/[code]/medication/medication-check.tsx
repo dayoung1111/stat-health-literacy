@@ -2,6 +2,8 @@
 
 import { useLayoutEffect, useRef, useState, useTransition } from 'react';
 
+import type { GuideKind } from '@/lib/guide-catalog';
+import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
 import {
   medications,
   verdictLabels,
@@ -10,12 +12,22 @@ import {
   type MedicationId,
   type Verdict,
 } from '@/lib/medication-guide';
+import { getMessages } from '@/lib/messages';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
 import { Ttobagi } from '../../../ttobagi';
 import { Drawing } from '../../pictures';
+<<<<<<< HEAD
 import { recordMedicationQuiz, saveMyMedications } from '../../records';
 import { buttonClass, CallButton } from '../../ui';
+=======
+import {
+  completeGuide,
+  recordMedicationQuiz,
+  saveMyMedications,
+} from '../../records';
+import { buttonClass, ButtonLink, CallButton } from '../../ui';
+>>>>>>> f3fbd526310436dbbdbd849a565d9c5a3b8836dd
 import { MedIcon, VerdictMark } from './med-icons';
 
 // 처음: 드시는 약 고르기 → 고른 약마다 1) 판정 2) 자세히 3) 확인 질문 → 📋 내 약 정리.
@@ -35,19 +47,39 @@ type StopDate = { text: string; short: string };
 const inOrder = (ids: MedicationId[]) =>
   medications.filter((m) => ids.includes(m.id));
 
+<<<<<<< HEAD
 const firstPhase = (saved: MedicationId[] | null): Phase =>
   saved
     ? { kind: 'summary', cheer: false }
     : { kind: 'select', editing: false };
+=======
+// 이 화면이 맡은 안내
+const thisGuide: GuideKind = 'medication';
+>>>>>>> f3fbd526310436dbbdbd849a565d9c5a3b8836dd
 
 export function MedicationFlow({
   code,
   saved,
   stopDate,
+  language,
+  guides,
+  completed,
 }: {
   code: string;
+<<<<<<< HEAD
   /** 저장된 내 약. 한 번도 저장하지 않았으면 null */
   saved: MedicationId[] | null;
+=======
+  /** 의료진이 고른 언어. 안내 사이 이동 문구에 쓴다. */
+  language: string;
+  /** 발급된 안내 중 끝까지 볼 수 있는 것 */
+  guides: GuideKind[];
+  /** 이미 마친 안내 */
+  completed: GuideKind[];
+  initial: MedicationId[];
+  /** 전에 한 번이라도 저장했는지("약이 없어요" 포함). 그렇다면 정리 화면부터 연다. */
+  hasSaved: boolean;
+>>>>>>> f3fbd526310436dbbdbd849a565d9c5a3b8836dd
   /** 피를 묽게 하는 약 중단 시작일. text 예: "11월 3일부터" / "의사 선생님과 정한 날짜부터", short 예: "11/3" / "?" */
   stopDate: StopDate;
 }) {
@@ -57,7 +89,12 @@ export function MedicationFlow({
   const [queue, setQueue] = useState<MedicationId[]>([]);
   const [phase, setPhase] = useState<Phase>(() => firstPhase(saved));
   const [saving, startSaving] = useTransition();
+  const t = getMessages(language);
+  // "확인했어요"를 누르면 이 안내는 마친 것. 아직 안 마친 다른 안내가 다음에 볼 곳이다.
+  const next = nextGuide(guides, [...completed, thisGuide], thisGuide);
+  const nextHref = next ? guideLessonHref(code, next) : null;
 
+<<<<<<< HEAD
   // Next.js는 다녀간 화면을 숨겨 두고 상태를 되살린다. 숨겨질 때 처음 상태로 돌려 두어
   // 💊를 다시 누르면 언제나 정리 화면(아직 안 골랐으면 고르기)부터 새로 시작한다.
   useLayoutEffect(
@@ -68,6 +105,14 @@ export function MedicationFlow({
     },
     [],
   );
+=======
+  // "확인했어요" 뒤 또박이가 칭찬하고, 남은 안내가 있으면 잠시 뒤 그 안내로 간다.
+  useEffect(() => {
+    if (phase.kind !== 'done' || !nextHref) return;
+    const timer = setTimeout(() => router.push(nextHref), 3500);
+    return () => clearTimeout(timer);
+  }, [phase.kind, router, nextHref]);
+>>>>>>> f3fbd526310436dbbdbd849a565d9c5a3b8836dd
 
   const chosen = inOrder(mine);
   const steps = inOrder(queue);
@@ -201,8 +246,18 @@ export function MedicationFlow({
         )}
         <button
           type="button"
+<<<<<<< HEAD
           onClick={() => setPhase({ kind: 'select', editing: true })}
           className={`mt-8 ${buttonClass.primary}`}
+=======
+          disabled={saving}
+          onClick={() => {
+            setEditing(false);
+            setPhase({ kind: 'done' });
+            void completeGuide(code, thisGuide);
+          }}
+          className={`mt-4 ${confirmButton}`}
+>>>>>>> f3fbd526310436dbbdbd849a565d9c5a3b8836dd
         >
           약 다시 선택하기·수정하기
         </button>
@@ -210,7 +265,47 @@ export function MedicationFlow({
     );
   }
 
+<<<<<<< HEAD
   const med = steps[phase.i];
+=======
+  if (phase.kind === 'done') {
+    return (
+      <section aria-labelledby="done-title">
+        <h1 id="done-title" className="sr-only">
+          약 확인을 마쳤어요
+        </h1>
+        <Ttobagi
+          pose="cheer"
+          message={
+            next
+              ? t.guideDoneNext(t.guides[thisGuide], t.guides[next])
+              : t.allDone
+          }
+        />
+        <div className="mt-6 flex flex-col gap-3">
+          {next && nextHref ? (
+            <ButtonLink href={nextHref}>
+              {t.nextButton(t.guides[next])}
+            </ButtonLink>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPhase({ kind: 'summary' })}
+              className={buttonClass.primary}
+            >
+              {t.restart}
+            </button>
+          )}
+          <ButtonLink href={`/p/${code}/home`} variant="outline">
+            🏠 홈으로
+          </ButtonLink>
+        </div>
+      </section>
+    );
+  }
+
+  const med = inOrder(queue)[phase.i];
+>>>>>>> f3fbd526310436dbbdbd849a565d9c5a3b8836dd
 
   return (
     <section aria-labelledby="med-title">

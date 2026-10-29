@@ -56,6 +56,8 @@ export type EducationCode = {
     count: number;
     lastAt: Date;
   }[];
+  /** 환자가 끝까지 마친 안내(대장내시경: 8교시 끝, 드시는 약: "확인했어요"). schema.prisma에는 아직 칸이 없다. */
+  guideCompletions: { guide: GuideKind; completedAt: Date }[];
 };
 
 export const MAX_ATTEMPTS = 5;
@@ -134,6 +136,7 @@ export async function createEducationCode(input: {
     medicationCheck: null,
     teachbackResults: [],
     confusionMarks: [],
+    guideCompletions: [],
   };
   codes().set(row.code, row);
   return row;
@@ -244,6 +247,16 @@ export async function addConfusionMark(
   else row.confusionMarks.push({ guide, paragraphId, count: 1, lastAt });
 }
 
+// 안내 완료: 처음 마친 시각을 남긴다(다시 마쳐도 그대로). 바뀐 코드 정보를 돌려준다.
+export async function markGuideCompleted(code: string, guide: GuideKind) {
+  const row = await findActiveCode(code);
+  if (!row) return null;
+  if (!row.guideCompletions.some((c) => c.guide === guide)) {
+    row.guideCompletions.push({ guide, completedAt: new Date() });
+  }
+  return row;
+}
+
 // 시연 데이터. 000000(생년월일 111111, 예비)과 482917(생년월일 590312)은 결과가 비어 있어,
 // 환자 화면에서 한 결과가 그대로 쌓인다.
 // 나머지는 의료진 목록이 비어 보이지 않게 넣은 예시이며, 550031은 다른 간호사 코드(보이면 안 됨).
@@ -264,6 +277,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
     medicationCheck: null,
     teachbackResults: [] as EducationCode['teachbackResults'],
     confusionMarks: [] as EducationCode['confusionMarks'],
+    guideCompletions: [] as EducationCode['guideCompletions'],
   });
   const topics = demoGuide.questions.map((q) => q.topic);
   const minutesAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);

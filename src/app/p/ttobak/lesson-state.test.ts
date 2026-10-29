@@ -125,6 +125,23 @@ describe('수업 진행', () => {
     assert.deepEqual([again.lesson, again.step, again.reached], [0, 0, 0]);
   });
 
+  it('마지막 교시를 마치면 다음 안내 말(또는 모든 수업 끝)을 한다', () => {
+    const last = lessons.length - 1;
+    const praise = reduce(quizOf(last), { type: 'answer', index: 1 });
+    const finish = '대장내시경 수업 끝! 이제 드시는 약을 볼게요.';
+    assert.equal(getSubtitle(lessons, praise, finish).text, finish);
+    assert.equal(
+      getSubtitle(lessons, reduce(praise, ended), finish).text,
+      finish,
+    );
+    // 중간 교시 칭찬은 그대로
+    const first = reduce(playToQuiz(), { type: 'answer', index: 1 });
+    assert.equal(
+      getSubtitle(lessons, first, finish).text,
+      '잘하셨어요! 이제 드셔도 되는 음식을 배워요.',
+    );
+  });
+
   it('수업 목록을 누르면 그 교시 처음으로 바로 간다', () => {
     const state = reduce(initialLessonState, { type: 'goLesson', lesson: 6 });
     assert.deepEqual(
