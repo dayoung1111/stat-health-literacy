@@ -5,7 +5,6 @@ import { demoGuide, getTodo, hospital } from '@/lib/demo-guide';
 import { getDemoSchedule, requireDemoPatient } from '@/lib/demo-patient';
 
 import { Ttobagi } from '../../../ttobagi';
-import { PictureRow } from '../../pictures';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
@@ -52,21 +51,8 @@ async function ColonoscopyHome({ code }: { code: string }) {
       <div className="mt-5">
         <Ttobagi pose="time" message={todo.speech} />
       </div>
-      <section
-        aria-labelledby="todo-title"
-        className="mt-2 rounded-3xl bg-stat-sun p-6"
-      >
-        <h2 id="todo-title" className="text-xl font-bold text-stat-ink">
-          <span aria-hidden="true">⏰ </span>지금 할 일
-        </h2>
-        <p className="mt-1 text-3xl font-bold">{todo.title}</p>
-        <div className="mt-5">
-          <PictureRow pictures={todo.pictures} />
-        </div>
-        <p className="mt-5 text-center text-xl">{todo.line}</p>
-      </section>
 
-      <nav aria-label="환자 메뉴" className="mt-8 flex flex-col gap-4">
+      <nav aria-label="환자 메뉴" className="mt-2 flex flex-col gap-4">
         <Link
           href={`/p/${code}/video`}
           className={`${menuClass} min-h-28 bg-stat-green text-3xl text-white`}
