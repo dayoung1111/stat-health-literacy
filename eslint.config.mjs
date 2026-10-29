@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     'coverage/**',
     'src/generated_prisma/**',
+    // 사용자가 넣은 참고 자료(디자인 시안·압축된 라이브러리). 앱 코드가 아니다.
+    'docs/reference/**',
   ]),
 ]);
 

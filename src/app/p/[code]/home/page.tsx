@@ -30,8 +30,8 @@ const menuClass =
   'flex min-h-20 items-center gap-4 rounded-3xl px-6 text-2xl font-bold shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green';
 
 async function PatientHome({ code }: { code: string }) {
-  const { examLabel, daysLeft, afterSecondDose } = await getDemoSchedule();
-  const todo = getTodo(daysLeft, afterSecondDose);
+  const { examLabel, daysLeft } = await getDemoSchedule();
+  const todo = getTodo(daysLeft);
 
   return (
     <>
@@ -64,6 +64,15 @@ async function PatientHome({ code }: { code: string }) {
 
       <nav aria-label="환자 메뉴" className="mt-8 flex flex-col gap-4">
         <Link
+          href={`/p/${code}/video`}
+          className={`${menuClass} min-h-28 bg-stat-green text-3xl text-white`}
+        >
+          <span aria-hidden="true" className="text-5xl">
+            🎬
+          </span>
+          또박이 선생님 수업 보기
+        </Link>
+        <Link
           href={`/p/${code}/guide/1`}
           className={`${menuClass} bg-stat-mint text-stat-green`}
         >
@@ -71,15 +80,6 @@ async function PatientHome({ code }: { code: string }) {
             📖
           </span>
           안내문 같이 보기
-        </Link>
-        <Link
-          href={`/p/${code}/video`}
-          className={`${menuClass} bg-teal-100 text-teal-900`}
-        >
-          <span aria-hidden="true" className="text-4xl">
-            🎬
-          </span>
-          또박이와 영상으로 보기
         </Link>
         <Link
           href={`/p/${code}/check`}

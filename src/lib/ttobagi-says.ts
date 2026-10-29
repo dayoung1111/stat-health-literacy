@@ -4,5 +4,5 @@ export const ttobagiSays = {
   explain: '이 부분, 쉽게 다시 알려 드릴게요.',
   cheer: '맞아요! 정말 잘 기억하셨어요.',
   retry: '괜찮아요, 같이 다시 볼게요.',
-  danger: '이럴 땐 바로 병원에 전화하세요.',
+  danger: '이럴 땐 꼭 병원에 말씀하세요.',
 };

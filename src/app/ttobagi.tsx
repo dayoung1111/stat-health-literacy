@@ -13,7 +13,7 @@ const mint = '#DCEDEE';
 const blush = '#F6B8A0';
 const alert = '#C2410C';
 
-function Arm({ d }: { d: string }) {
+export function Arm({ d }: { d: string }) {
   return (
     <path
       d={d}
@@ -25,16 +25,25 @@ function Arm({ d }: { d: string }) {
   );
 }
 
-function Hand({ cx, cy, r = 8 }: { cx: number; cy: number; r?: number }) {
+export function Hand({
+  cx,
+  cy,
+  r = 8,
+}: {
+  cx: number;
+  cy: number;
+  r?: number;
+}) {
   return (
     <circle cx={cx} cy={cy} r={r} fill="#FFFFFF" stroke={ink} strokeWidth="4" />
   );
 }
 
-const leftArm = 'M44 120 Q24 132 24 150';
+export const leftArm = 'M44 120 Q24 132 24 150';
 
 // 모든 포즈에 공통인 몸(그림자·다리·종이 몸·접힌 귀퉁이·초록 십자·줄글·볼터치).
-function Body() {
+// 사진 수업 플레이어(src/app/p/ttobak)도 같은 몸을 쓴다.
+export function Body() {
   return (
     <>
       <ellipse cx="100" cy="210" rx="54" ry="8" fill="#DCE5E4" />
@@ -73,7 +82,7 @@ function Body() {
   );
 }
 
-function Eyes({ y = 94, rx = 5.5, ry = 7.5, shine = 1.8, shineY = 91 }) {
+export function Eyes({ y = 94, rx = 5.5, ry = 7.5, shine = 1.8, shineY = 91 }) {
   return (
     <>
       <ellipse cx="80" cy={y} rx={rx} ry={ry} fill={ink} />
