@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
+
+import { isHttpsRequest } from './request-origin';
 import { redirect } from 'next/navigation';
 
 // 시연용 임시 의료진 계정. 발급 기록은 education-store.ts에 있다. 로그인 단계에서
@@ -17,7 +19,7 @@ export async function startStaffSession() {
   (await cookies()).set(cookieName, demoStaff.id, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: await isHttpsRequest(),
     maxAge: eightHours,
     path: '/staff',
   });

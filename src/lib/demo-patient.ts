@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
+
+import { isHttpsRequest } from './request-origin';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 
@@ -15,7 +17,7 @@ export async function startDemoSession(code: string) {
   (await cookies()).set(cookieName, code, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: await isHttpsRequest(),
     maxAge: sevenDays,
     path: '/p',
   });
