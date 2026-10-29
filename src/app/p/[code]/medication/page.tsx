@@ -9,6 +9,7 @@ import { VerdictMark } from './med-icons';
 import { MedicationFlow } from './medication-check';
 
 // 드시는 약 안내(STAT 교육내용 초안 D. 복용약). 나이대와 상관없이 항상 전체 목록을 보여 준다.
+// 한 번 저장했으면 📋 내 약 정리부터 보여 준다.
 export default function MedicationPage({
   params,
 }: PageProps<'/p/[code]/medication'>) {
@@ -50,7 +51,7 @@ async function Medication({ code }: { code: string }) {
       </div>
       <MedicationFlow
         code={code}
-        initial={issued.medicationCheck?.medications ?? []}
+        saved={issued.medicationCheck?.medications ?? null}
         stopDate={stopDate(issued.bloodThinnerStopDate)}
       />
       <CheckWithStaff />
