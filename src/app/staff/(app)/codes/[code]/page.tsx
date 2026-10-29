@@ -10,7 +10,11 @@ import {
 import { guideCatalog, guideNames } from '@/lib/guide-catalog';
 import { confusionLabel } from '@/lib/guide-labels';
 import { verdictLabels } from '@/lib/medication-guide';
-import { medicationRows, verdictMarks } from '@/lib/medication-summary';
+import {
+  medicationRows,
+  removedMedicationRows,
+  verdictMarks,
+} from '@/lib/medication-summary';
 import { extraLabels, settingLabel } from '@/lib/staff-options';
 
 import { Panel, StaffBack } from '../../../ui';
@@ -60,6 +64,7 @@ async function CodeDetail({ code }: { code: string }) {
     (r) => r.guide !== 'medication',
   );
   const medRows = medicationRows(item);
+  const removedRows = removedMedicationRows(item);
   const wrong = teachback.filter((r) => r.result === 'wrong');
   const extras = extraLabels(item.extras);
 
@@ -216,6 +221,20 @@ async function CodeDetail({ code }: { code: string }) {
                   </tbody>
                 </table>
               </>
+            )}
+            {removedRows.length > 0 && (
+              <ul
+                aria-label="환자가 뺀 약"
+                className="mt-3 flex flex-col gap-1 text-base text-zinc-500"
+              >
+                {removedRows.map((r) => (
+                  <li key={r.id}>
+                    뺀 약: {r.name} (확인 질문{' '}
+                    {resultLabel[r.quiz].text.replace(/^[✓✕] /, '')}) ·{' '}
+                    {kstTime(r.answeredAt)}
+                  </li>
+                ))}
+              </ul>
             )}
           </Section>
         )}

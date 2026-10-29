@@ -47,3 +47,21 @@ export function medicationCell(code: EducationCode) {
 export function teachbackOnly(code: EducationCode) {
   return code.teachbackResults.filter((r) => r.guide !== 'medication');
 }
+
+// 환자가 뺀 약 중 확인 질문 기록이 남은 약. 의료진 상세에 회색으로 보여 준다.
+// 예: 당뇨약을 틀린 뒤 목록에서 뺐다면 "뺀 약: 당뇨약 (확인 질문 틀림)"
+export function removedMedicationRows(code: EducationCode) {
+  const current = code.medicationCheck?.medications ?? [];
+  return code.teachbackResults
+    .filter(
+      (r) =>
+        r.guide === 'medication' &&
+        !current.includes(r.question as (typeof current)[number]),
+    )
+    .map((r) => ({
+      id: r.question,
+      name: findMedication(r.question)?.name ?? r.question,
+      quiz: r.result,
+      answeredAt: r.answeredAt,
+    }));
+}
