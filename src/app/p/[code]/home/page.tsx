@@ -26,6 +26,7 @@ export default function PatientHomePage({
 const guideHref = (code: string, kind: (typeof guideKinds)[number]) => {
   if (kind === 'colonoscopy') return `/p/${code}/colonoscopy`;
   if (kind === 'checkup') return `/p/${code}/day-before`;
+  if (kind === 'gastroscopy') return `/p/${code}/gastroscopy`;
   if (kind === 'medication') return `/p/${code}/medication`;
   return `/p/${code}/preparing/${kind}`;
 };

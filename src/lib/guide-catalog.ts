@@ -26,7 +26,7 @@ export const guideCatalog: Record<
 > = {
   checkup: { name: '건강검진 기본 확인사항', icon: 'checkup', ready: true },
   colonoscopy: { name: '대장내시경', icon: 'colon', ready: true },
-  gastroscopy: { name: '위내시경', icon: 'stomach', ready: false },
+  gastroscopy: { name: '위내시경', icon: 'stomach', ready: true },
   medication: {
     name: '복용약·영양제 안내',
     patientName: '드시는 약',

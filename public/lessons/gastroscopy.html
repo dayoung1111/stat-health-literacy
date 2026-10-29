@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>또박이 위내시경 수업</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 디자인 시안: 위내시경 수업 (예시) — Gastro.dc.html. 수업 화면 좌표는 시안의 896×504 그대로 쓴다. */
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+:root{
+  --bg:#F3F6F5; --surface:#FFFFFF; --fg:#15262B; --muted:#4A5D63; --line:#CAD6D6;
+  --teal:#0F6670; --teal-dark:#0B4E56; --mint:#DCEDEE;
+  --font:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1A1D; --surface:#16262A; --fg:#E7F0F1; --muted:#9DB2B5; --line:#2A3E43; --mint:#1F3A3E; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1A1D; --surface:#16262A; --fg:#E7F0F1; --muted:#9DB2B5; --line:#2A3E43; --mint:#1F3A3E; color-scheme:dark}
+
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.embed body{padding-block:4px 8px}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+header h1{font-size:1.4rem;font-weight:700;margin:0}
+.crumb{font-size:.95rem;color:var(--muted)}
+.sample{margin-left:auto;font-size:.82rem;font-weight:700;color:#7A5A06;background:#FFF1C7;padding:6px 12px;border-radius:999px}
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr);gap:18px}}
+
+/* ===== 수업 화면 (항상 밝은 화면). 1u = 시안의 1px ===== */
+.player{display:flex;flex-direction:column;gap:14px;min-width:0}
+.screen{position:relative;container-type:inline-size;border-radius:18px;overflow:hidden;background:#EAF2F0;color:#15262B}
+.screen{--u:calc(100cqw / 896)}
+.scene{display:block;width:100%;height:auto;aspect-ratio:896/504}
+.scene text{font-family:var(--font)}
+
+.ttobak{position:absolute;right:calc(var(--u) * 36);top:calc(var(--u) * 187);width:calc(var(--u) * 230);height:calc(var(--u) * 219);transform:scaleX(-1)}
+.ttobak .pose,.ttobak .face{display:none}
+.ttobak[data-pose="wave"] .p-wave,.ttobak[data-pose="point"] .p-point,.ttobak[data-pose="cheer"] .p-cheer{display:inline}
+.ttobak[data-pose="cheer"] .f-cheer,.ttobak:not([data-pose="cheer"]) .f-normal{display:inline}
+.ttobak .arm{transform-box:view-box}
+.ttobak[data-pose="wave"] .arm{transform-origin:150px 116px}
+.ttobak[data-pose="point"] .arm{transform-origin:150px 118px}
+.ttobak .talk{opacity:0}
+.playing .ttobak .bob{animation:lcBob 1.8s ease-in-out infinite}
+.cheering .ttobak .bob{animation:lcBob 1.8s ease-in-out infinite}
+.playing.moving .ttobak[data-pose="wave"] .arm{animation:lcWave .9s ease-in-out infinite}
+.playing.moving .ttobak[data-pose="point"] .arm{animation:lcPoint 1.4s ease-in-out infinite}
+.playing .ttobak .talk{animation:lcTalk .32s steps(1,end) infinite}
+
+/* 자막 말풍선 */
+.bubble{position:absolute;left:calc(var(--u) * 20);right:calc(var(--u) * 20);bottom:calc(var(--u) * 16);min-height:calc(var(--u) * 78);
+  background:#FFFFFF;border:calc(var(--u) * 3) solid #15262B;border-radius:calc(var(--u) * 20);padding:calc(var(--u) * 12) calc(var(--u) * 22);
+  display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u) * 16)}
+.bubble::before{content:"";position:absolute;top:calc(var(--u) * -13);right:calc(var(--u) * 150);width:calc(var(--u) * 22);height:calc(var(--u) * 22);
+  background:#FFFFFF;border-left:calc(var(--u) * 3) solid #15262B;border-top:calc(var(--u) * 3) solid #15262B;transform:rotate(45deg)}
+.say{font-size:calc(var(--u) * 25);font-weight:700;line-height:1.4;word-break:keep-all}
+.say mark{border-radius:calc(var(--u) * 8);padding:0 calc(var(--u) * 6)}
+.say mark.r{background:#FCE3E1;color:#A3262C}
+.say mark.g{background:#DDF3E8;color:#1D6E47}
+.say mark.y{background:#FFF1C7;color:#7A5A06}
+.acts{display:flex;gap:calc(var(--u) * 10);flex:none}
+.opt{min-width:calc(var(--u) * 150);height:calc(var(--u) * 54);border-radius:calc(var(--u) * 14);border:calc(var(--u) * 2.5) solid #15262B;
+  background:#FFFFFF;color:#15262B;font-size:calc(var(--u) * 19);font-weight:700;padding:0 calc(var(--u) * 12)}
+.opt.wrong{background:#FCE3E1}
+.again{height:calc(var(--u) * 54);border-radius:calc(var(--u) * 14);border:none;background:#0F6670;color:#FFFFFF;
+  font-size:calc(var(--u) * 18);font-weight:700;padding:0 calc(var(--u) * 20)}
+
+/* 휴대폰처럼 좁으면 글씨가 너무 작아지므로 말풍선을 그림 아래로 내리고 글씨 크기를 고정한다 */
+@container (max-width:640px){
+  .bubble{position:relative;left:auto;right:auto;bottom:auto;margin:0 10px 10px;min-height:0;border-width:3px;border-radius:16px;
+    padding:12px 14px;flex-direction:column;align-items:stretch;gap:10px}
+  .bubble::before{top:-13px;right:22%;width:20px;height:20px;border-left-width:3px;border-top-width:3px}
+  .say{font-size:20px}
+  .say mark{border-radius:6px;padding:0 4px}
+  .acts{gap:8px}
+  .opt,.again{flex:1;min-width:0;height:54px;border-radius:14px;border-width:2.5px;font-size:18px}
+}
+
+/* 시작 덮개 */
+.start{position:absolute;inset:0;background:rgba(21,38,43,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:16px}
+.bigplay{width:clamp(72px,calc(var(--u) * 112),112px);height:clamp(72px,calc(var(--u) * 112),112px);border-radius:50%;border:none;background:#0F6670;display:flex;align-items:center;justify-content:center}
+.bigplay:focus-visible{outline:4px solid #F6B8A0;outline-offset:4px}
+.bigplay svg{width:45%;height:45%}
+.start b{font-size:clamp(20px,calc(var(--u) * 24),24px);font-weight:700;color:#FFFFFF}
+.start span{font-size:16px;color:#DCEDEE}
+
+/* 조작 버튼 + 진행 막대 */
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.btn{height:52px;padding:0 18px;min-width:96px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font-size:16px;font-weight:600}
+.btn:hover{border-color:var(--teal)}
+.btn.primary{min-width:140px;border:none;background:var(--teal);color:#FFFFFF;font-size:17px;font-weight:700}
+.btn.primary:hover{background:var(--teal-dark)}
+.bars{flex:1 1 200px;display:flex;gap:6px}
+.bars i{flex:1;height:8px;border-radius:4px;background:var(--line)}
+.bars i.on{background:var(--teal)}
+/* 휴대폰: 이전·재생·다음 한 줄, 소리·진행 막대 한 줄 */
+@media (max-width:560px){
+  .controls{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:10px}
+  .controls .btn{min-width:0;padding:0 8px}
+  .bars{grid-column:2 / 4}
+}
+
+/* 오른쪽 패널 */
+aside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.panel h2{font-size:16px;font-weight:700;margin:0}
+.lessons{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.lessons li{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--muted)}
+.lessons li b{font-size:15px}
+.lessons li span{font-size:12px;font-weight:700}
+.lessons li.done{color:var(--fg)}
+.lessons li.now{background:#DCEDEE;border-color:#0F6670;color:#0B4E56}
+.legend{display:flex;align-items:center;gap:10px;font-size:15px}
+.legend i{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;color:#FFFFFF}
+.legend .x{background:#D9363E}.legend .o{background:#2E9E6B}.legend .q{background:#E0A82E;color:#15262B}
+.note{background:#FFF6D6;border:1px solid #E8D28A;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5;color:#5C4405}
+
+@keyframes lcBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes lcWave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-22deg)}}
+@keyframes lcPoint{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-12deg)}}
+@keyframes lcTalk{0%,100%{opacity:0}50%{opacity:1}}
+@keyframes gsDraw{to{stroke-dashoffset:0}}
+@keyframes gsPop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+.pop{animation:gsPop .4s ease-out both;transform-box:fill-box;transform-origin:center}
+.pop.left{animation-duration:.45s;transform-origin:left center}
+.draw{animation:gsDraw .35s ease-out forwards}
+.draw.slow{animation-duration:.6s}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}
+  .draw{stroke-dashoffset:0!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="btn" id="backBtn" type="button">← 뒤로</button>
+    <h1 id="title">위내시경 준비</h1>
+    <span class="crumb" id="crumb">또박이 선생님 수업</span>
+    <span class="sample">병원 안내문 확인 전 예시</span>
+  </header>
+
+  <div class="main">
+    <div class="player">
+      <div class="screen" id="screen">
+        <svg class="scene" id="scene" role="img" viewBox="0 0 896 504" aria-label="위내시경 준비 그림"></svg>
+
+        <svg class="ttobak" id="ttobak" data-pose="wave" aria-hidden="true" viewBox="-24 -16 248 236">
+          <g class="bob">
+            <g class="pose p-wave">
+              <g class="arm">
+                <path d="M150 116 Q176 104 182 80" fill="none" stroke="#15262B" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="183" cy="74" r="8" fill="#FFFFFF" stroke="#15262B" stroke-width="4"/>
+              </g>
+              <path d="M44 120 Q24 132 24 150" fill="none" stroke="#15262B" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="24" cy="154" r="8" fill="#FFFFFF" stroke="#15262B" stroke-width="4"/>
+            </g>
+            <g class="pose p-point">
+              <g class="arm">
+                <path d="M150 118 Q172 114 180 98" fill="none" stroke="#15262B" stroke-width="5" stroke-linecap="round"/>
+                <path d="M186 86 L214 40" stroke="#C99A6B" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="216" cy="36" r="5" fill="#F4F1E8" stroke="#15262B" stroke-width="2"/>
+                <circle cx="182" cy="92" r="8" fill="#FFFFFF" stroke="#15262B" stroke-width="4"/>
+              </g>
+              <path d="M44 120 Q24 132 24 150" fill="none" stroke="#15262B" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="24" cy="154" r="8" fill="#FFFFFF" stroke="#15262B" stroke-width="4"/>
+            </g>
+            <g class="pose p-cheer">
+              <path d="M150 108 Q174 92 176 64" fill="none" stroke="#15262B" stroke-width="5" stroke-linecap="round"/>
+              <path d="M46 108 Q22 92 20 64" fill="none" stroke="#15262B" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="176" cy="58" r="8" fill="#FFFFFF" stroke="#15262B" stroke-width="4"/>
+              <circle cx="20" cy="58" r="8" fill="#FFFFFF" stroke="#15262B" stroke-width="4"/>
+              <polygon points="98,-12 101.5,-4.8 109.4,-3.7 103.7,1.9 105,9.7 98,6 91,9.7 92.3,1.9 86.6,-3.7 94.5,-4.8" fill="#F2B94B" stroke="#15262B" stroke-width="2.5" stroke-linejoin="round"/>
+            </g>
+            <rect x="74" y="180" width="16" height="24" rx="8" fill="#15262B"/>
+            <rect x="110" y="180" width="16" height="24" rx="8" fill="#15262B"/>
+            <path d="M50 24 H128 L160 56 V170 A16 16 0 0 1 144 186 H50 A16 16 0 0 1 34 170 V40 A16 16 0 0 1 50 24 Z" fill="#FFFFFF" stroke="#15262B" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M128 24 V48 A8 8 0 0 0 136 56 H160 Z" fill="#DCEDEE" stroke="#15262B" stroke-width="4" stroke-linejoin="round"/>
+            <circle cx="58" cy="48" r="10" fill="#0F6670"/>
+            <path d="M58 42 V54 M52 48 H64" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M62 150 H134 M62 164 H110" stroke="#CAD6D6" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="68" cy="110" rx="9" ry="5.5" fill="#F6B8A0"/>
+            <ellipse cx="128" cy="110" rx="9" ry="5.5" fill="#F6B8A0"/>
+            <g class="face f-cheer">
+              <path d="M73 96 Q80 88 87 96 M109 96 Q116 88 123 96" fill="none" stroke="#15262B" stroke-width="4" stroke-linecap="round"/>
+              <path d="M86 108 Q98 124 110 108 Z" fill="#15262B" stroke="#15262B" stroke-width="3" stroke-linejoin="round"/>
+            </g>
+            <g class="face f-normal">
+              <ellipse cx="80" cy="94" rx="5.5" ry="7.5" fill="#15262B"/>
+              <ellipse cx="116" cy="94" rx="5.5" ry="7.5" fill="#15262B"/>
+              <circle cx="82" cy="91" r="1.8" fill="#FFFFFF"/>
+              <circle cx="118" cy="91" r="1.8" fill="#FFFFFF"/>
+              <path d="M88 110 Q98 120 108 110" fill="none" stroke="#15262B" stroke-width="4" stroke-linecap="round"/>
+              <ellipse class="talk" cx="98" cy="114" rx="7" ry="6" fill="#15262B"/>
+            </g>
+          </g>
+        </svg>
+
+        <div class="bubble">
+          <span class="say" id="say" aria-live="polite">재생을 누르면 수업이 시작돼요.</span>
+          <div class="acts" id="acts" hidden></div>
+        </div>
+
+        <div class="start" id="start">
+          <button type="button" class="bigplay" id="bigplay" aria-label="수업 시작">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5 L19 12 L8 19 Z" fill="#FFFFFF"/></svg>
+          </button>
+          <b>눌러서 수업 시작</b>
+          <span>소리를 켜 주세요</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button type="button" class="btn" id="prevBtn">이전</button>
+        <button type="button" class="btn primary" id="playBtn">재생</button>
+        <button type="button" class="btn" id="nextBtn">다음</button>
+        <button type="button" class="btn" id="soundBtn" aria-pressed="true">🔊 소리 켬</button>
+        <div class="bars" id="bars" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="panel">
+        <h2>오늘의 수업</h2>
+        <ol class="lessons" id="lessons"></ol>
+      </div>
+      <div class="panel">
+        <h2>표시 읽는 법</h2>
+        <div class="legend"><i class="x" aria-hidden="true">✕</i>하면 안 돼요</div>
+        <div class="legend"><i class="o" aria-hidden="true">○</i>해도 돼요, 꼭 하세요</div>
+        <div class="legend"><i class="q" aria-hidden="true">!</i>병원 안내문대로</div>
+      </div>
+      <div class="note">시간과 물·약 기준은 병원 위내시경 안내문을 받으면 그 내용으로 바뀌어요.</div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ===== 그림 =====
+// 사진: [주소, 그림 안에서의 너비, 높이]. 자르는 범위(view)는 시안 좌표 그대로 쓴다.
+const IMG={
+  porridge:['/images/foods/food-05-porridge.jpg',1600,900],
+  rice:['/images/foods/food-08-white-rice.jpg',1600,900],
+  water:['/images/foods/food-09-water.jpg',1200,900],
+  pills:['/images/foods/food-10-pills.jpg',1200,900],
+  cig:['/images/foods/food-11-smoking.jpg',1200,900],
+  guardian:['/images/foods/food-12-guardian.jpg',1200,900],
+  gum:['/images/foods/food-13-gum.jpg',1200,900],
+  clock:['/images/gastro/gastro-01-midnight-clock.jpg',1200,900],
+  bed:['/images/gastro/gastro-02-bed.jpg',1200,900],
+  coffee:['/images/gastro/gastro-03-coffee.jpg',1200,900],
+  car:['/images/gastro/gastro-04-car.jpg',1200,900],
+  bus:['/images/gastro/gastro-05-bus.jpg',1200,900],
+  waiting:['/images/gastro/gastro-06-waiting.jpg',1200,900],
+  stool:['/images/gastro/gastro-07-black-stool.jpg',1200,900],
+  vomit:['/images/gastro/gastro-08-vomit-blood.jpg',1200,900],
+  pain:['/images/gastro/gastro-09-stomach-pain.jpg',1200,900]
+};
+const INK='#15262B',RED='#D9363E',GREEN='#2E9E6B',YELLOW='#E0A82E',LINE='#CAD6D6';
+const BG='<rect x="0" y="0" width="896" height="504" fill="#EAF2F0"/>';
+const T=(x,y,size,weight,fill,text,anchor)=>`<text x="${x}" y="${y}"${anchor?' text-anchor="middle"':''} font-size="${size}" font-weight="${weight}" fill="${fill}">${text}</text>`;
+const late=d=>d?` style="animation-delay:${d}s"`:'';
+function photo(key,x,y,w,h,view){const [src,iw,ih]=IMG[key];
+  return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${view}" preserveAspectRatio="xMidYMid slice"><image href="${src}" x="0" y="0" width="${iw}" height="${ih}"/></svg>`+
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="none" stroke="${LINE}" stroke-width="2"/>`}
+// 위쪽 제목 띠: kind o(초록 ○) / x(빨강 ✕) / q(노랑 !)
+function banner(kind,title,sub){const c={o:GREEN,x:RED,q:YELLOW}[kind],sym={o:'○',x:'✕',q:'!'}[kind];
+  return `<g class="pop left"><rect x="24" y="20" width="586" height="120" rx="20" fill="#FFFFFF" stroke="${c}" stroke-width="4"/>`+
+    `<circle cx="78" cy="80" r="32" fill="${c}"/>${T(78,93,34,700,kind==='q'?INK:'#FFFFFF',sym,1)}`+
+    `${T(126,72,40,700,INK,title)}${T(126,118,27,600,'#2E4A50',sub)}</g>`}
+// 사진 카드(아래 짧은 이름)
+function card(x,w,key,view,label,d){
+  return `<g class="pop"${late(d)}><rect x="${x}" y="158" width="${w}" height="188" rx="18" fill="#FFFFFF" stroke="${LINE}" stroke-width="2.5"/>`+
+    photo(key,x+8,166,w-16,128,view)+T(x+w/2,324,24,700,INK,label,1)+'</g>'}
+function xmark(cx,d){return [[cx-40,cx+40,d],[cx+40,cx-40,d+.35]].map(([a,b,t])=>
+  `<path d="M${a} 188 L${b} 268" stroke="${RED}" stroke-width="10" stroke-linecap="round" stroke-dasharray="300" stroke-dashoffset="300" class="draw"${late(t)}/>`).join('')}
+function omark(cx,cy,r,d){return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${GREEN}" stroke-width="9" stroke-dasharray="600" stroke-dashoffset="600" transform="rotate(-90 ${cx} ${cy})" class="draw slow"${late(d)}/>`}
+function bang(cx,d){return `<g class="pop"${late(d)}><circle cx="${cx}" cy="184" r="20" fill="${YELLOW}" stroke="${INK}" stroke-width="3"/>${T(cx,192,24,700,INK,'!',1)}</g>`}
+function redFrame(x,w,d){return `<rect x="${x}" y="158" width="${w}" height="188" rx="18" fill="none" stroke="${RED}" stroke-width="4" class="pop"${late(d)}/>`}
+
+const SCENES={
+  intro:()=>T(40,70,36,700,INK,'위내시경 수업')+
+    [[40,100,'1','#0F6670','전날 저녁'],[325,100,'2',YELLOW,'검사 날 아침'],[40,240,'3','#7A5AB8','수면 내시경'],[325,240,'4',GREEN,'검사 끝난 뒤']]
+    .map(([x,y,n,c,label],i)=>`<g class="pop"${late(.2+i*.2)}><rect x="${x}" y="${y}" width="265" height="120" rx="18" fill="#FFFFFF" stroke="${LINE}" stroke-width="2.5"/>`+
+      `<circle cx="${x+52}" cy="${y+60}" r="30" fill="${c}"/>${T(x+52,y+71,30,700,'#FFFFFF',n,1)}${T(x+96,y+70,25,700,INK,label)}</g>`).join(''),
+  dinner:()=>banner('o','검사 전날 저녁','가볍고 소화 잘 되는 음식으로')+
+    card(24,180,'porridge','96 40 880 690','죽',.4)+card(220,180,'rice','145 30 820 820','흰쌀밥',.75)+
+    omark(114,230,74,1.3)+omark(310,228,60,1.7),
+  night:()=>banner('x','밤 12시부터','아무것도 먹지 않기')+
+    card(24,132,'clock','300 70 610 610','밤 12시',.4)+card(172,132,'bed','0 0 1200 900','잠자기 전',.75)+
+    card(320,132,'rice','145 30 820 820','밥·간식',1.1)+xmark(386,1.6)+
+    card(468,132,'water','230 40 680 760','물',1.45)+bang(574,1.95),
+  morningA:()=>banner('x','검사 날 아침','먹지 말고 그대로 오기')+
+    card(24,132,'rice','145 30 820 820','밥',.4)+xmark(90,.9)+
+    card(172,132,'gum','300 160 860 700','껌',.75)+xmark(238,1.25)+
+    card(320,132,'cig','300 190 700 620','담배',1.1)+xmark(386,1.6)+
+    card(468,132,'coffee','330 130 650 650','커피',1.45)+xmark(534,1.95),
+  morningB:()=>banner('q','물과 약은','병원 안내문에 적힌 대로')+
+    card(24,180,'water','230 40 680 760','물',.4)+bang(154,.9)+
+    card(220,180,'pills','380 230 500 480','먹는 약',.75)+bang(350,1.25),
+  car:()=>banner('x','수면 내시경 받은 날','직접 운전하지 않기')+
+    card(24,180,'car','0 0 1200 900','내 차',.4)+xmark(114,.9)+
+    card(220,180,'bus','0 0 1200 900','대중교통',.75)+omark(310,228,52,1.25),
+  guardian:()=>banner('o','보호자와 함께','같이 오고 같이 집에 가기')+
+    `<g class="pop"${late(.4)}><rect x="24" y="150" width="440" height="250" rx="18" fill="#FFFFFF" stroke="${LINE}" stroke-width="2.5"/>`+
+    photo('guardian',34,160,420,188,'0 0 1200 538').replace(/<rect[^>]*\/>$/,'')+
+    `<rect x="166" y="256" width="72" height="30" rx="15" fill="${GREEN}" stroke="#FFFFFF" stroke-width="2"/>${T(202,277,18,700,'#FFFFFF','보호자',1)}`+
+    `<rect x="253" y="266" width="44" height="30" rx="15" fill="#0F6670" stroke="#FFFFFF" stroke-width="2"/>${T(275,287,18,700,'#FFFFFF','나',1)}`+
+    T(244,384,24,700,INK,'보호자와 함께',1)+'</g>',
+  after:()=>banner('x','검사 끝난 뒤','목 마취가 풀릴 때까지 기다리기')+
+    card(24,132,'water','230 40 680 760','물',.4)+xmark(90,.9)+
+    card(172,132,'rice','145 30 820 820','음식',.75)+xmark(238,1.25)+
+    card(320,132,'waiting','0 0 1200 900','기다리기',1.1),
+  warn:()=>banner('q','이럴 땐 바로 연락','병원에 전화하세요')+
+    card(24,180,'stool','200 0 900 900','검은 변',.4)+card(220,180,'vomit','250 0 950 900','피를 토함',.75)+
+    card(416,180,'pain','150 80 1000 820','심한 배 통증',1.1)+
+    redFrame(24,180,.4)+redFrame(220,180,.75)+redFrame(416,180,1.1)
+};
+
+// ===== 수업 내용 (시안 문구 그대로) =====
+const LINES=[
+  {v:'intro',lesson:0,text:'이번에는 위내시경 준비를 배워요.',key:'위내시경'},
+  {v:'dinner',lesson:1,text:'검사 전날 저녁은 가볍고 소화가 잘 되는 음식으로 드세요.',key:'가볍고'},
+  {v:'night',lesson:1,text:'밤 12시부터는 아무것도 드시면 안 돼요.',key:'밤 12시부터'},
+  {v:'morningA',lesson:2,text:'검사 날 아침에는 밥, 껌, 담배, 커피 모두 안 돼요.',key:'안 돼요'},
+  {v:'morningB',lesson:2,text:'물과 약은 병원 안내문에 적힌 대로만 드세요.',key:'안내문에 적힌 대로'},
+  {v:'car',lesson:3,text:'수면 내시경을 받은 날은 직접 운전하시면 안 돼요. 보호자와 함께 대중교통을 타세요.',key:'직접 운전하시면 안 돼요'},
+  {v:'guardian',lesson:3,text:'보호자와 함께 오셔서 같이 집에 가세요.',key:'보호자와 함께'},
+  {v:'after',lesson:4,text:'검사가 끝나면 목 마취가 풀릴 때까지 물과 음식을 기다려 주세요.',key:'기다려 주세요'},
+  {v:'warn',lesson:4,text:'검은 변이 나오거나, 피를 토하거나, 배가 많이 아프면 바로 병원에 연락하세요.',key:'바로 병원에 연락'}
+];
+const QUIZ={q:'수면 내시경을 받은 날, 운전해도 될까요?',key:'운전해도',opts:['운전해도 돼요','안 돼요'],correct:1,back:5};
+const CHEER='잘하셨어요! 위내시경 준비 수업 끝이에요.';
+const LESSON_NAMES=['','1. 전날 저녁','2. 검사 날 아침','3. 수면 내시경이라면','4. 검사 끝난 뒤'];
+
+// ===== 상태 =====
+const $=id=>document.getElementById(id);
+const st={line:0,maxLine:0,playing:false,started:false,quiz:false,cheer:false,done:false,wrong:-1};
+let token=0,timer=null,reviewing=false,sound=true,shownScene=null,voice=null;
+function set(patch){Object.assign(st,patch);render()}
+
+// ===== 소리 =====
+function pickVoice(){const v=speechSynthesis.getVoices();voice=v.find(x=>x.lang==='ko-KR')||v.find(x=>x.lang&&x.lang.startsWith('ko'))||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function stopAll(){token++;if(timer){clearTimeout(timer);timer=null}try{speechSynthesis.cancel()}catch(e){}}
+// 읽기가 끝나고 최소 시간(minMs)도 지나면 다음으로. 소리가 안 나는 기기에서도 넘어가도록 시간 안전장치를 둔다.
+function say(text,cb,minMs){
+  stopAll();const my=token;let fired=false,spoke=false,minDone=false;
+  const fin=()=>{if(my===token&&!fired){fired=true;if(cb)cb()}};
+  const tryFin=()=>{if(spoke&&minDone)fin()};
+  setTimeout(()=>{minDone=true;tryFin()},minMs||0);
+  if(sound&&'speechSynthesis' in window){try{
+    const u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';if(voice)u.voice=voice;u.pitch=1.3;u.rate=.88;
+    u.onend=()=>setTimeout(()=>{spoke=true;tryFin()},600);
+    speechSynthesis.speak(u);
+  }catch(e){}}
+  else setTimeout(()=>{spoke=true;tryFin()},text.length*180+800);
+  timer=setTimeout(fin,Math.max(text.length*280+1800,(minMs||0)+800));
+}
+
+// ===== 흐름 =====
+function playLine(l){set({line:l,maxLine:Math.max(st.maxLine,l),quiz:false,cheer:false,done:false,wrong:-1});say(LINES[l].text,()=>afterLine(l),3400)}
+function afterLine(l){if(reviewing){reviewing=false;enterQuiz();return}if(l<LINES.length-1)playLine(l+1);else enterQuiz()}
+function enterQuiz(){set({quiz:true,wrong:-1});say(QUIZ.q,null,0);setTimeout(()=>$('acts').querySelector('.opt')?.focus(),50)}
+function answer(i){
+  if(!st.quiz)return;
+  if(!st.playing)set({playing:true});
+  if(i===QUIZ.correct){
+    reviewing=false;set({quiz:false,cheer:true});
+    tellApp({type:'stat-lesson-finished',lesson:'gastroscopy'});
+    say(CHEER,()=>{stopAll();set({done:true,playing:false})},1500);
+  }else{
+    set({wrong:i});reviewing=true;
+    say('다시 볼까요?',()=>playLine(QUIZ.back),900);
+  }
+}
+function restart(){reviewing=false;set({playing:true,started:true,maxLine:0});playLine(0)}
+
+// ===== 화면 그리기 =====
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function render(){
+  const cur=LINES[st.line],finished=st.quiz||st.cheer||st.done;
+  const v=!st.started||st.cheer||st.done?'intro':(st.quiz?LINES[QUIZ.back]:cur).v;
+  let sub,key;
+  if(!st.started){sub='재생을 누르면 수업이 시작돼요.';key=''}
+  else if(st.cheer||st.done){sub=CHEER;key='잘하셨어요'}
+  else if(st.quiz){sub=QUIZ.q;key=QUIZ.key}
+  else{sub=cur.text;key=cur.key}
+
+  // 장면은 바뀔 때만 다시 그린다(그때 그림이 하나씩 나타난다)
+  if(shownScene!==v){$('scene').innerHTML=BG+SCENES[v]();shownScene=v}
+  $('scene').setAttribute('aria-label','위내시경 준비 그림: '+sub);
+
+  const ki=key?sub.indexOf(key):-1;
+  const tone=/안내문/.test(key)?'y':/잘하셨어요|가볍고|보호자와 함께|기다려/.test(key)?'g':'r';
+  $('say').innerHTML=ki<0?esc(sub):esc(sub.slice(0,ki))+`<mark class="${tone}">${esc(key)}</mark>`+esc(sub.slice(ki+key.length));
+
+  const acts=$('acts');
+  if(st.quiz){
+    if(!acts.dataset.quiz||acts.dataset.wrong!==String(st.wrong)){
+      acts.innerHTML=QUIZ.opts.map((o,i)=>`<button type="button" class="opt${st.wrong===i?' wrong':''}" data-i="${i}">${esc(o)}</button>`).join('');
+      acts.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+      acts.dataset.quiz='1';acts.dataset.wrong=String(st.wrong);
+    }
+    acts.hidden=false;
+  }else if(st.done){
+    acts.innerHTML='<button type="button" class="again" id="againBtn">처음부터 다시</button>';
+    $('againBtn').onclick=restart;delete acts.dataset.quiz;acts.hidden=false;
+  }else{acts.innerHTML='';delete acts.dataset.quiz;acts.hidden=true}
+
+  const cheer=st.cheer||st.done,wave=!cheer&&!st.quiz&&(!st.started||st.line===0);
+  $('ttobak').dataset.pose=cheer?'cheer':wave?'wave':'point';
+  const screen=$('screen');
+  screen.classList.toggle('playing',st.playing);
+  screen.classList.toggle('moving',st.playing&&!st.quiz);
+  screen.classList.toggle('cheering',st.cheer);
+  $('start').hidden=st.started;
+
+  $('lessons').innerHTML=[1,2,3,4].map(n=>{
+    let lastIdx=0;LINES.forEach((x,i)=>{if(x.lesson===n)lastIdx=i});
+    const now=st.started&&!finished&&cur.lesson===n,dn=st.started&&(st.maxLine>lastIdx||finished);
+    return `<li class="${now?'now':dn?'done':''}"><b>${LESSON_NAMES[n]}</b><span>${now?'지금':dn?'완료':''}</span></li>`}).join('');
+  [...$('bars').children].forEach((b,i)=>b.className=st.started&&i<=st.maxLine?'on':'');
+  $('playBtn').textContent=st.playing?'일시정지':'재생';
+}
+
+// ===== 버튼 =====
+LINES.forEach(()=>$('bars').appendChild(document.createElement('i')));
+$('bigplay').onclick=()=>{set({started:true,playing:true});playLine(0)};
+$('playBtn').onclick=()=>{
+  if(st.playing){stopAll();set({playing:false});return}
+  set({started:true,playing:true});
+  if(st.done)restart();
+  else if(st.quiz)say(QUIZ.q,null,0);
+  else playLine(st.line);
+};
+function step(n){reviewing=false;
+  if(st.playing)playLine(n);else{stopAll();set({started:true,line:n,maxLine:Math.max(st.maxLine,n),quiz:false,cheer:false,done:false})}}
+$('prevBtn').onclick=()=>step(Math.max(0,st.line-1));
+$('nextBtn').onclick=()=>step(Math.min(LINES.length-1,st.line+1));
+function showSound(){const b=$('soundBtn');b.setAttribute('aria-pressed',String(sound));b.textContent=sound?'🔊 소리 켬':'🔈 소리 끔'}
+$('soundBtn').onclick=()=>{sound=!sound;try{localStorage.setItem('stat-sound',sound?'on':'off')}catch(_){}showSound();if(!sound)try{speechSynthesis.cancel()}catch(_){}};
+$('backBtn').onclick=()=>{if(history.length>1)history.back();else location.href='/'};
+try{if(localStorage.getItem('stat-sound')==='off'){sound=false;showSound()}}catch(_){}
+render();
+
+// ===== 앱 연결: 앱 화면(/p/[교육번호]/gastroscopy) 안에 끼워 넣었을 때 =====
+// ?embed=1 로 열리면 앱 안이다. 제목·뒤로 버튼은 앱이 맡고, 다 보면 앱에 알리고, 높이를 알려 준다.
+const EMBED=new URLSearchParams(location.search).has('embed');
+function tellApp(msg){try{if(EMBED&&window.parent!==window)window.parent.postMessage(msg,location.origin)}catch(_){}}
+if(EMBED){$('backBtn').hidden=true;$('title').hidden=true;$('crumb').hidden=true;document.documentElement.classList.add('embed')}
+function sendHeight(){tellApp({type:'stat-lesson-height',lesson:'gastroscopy',height:Math.ceil(document.documentElement.scrollHeight)})}
+window.addEventListener('load',sendHeight);window.addEventListener('resize',sendHeight);
+try{new ResizeObserver(sendHeight).observe(document.body)}catch(_){}
+setTimeout(sendHeight,300);
+</script>
+</body>
+</html>

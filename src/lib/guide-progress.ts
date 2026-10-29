@@ -7,6 +7,7 @@ import { guideCatalog, guideKinds, type GuideKind } from './guide-catalog';
 export function guideLessonHref(code: string, kind: GuideKind) {
   if (kind === 'colonoscopy') return `/p/${code}/video`;
   if (kind === 'checkup') return `/p/${code}/day-before`;
+  if (kind === 'gastroscopy') return `/p/${code}/gastroscopy`;
   if (kind === 'medication') return `/p/${code}/medication`;
   return `/p/${code}/preparing/${kind}`;
 }

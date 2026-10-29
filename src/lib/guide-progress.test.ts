@@ -25,13 +25,18 @@ describe('안내 사이 이동', () => {
     assert.equal(nextGuide(['colonoscopy'], [], 'colonoscopy'), null);
   });
 
-  it('내용이 준비 중인 안내로는 가지 않는다', () => {
+  it('위내시경도 내용이 있어 다음 안내가 된다', () => {
     assert.deepEqual(readyGuides(['gastroscopy', 'medication']), [
+      'gastroscopy',
       'medication',
     ]);
     assert.equal(
       nextGuide(['gastroscopy', 'medication'], [], 'medication'),
-      null,
+      'gastroscopy',
+    );
+    assert.equal(
+      guideLessonHref('771204', 'gastroscopy'),
+      '/p/771204/gastroscopy',
     );
   });
 
