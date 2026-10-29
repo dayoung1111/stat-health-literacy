@@ -49,11 +49,11 @@ export function IssueForm({ exam }: { exam: Exam }) {
       }}
     >
       <input type="hidden" name="exam" value={exam.id} />
-      {/* ③에서 뒤로는 ②로, ②에서 뒤로는 ① 검사 고르기로 간다. */}
+      {/* ③에서 뒤로는 ②로, ②에서 뒤로는 검사를 고른 화면(내시경 고르기)으로 간다. */}
       {step === 'date' ? (
         <StaffBack onClick={() => setStep('patient')} />
       ) : (
-        <StaffBack href="/staff/new" />
+        <StaffBack href={exam.back} />
       )}
 
       <div hidden={step !== 'patient'}>
