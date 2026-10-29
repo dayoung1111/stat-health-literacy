@@ -1,7 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import {
   medications,
@@ -19,114 +18,63 @@ import { recordMedicationQuiz, saveMyMedications } from '../../records';
 import { buttonClass, ButtonLink, CallButton } from '../../ui';
 import { MedIcon, VerdictMark } from './med-icons';
 
-type StopDate = { text: string; short: string };
-
-// 드시는 약: 고르기 → 고른 약마다 1) 판정 2) 자세히 3) 확인 질문 → 📋 내 약 정리.
-// 이미 고른 적이 있으면 정리 화면부터 보여 준다. 정리 화면에서 약 추가·빼기·확인을 한다.
-// 고른 약과 확인 질문 결과는 바로 저장되어 의료진 목록·상세에 최신으로 보인다.
+// 드시는 약 고르기 → 고른 약마다 1) 판정 2) 자세히 3) 확인 질문 → 끝나면 또박이 "잘하셨어요".
+// 고른 약과 확인 질문 결과는 저장되어 의료진 코드 상세에 보인다.
 type Phase =
-  | { kind: 'select'; adding: boolean }
+  | { kind: 'select' }
   | { kind: 'verdict'; i: number }
   | { kind: 'detail'; i: number; retry: boolean }
   | { kind: 'quiz'; i: number; attempt: 1 | 2 }
   | { kind: 'result'; i: number; correct: boolean }
-  | { kind: 'summary' }
   | { kind: 'done' };
-
-// "확인했어요"는 가장 크게: 기본 버튼에서 높이·글자 크기만 키운다.
-const confirmButton = buttonClass.primary
-  .replace('min-h-18', 'min-h-24')
-  .replace('text-2xl', 'text-3xl');
-
-// 목록 순서대로 정리한다.
-const inOrder = (ids: MedicationId[]) =>
-  medications.filter((m) => ids.includes(m.id));
 
 export function MedicationFlow({
   code,
   initial,
-  hasSaved,
   stopDate,
 }: {
   code: string;
   initial: MedicationId[];
-  /** 전에 한 번이라도 저장했는지("약이 없어요" 포함). 그렇다면 정리 화면부터 연다. */
-  hasSaved: boolean;
   /** 피를 묽게 하는 약 중단 시작일. text 예: "11월 3일부터" / "의사 선생님과 정한 날짜부터", short 예: "11/3" / "?" */
-  stopDate: StopDate;
+  stopDate: { text: string; short: string };
 }) {
-  const router = useRouter();
   const [mine, setMine] = useState<MedicationId[]>(initial);
-  const [picks, setPicks] = useState<MedicationId[]>([]);
-  const [queue, setQueue] = useState<MedicationId[]>([]);
-  const [editing, setEditing] = useState(false);
-  const [phase, setPhase] = useState<Phase>(
-    hasSaved ? { kind: 'summary' } : { kind: 'select', adding: false },
-  );
+  const [phase, setPhase] = useState<Phase>({ kind: 'select' });
   const [saving, startSaving] = useTransition();
 
-  // "확인했어요" 뒤 또박이가 칭찬하고 잠시 뒤 홈으로 간다.
-  useEffect(() => {
-    if (phase.kind !== 'done') return;
-    const timer = setTimeout(() => router.push(`/p/${code}/home`), 3500);
-    return () => clearTimeout(timer);
-  }, [phase.kind, router, code]);
-
-  const save = (ids: MedicationId[], after: () => void) =>
-    startSaving(async () => {
-      await saveMyMedications(code, ids);
-      setMine(ids);
-      after();
-    });
-
-  const togglePick = (id: MedicationId) =>
-    setPicks((list) =>
+  const chosen = medications.filter((m) => mine.includes(m.id));
+  const toggle = (id: MedicationId) =>
+    setMine((list) =>
       list.includes(id) ? list.filter((m) => m !== id) : [...list, id],
     );
-
-  // 고른 약(또는 추가한 약)만 하나씩 3화면을 본다.
-  const startQueue = (adding: boolean) => {
-    const ordered = inOrder(picks).map((m) => m.id);
-    const next = adding
-      ? inOrder([...mine, ...ordered]).map((m) => m.id)
-      : ordered;
-    save(next, () => {
-      setQueue(ordered);
-      setPicks([]);
-      setPhase({ kind: 'verdict', i: 0 });
+  const start = (ids: MedicationId[]) =>
+    startSaving(async () => {
+      await saveMyMedications(code, ids);
+      setPhase(ids.length > 0 ? { kind: 'verdict', i: 0 } : { kind: 'done' });
     });
-  };
-
-  const nextInQueue = (i: number) =>
+  const next = (i: number) =>
     setPhase(
-      i + 1 < queue.length
-        ? { kind: 'verdict', i: i + 1 }
-        : { kind: 'summary' },
+      i + 1 < chosen.length ? { kind: 'verdict', i: i + 1 } : { kind: 'done' },
     );
 
   if (phase.kind === 'select') {
-    const choices = phase.adding
-      ? medications.filter((m) => !mine.includes(m.id))
-      : medications;
     return (
       <section aria-labelledby="select-title">
         <h1
           id="select-title"
           className="mb-4 text-3xl leading-snug font-bold break-keep"
         >
-          {phase.adding
-            ? '더 드시는 약을 눌러 주세요'
-            : '드시는 약을 모두 눌러 주세요'}
+          드시는 약을 모두 눌러 주세요
         </h1>
         <div className="grid grid-cols-2 gap-3">
-          {choices.map((m) => {
-            const on = picks.includes(m.id);
+          {medications.map((m) => {
+            const on = mine.includes(m.id);
             return (
               <button
                 key={m.id}
                 type="button"
                 aria-pressed={on}
-                onClick={() => togglePick(m.id)}
+                onClick={() => toggle(m.id)}
                 className={`relative flex min-h-36 flex-col items-center justify-center gap-2 rounded-3xl border-4 px-3 py-4 text-center text-2xl font-bold break-keep focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green ${
                   on
                     ? 'border-stat-green bg-stat-mint text-stat-green'
@@ -146,142 +94,26 @@ export function MedicationFlow({
         </div>
         <button
           type="button"
-          disabled={picks.length === 0 || saving}
-          onClick={() => startQueue(phase.adding)}
+          disabled={chosen.length === 0 || saving}
+          onClick={() => start(chosen.map((m) => m.id))}
           className={`mt-6 ${buttonClass.primary}`}
         >
           {saving
             ? '저장하는 중…'
-            : picks.length === 0
+            : chosen.length === 0
               ? '약을 하나 이상 눌러 주세요'
-              : `${picks.length}개 ${phase.adding ? '추가' : '골랐어요'} · 하나씩 볼게요 ▶`}
+              : `${chosen.length}개 골랐어요 · 하나씩 볼게요 ▶`}
         </button>
-        {phase.adding ? (
-          <button
-            type="button"
-            onClick={() => {
-              setPicks([]);
-              setPhase({ kind: 'summary' });
-            }}
-            className={`mt-3 ${buttonClass.outline}`}
-          >
-            ← 내 약 정리로 돌아가기
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => save([], () => setPhase({ kind: 'summary' }))}
-            className={`mt-3 ${buttonClass.outline}`}
-          >
-            드시는 약이 없어요
-          </button>
-        )}
-      </section>
-    );
-  }
-
-  if (phase.kind === 'summary') {
-    const list = inOrder(mine);
-    const canAdd = list.length < medications.length;
-    return (
-      <section aria-labelledby="summary-title">
-        <h1
-          id="summary-title"
-          className="mb-4 text-3xl leading-snug font-bold break-keep"
-        >
-          <span aria-hidden="true">📋 </span>내 약 정리
-        </h1>
-        {list.length === 0 ? (
-          <p className="rounded-3xl bg-white p-5 text-2xl">
-            드시는 약이 없다고 알려 주셨어요.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {list.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-start gap-3 rounded-3xl bg-white p-4 shadow-sm"
-              >
-                <MedIcon name={m.icon} className="size-14 shrink-0" />
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="text-2xl font-bold break-keep">
-                    {m.name}
-                  </span>
-                  <span className="flex items-center gap-2 text-xl font-bold">
-                    <VerdictMark
-                      verdict={m.verdict}
-                      className="size-8 shrink-0"
-                    />
-                    {verdictLabels[m.verdict]}
-                  </span>
-                  <span className="text-xl leading-snug break-keep text-zinc-700">
-                    {cautionLine(m, stopDate)}
-                  </span>
-                </span>
-                {editing && (
-                  <button
-                    type="button"
-                    disabled={saving}
-                    aria-label={`${m.name} 빼기`}
-                    onClick={() =>
-                      save(
-                        mine.filter((id) => id !== m.id),
-                        () => {},
-                      )
-                    }
-                    className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-stat-alert bg-white text-3xl font-bold text-stat-alert focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
-                  >
-                    ✕
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <p
-          role="status"
-          className="mt-3 min-h-7 text-xl font-bold text-stat-green"
-        >
-          {saving ? '저장하는 중…' : ''}
-        </p>
-
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          {canAdd && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                setPicks([]);
-                setPhase({ kind: 'select', adding: true });
-              }}
-              className={buttonClass.outline}
-            >
-              ➕ 약 추가하기
-            </button>
-          )}
-          {list.length > 0 && (
-            <button
-              type="button"
-              aria-pressed={editing}
-              onClick={() => setEditing(!editing)}
-              className={buttonClass.outline}
-            >
-              {editing ? '✔ 다 고쳤어요' : '✏️ 고치기'}
-            </button>
-          )}
-        </div>
         <button
           type="button"
           disabled={saving}
           onClick={() => {
-            setEditing(false);
-            setPhase({ kind: 'done' });
+            setMine([]);
+            start([]);
           }}
-          className={`mt-4 ${confirmButton}`}
+          className={`mt-3 ${buttonClass.outline}`}
         >
-          ✅ 확인했어요
+          드시는 약이 없어요
         </button>
       </section>
     );
@@ -294,20 +126,44 @@ export function MedicationFlow({
           약 확인을 마쳤어요
         </h1>
         <Ttobagi pose="cheer" message="잘하셨어요." />
-        <p className="mt-4 text-xl text-zinc-700">잠시 뒤 홈으로 갈게요.</p>
-        <div className="mt-6">
+        {chosen.length > 0 ? (
+          <ul className="mt-2 flex flex-col gap-3">
+            {chosen.map((m) => (
+              <li
+                key={m.id}
+                className="flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm"
+              >
+                <VerdictMark verdict={m.verdict} className="size-14 shrink-0" />
+                <span className="flex flex-col">
+                  <span className="text-2xl font-bold">{m.name}</span>
+                  <span className="text-xl">{verdictLabels[m.verdict]}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-2xl">드시는 약이 없다고 알려 주셨어요.</p>
+        )}
+        <div className="mt-8 flex flex-col gap-3">
           <ButtonLink href={`/p/${code}/home`}>🏠 홈으로</ButtonLink>
+          <button
+            type="button"
+            onClick={() => setPhase({ kind: 'select' })}
+            className={buttonClass.outline}
+          >
+            약 다시 고르기
+          </button>
         </div>
       </section>
     );
   }
 
-  const med = inOrder(queue)[phase.i];
+  const med = chosen[phase.i];
 
   return (
     <section aria-labelledby="med-title">
       <p className="text-xl text-zinc-700">
-        약 {phase.i + 1} / {queue.length}
+        약 {phase.i + 1} / {chosen.length}
       </p>
       <h1
         id="med-title"
@@ -397,25 +253,15 @@ export function MedicationFlow({
           {!phase.correct && <CallButton variant="outline" />}
           <button
             type="button"
-            onClick={() => nextInQueue(phase.i)}
+            onClick={() => next(phase.i)}
             className={`mt-4 ${buttonClass.primary}`}
           >
-            {phase.i + 1 < queue.length ? '다음 약 ▶' : '📋 내 약 정리 보기 ▶'}
+            {phase.i + 1 < chosen.length ? '다음 약 ▶' : '모두 확인했어요 ▶'}
           </button>
         </>
       )}
     </section>
   );
-}
-
-// 2화면 "자세히" 한 줄의 글자. 중단 시작일은 의료진이 넣은 날짜(없으면 정해 둔 문장)로.
-function detailText(detail: MedDetail, stopDate: StopDate) {
-  return detail.kind === 'stop-date' ? `${stopDate.text} 중단` : detail.text;
-}
-
-// 정리 화면 주의사항 한 줄: 그 약의 "자세히"를 이어 붙인다(새 내용은 넣지 않는다).
-function cautionLine(med: Medication, stopDate: StopDate) {
-  return med.details.map((d) => detailText(d, stopDate)).join(' · ');
 }
 
 // 3화면 중 지금 어디인지: 판정 · 자세히 · 확인
@@ -462,7 +308,13 @@ function VerdictCard({ verdict }: { verdict: Verdict }) {
 }
 
 // 2화면: 표의 "자세히"를 큰 그림 + 짧은 말로
-function Details({ med, stopDate }: { med: Medication; stopDate: StopDate }) {
+function Details({
+  med,
+  stopDate,
+}: {
+  med: Medication;
+  stopDate: { text: string; short: string };
+}) {
   return (
     <ul className="mt-4 flex flex-col gap-3 rounded-3xl bg-stat-sun p-4">
       {med.details.map((detail, index) => (
@@ -477,9 +329,10 @@ function DetailRow({
   stopDate,
 }: {
   detail: MedDetail;
-  stopDate: StopDate;
+  stopDate: { text: string; short: string };
 }) {
-  const text = detailText(detail, stopDate);
+  const text =
+    detail.kind === 'stop-date' ? `${stopDate.text} 중단` : detail.text;
   // 중단 시작일은 날짜가 가려지지 않게 달력은 그대로 두고, 구석에 작은 "약 ✕"만 붙인다.
   const no = detail.kind === 'stop-date' ? false : Boolean(detail.no);
   return (

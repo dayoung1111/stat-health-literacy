@@ -51,7 +51,6 @@ async function Medication({ code }: { code: string }) {
       <MedicationFlow
         code={code}
         initial={issued.medicationCheck?.medications ?? []}
-        hasSaved={issued.medicationCheck !== null}
         stopDate={stopDate(issued.bloodThinnerStopDate)}
       />
       <CheckWithStaff />
