@@ -229,6 +229,28 @@ export function IssueForm() {
                 className={inputClass}
               />
             </Field>
+            {guides.includes('medication') && (
+              <Field
+                id="bloodThinnerStopDate"
+                label="피를 묽게 하는 약 중단 시작일 (선택)"
+                error={state.fieldErrors?.bloodThinnerStopDate}
+              >
+                <input
+                  id="bloodThinnerStopDate"
+                  name="bloodThinnerStopDate"
+                  type="date"
+                  aria-describedby="bloodThinnerStopDate-hint"
+                  className={inputClass}
+                />
+                <p
+                  id="bloodThinnerStopDate-hint"
+                  className="mt-1 text-sm text-zinc-600"
+                >
+                  비우면 환자 화면에 &quot;의사 선생님과 정한 날짜부터&quot;로
+                  보여요.
+                </p>
+              </Field>
+            )}
             {state.message && (
               <p
                 role="alert"

@@ -3,146 +3,420 @@
 import { useState, useTransition } from 'react';
 
 import {
-  adviceLabels,
   medications,
+  verdictLabels,
+  type MedDetail,
   type Medication,
-  type MedicationAdvice,
   type MedicationId,
+  type Verdict,
 } from '@/lib/medication-guide';
+import { ttobagiSays } from '@/lib/ttobagi-says';
 
-import { saveMyMedications } from '../../records';
+import { Ttobagi } from '../../../ttobagi';
+import { Drawing } from '../../pictures';
+import { recordMedicationQuiz, saveMyMedications } from '../../records';
+import { buttonClass, ButtonLink, CallButton } from '../../ui';
+import { MedIcon, VerdictMark } from './med-icons';
 
-// "내가 먹는 약"을 체크하면 그 약만 위에 크게 보여 주고, 체크 결과를 저장한다(의료진 코드 상세에 보임).
-export function MedicationCheck({
+// 드시는 약 고르기 → 고른 약마다 1) 판정 2) 자세히 3) 확인 질문 → 끝나면 또박이 "잘하셨어요".
+// 고른 약과 확인 질문 결과는 저장되어 의료진 코드 상세에 보인다.
+type Phase =
+  | { kind: 'select' }
+  | { kind: 'verdict'; i: number }
+  | { kind: 'detail'; i: number; retry: boolean }
+  | { kind: 'quiz'; i: number; attempt: 1 | 2 }
+  | { kind: 'result'; i: number; correct: boolean }
+  | { kind: 'done' };
+
+export function MedicationFlow({
   code,
   initial,
+  stopDate,
 }: {
   code: string;
   initial: MedicationId[];
+  /** 피를 묽게 하는 약 중단 시작일. text 예: "11월 3일부터" / "의사 선생님과 정한 날짜부터", short 예: "11/3" / "?" */
+  stopDate: { text: string; short: string };
 }) {
   const [mine, setMine] = useState<MedicationId[]>(initial);
-  const [saved, setSaved] = useState<'saved' | 'failed' | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [phase, setPhase] = useState<Phase>({ kind: 'select' });
+  const [saving, startSaving] = useTransition();
 
-  function toggle(id: MedicationId) {
-    const next = mine.includes(id)
-      ? mine.filter((m) => m !== id)
-      : [...mine, id];
-    setMine(next);
-    setSaved(null);
-    startTransition(async () => {
-      const result = await saveMyMedications(code, next);
-      setSaved(result.ok ? 'saved' : 'failed');
+  const chosen = medications.filter((m) => mine.includes(m.id));
+  const toggle = (id: MedicationId) =>
+    setMine((list) =>
+      list.includes(id) ? list.filter((m) => m !== id) : [...list, id],
+    );
+  const start = (ids: MedicationId[]) =>
+    startSaving(async () => {
+      await saveMyMedications(code, ids);
+      setPhase(ids.length > 0 ? { kind: 'verdict', i: 0 } : { kind: 'done' });
     });
+  const next = (i: number) =>
+    setPhase(
+      i + 1 < chosen.length ? { kind: 'verdict', i: i + 1 } : { kind: 'done' },
+    );
+
+  if (phase.kind === 'select') {
+    return (
+      <section aria-labelledby="select-title">
+        <h1
+          id="select-title"
+          className="mb-4 text-3xl leading-snug font-bold break-keep"
+        >
+          드시는 약을 모두 눌러 주세요
+        </h1>
+        <div className="grid grid-cols-2 gap-3">
+          {medications.map((m) => {
+            const on = mine.includes(m.id);
+            return (
+              <button
+                key={m.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(m.id)}
+                className={`relative flex min-h-36 flex-col items-center justify-center gap-2 rounded-3xl border-4 px-3 py-4 text-center text-2xl font-bold break-keep focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green ${
+                  on
+                    ? 'border-stat-green bg-stat-mint text-stat-green'
+                    : 'border-zinc-200 bg-white text-stat-ink'
+                }`}
+              >
+                {on && (
+                  <span aria-hidden="true" className="absolute top-2 right-2">
+                    <MedIcon name="ok" className="size-8" />
+                  </span>
+                )}
+                <MedIcon name={m.icon} className="size-16" />
+                {m.name}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          disabled={chosen.length === 0 || saving}
+          onClick={() => start(chosen.map((m) => m.id))}
+          className={`mt-6 ${buttonClass.primary}`}
+        >
+          {saving
+            ? '저장하는 중…'
+            : chosen.length === 0
+              ? '약을 하나 이상 눌러 주세요'
+              : `${chosen.length}개 골랐어요 · 하나씩 볼게요 ▶`}
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => {
+            setMine([]);
+            start([]);
+          }}
+          className={`mt-3 ${buttonClass.outline}`}
+        >
+          드시는 약이 없어요
+        </button>
+      </section>
+    );
   }
 
-  const myList = medications.filter((m) => mine.includes(m.id));
-
-  return (
-    <>
-      {myList.length > 0 && (
-        <section aria-labelledby="mine-title" className="mt-6">
-          <h2 id="mine-title" className="mb-3 text-2xl font-bold">
-            내가 먹는 약
-          </h2>
-          <ul className="flex flex-col gap-4">
-            {myList.map((m) => (
+  if (phase.kind === 'done') {
+    return (
+      <section aria-labelledby="done-title">
+        <h1 id="done-title" className="sr-only">
+          약 확인을 마쳤어요
+        </h1>
+        <Ttobagi pose="cheer" message="잘하셨어요." />
+        {chosen.length > 0 ? (
+          <ul className="mt-2 flex flex-col gap-3">
+            {chosen.map((m) => (
               <li
                 key={m.id}
-                className="rounded-3xl border-2 border-stat-green bg-white p-5 shadow-sm"
+                className="flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm"
               >
-                <p className="flex items-center gap-3 text-3xl font-bold">
-                  <span aria-hidden="true" className="text-5xl">
-                    {m.emoji}
-                  </span>
-                  {m.name}
-                </p>
-                {m.example && (
-                  <p className="mt-1 text-xl text-zinc-600">{m.example}</p>
-                )}
-                <AdviceSlots medication={m} />
+                <VerdictMark verdict={m.verdict} className="size-14 shrink-0" />
+                <span className="flex flex-col">
+                  <span className="text-2xl font-bold">{m.name}</span>
+                  <span className="text-xl">{verdictLabels[m.verdict]}</span>
+                </span>
               </li>
             ))}
           </ul>
-        </section>
+        ) : (
+          <p className="mt-2 text-2xl">드시는 약이 없다고 알려 주셨어요.</p>
+        )}
+        <div className="mt-8 flex flex-col gap-3">
+          <ButtonLink href={`/p/${code}/home`}>🏠 홈으로</ButtonLink>
+          <button
+            type="button"
+            onClick={() => setPhase({ kind: 'select' })}
+            className={buttonClass.outline}
+          >
+            약 다시 고르기
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  const med = chosen[phase.i];
+
+  return (
+    <section aria-labelledby="med-title">
+      <p className="text-xl text-zinc-700">
+        약 {phase.i + 1} / {chosen.length}
+      </p>
+      <h1
+        id="med-title"
+        className="mt-1 flex items-center gap-3 text-3xl font-bold break-keep"
+      >
+        <MedIcon name={med.icon} className="size-12 shrink-0" />
+        {med.name}
+      </h1>
+      <ScreenDots
+        current={phase.kind === 'verdict' ? 0 : phase.kind === 'detail' ? 1 : 2}
+      />
+
+      {phase.kind === 'verdict' && (
+        <>
+          <VerdictCard verdict={med.verdict} />
+          <button
+            type="button"
+            onClick={() =>
+              setPhase({ kind: 'detail', i: phase.i, retry: false })
+            }
+            className={`mt-6 ${buttonClass.primary}`}
+          >
+            자세히 보기 ▶
+          </button>
+        </>
       )}
 
-      <p
-        role="status"
-        className="mt-4 min-h-7 text-xl font-bold text-stat-green"
-      >
-        {pending
-          ? '저장하는 중…'
-          : saved === 'saved'
-            ? '✓ 저장했어요. 간호사 선생님도 볼 수 있어요.'
-            : saved === 'failed'
-              ? '저장하지 못했어요. 다시 눌러 주세요.'
-              : ''}
-      </p>
+      {phase.kind === 'detail' && (
+        <>
+          {phase.retry && (
+            <div role="status" className="mt-4">
+              <Ttobagi pose="explain" message={ttobagiSays.retry} />
+            </div>
+          )}
+          <Details med={med} stopDate={stopDate} />
+          <button
+            type="button"
+            onClick={() =>
+              setPhase({
+                kind: 'quiz',
+                i: phase.i,
+                attempt: phase.retry ? 2 : 1,
+              })
+            }
+            className={`mt-6 ${buttonClass.primary}`}
+          >
+            {phase.retry ? '다시 풀어 볼까요? ▶' : '확인 질문 ▶'}
+          </button>
+        </>
+      )}
 
-      <fieldset className="mt-2">
-        <legend className="mb-3 text-2xl font-bold">
-          드시는 약에 모두 체크해 주세요
-        </legend>
-        <div className="flex flex-col gap-3">
-          {medications.map((m) => (
-            <label
-              key={m.id}
-              className="flex min-h-20 cursor-pointer items-center gap-4 rounded-3xl border-2 border-zinc-300 bg-white px-5 py-3 has-checked:border-stat-green has-checked:bg-stat-mint has-focus-visible:outline-4 has-focus-visible:outline-offset-2 has-focus-visible:outline-stat-green"
-            >
-              <input
-                type="checkbox"
-                checked={mine.includes(m.id)}
-                onChange={() => toggle(m.id)}
-                className="size-8 shrink-0 accent-stat-green"
+      {phase.kind === 'quiz' && (
+        <Quiz
+          med={med}
+          onPick={(correct) => {
+            const { i, attempt } = phase;
+            if (correct) {
+              void recordMedicationQuiz(
+                code,
+                med.id,
+                attempt === 1 ? 'correct' : 'retry_correct',
+              );
+              setPhase({ kind: 'result', i, correct: true });
+            } else if (attempt === 1) {
+              // 틀리면 "괜찮아요" 하고 2화면을 다시 보여 준 뒤 다시 묻는다.
+              setPhase({ kind: 'detail', i, retry: true });
+            } else {
+              void recordMedicationQuiz(code, med.id, 'wrong');
+              setPhase({ kind: 'result', i, correct: false });
+            }
+          }}
+        />
+      )}
+
+      {phase.kind === 'result' && (
+        <>
+          <div role="status" className="mt-4">
+            {phase.correct ? (
+              <Ttobagi pose="cheer" message={ttobagiSays.cheer} />
+            ) : (
+              <Ttobagi
+                pose="explain"
+                message={`정답은 「${med.quiz.options.find((o) => o.correct)?.text}」예요. 간호사에게 꼭 물어보세요.`}
               />
-              <span aria-hidden="true" className="text-4xl">
-                {m.emoji}
-              </span>
-              <span className="flex flex-col">
-                <span className="text-2xl font-bold">{m.name}</span>
-                {m.example && (
-                  <span className="text-xl text-zinc-600">{m.example}</span>
-                )}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-    </>
+            )}
+          </div>
+          {!phase.correct && <CallButton variant="outline" />}
+          <button
+            type="button"
+            onClick={() => next(phase.i)}
+            className={`mt-4 ${buttonClass.primary}`}
+          >
+            {phase.i + 1 < chosen.length ? '다음 약 ▶' : '모두 확인했어요 ▶'}
+          </button>
+        </>
+      )}
+    </section>
   );
 }
 
-const slotOrder: MedicationAdvice[] = ['ok', 'stop', 'ask'];
-
-// 약마다 "드셔도 돼요 / 드시면 안 돼요(언제부터) / 의료진과 상의하세요" 칸.
-// 검수 필요: 내용이 정해지기 전에는 어느 칸도 고르지 않고 "검수 필요"로 보여 준다.
-function AdviceSlots({ medication }: { medication: Medication }) {
+// 3화면 중 지금 어디인지: 판정 · 자세히 · 확인
+function ScreenDots({ current }: { current: number }) {
+  const names = ['판정', '자세히', '확인 질문'];
   return (
-    <ul className="mt-4 grid gap-2">
-      {slotOrder.map((slot) => {
-        const active = medication.advice === slot;
-        return (
-          <li
-            key={slot}
-            className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-xl ${
-              active ? 'bg-stat-green text-white' : 'bg-zinc-100 text-zinc-700'
-            }`}
-          >
-            <span className="font-bold">
-              {adviceLabels[slot]}
-              {slot === 'stop' && ' (언제부터)'}
-            </span>
-            <span className="shrink-0 text-lg whitespace-nowrap">
-              {medication.advice === null
-                ? '검수 필요'
-                : active && slot === 'stop'
-                  ? medication.when
-                  : ''}
-            </span>
-          </li>
-        );
-      })}
+    <ol aria-label="이 약의 순서" className="mt-3 flex gap-2 text-lg">
+      {names.map((name, i) => (
+        <li
+          key={name}
+          aria-current={i === current ? 'step' : undefined}
+          className={`rounded-full px-3 py-1 font-bold ${
+            i === current
+              ? 'bg-stat-green text-white'
+              : i < current
+                ? 'bg-stat-mint text-stat-green'
+                : 'bg-zinc-100 text-zinc-500'
+          }`}
+        >
+          {i + 1}. {name}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// 1화면: 큰 판정 그림과 글자
+function VerdictCard({ verdict }: { verdict: Verdict }) {
+  const tone: Record<Verdict, string> = {
+    ok: 'bg-green-50 text-green-800 border-green-700',
+    stop: 'bg-stat-alert-soft text-stat-alert border-stat-alert',
+    ask: 'bg-stat-mint text-stat-green border-stat-green',
+  };
+  return (
+    <div
+      className={`mt-5 flex flex-col items-center gap-4 rounded-3xl border-4 px-4 py-8 text-center ${tone[verdict]}`}
+    >
+      <VerdictMark verdict={verdict} className="size-36" />
+      <p className="text-4xl leading-snug font-bold break-keep">
+        {verdictLabels[verdict]}
+      </p>
+    </div>
+  );
+}
+
+// 2화면: 표의 "자세히"를 큰 그림 + 짧은 말로
+function Details({
+  med,
+  stopDate,
+}: {
+  med: Medication;
+  stopDate: { text: string; short: string };
+}) {
+  return (
+    <ul className="mt-4 flex flex-col gap-3 rounded-3xl bg-stat-sun p-4">
+      {med.details.map((detail, index) => (
+        <DetailRow key={index} detail={detail} stopDate={stopDate} />
+      ))}
     </ul>
+  );
+}
+
+function DetailRow({
+  detail,
+  stopDate,
+}: {
+  detail: MedDetail;
+  stopDate: { text: string; short: string };
+}) {
+  const text =
+    detail.kind === 'stop-date' ? `${stopDate.text} 약 안 먹어요` : detail.text;
+  // 중단 시작일은 날짜가 가려지지 않게 달력은 그대로 두고, 구석에 작은 "약 ✕"만 붙인다.
+  const no = detail.kind === 'stop-date' ? false : Boolean(detail.no);
+  return (
+    <li className="flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm">
+      <span className="relative flex size-20 shrink-0 items-center justify-center [&_.size-24]:size-20 [&_svg]:max-h-20">
+        {detail.kind === 'clock' && (
+          <Drawing visual={{ kind: 'clock', hour: detail.hour }} />
+        )}
+        {detail.kind === 'calendar' && (
+          <Drawing visual={{ kind: 'calendar', text: detail.label }} />
+        )}
+        {detail.kind === 'stop-date' && (
+          <>
+            <Drawing visual={{ kind: 'calendar', text: stopDate.short }} />
+            <span className="absolute -right-4 -bottom-3 rounded-full bg-white">
+              <MedIcon name="pill" no className="size-9" />
+            </span>
+          </>
+        )}
+        {detail.kind === 'icon' && (
+          <MedIcon name={detail.icon} className="size-20" />
+        )}
+        {no && detail.kind !== 'icon' && (
+          <svg
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+            className="absolute inset-0 size-20"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="44"
+              fill="none"
+              stroke="#C2410C"
+              strokeWidth="7"
+            />
+            <path
+              d="M20 80 L80 20"
+              stroke="#C2410C"
+              strokeWidth="7"
+              strokeLinecap="round"
+            />
+          </svg>
+        )}
+        {no && detail.kind === 'icon' && (
+          <span className="absolute inset-0">
+            <MedIcon name={detail.icon} no className="size-20" />
+          </span>
+        )}
+      </span>
+      <span className="text-2xl leading-snug font-bold break-keep">
+        {no && <span className="sr-only">하면 안 돼요: </span>}
+        {text}
+      </span>
+    </li>
+  );
+}
+
+// 3화면: 확인 질문. 정답은 표대로.
+function Quiz({
+  med,
+  onPick,
+}: {
+  med: Medication;
+  onPick: (correct: boolean) => void;
+}) {
+  return (
+    <>
+      <h2 className="mt-5 text-3xl leading-snug font-bold whitespace-pre-line break-keep">
+        {med.quiz.question}
+      </h2>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {med.quiz.options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onPick(Boolean(option.correct))}
+            className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-3xl border-4 border-zinc-200 bg-white px-3 py-4 text-2xl font-bold break-keep hover:border-stat-green focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
+          >
+            <MedIcon name={option.icon} className="size-20" />
+            {option.text}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }

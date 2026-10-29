@@ -27,6 +27,28 @@ export async function saveMyMedications(code: string, ids: string[]) {
   return { ok: true as const };
 }
 
+// 복용약 확인 질문 결과(약마다 하나, 다시 풀면 최신으로).
+export async function recordMedicationQuiz(
+  code: string,
+  medicationId: string,
+  result: string,
+) {
+  const parsed = z
+    .object({
+      code: codeSchema,
+      medicationId: z.enum(medicationIds),
+      result: z.enum(['correct', 'retry_correct', 'wrong']),
+    })
+    .safeParse({ code, medicationId, result });
+  if (!parsed.success || !(await getPatientCode(parsed.data.code))) return;
+  await saveTeachbackResult(
+    parsed.data.code,
+    'medication',
+    parsed.data.medicationId,
+    parsed.data.result,
+  );
+}
+
 const topics = demoGuide.questions.map((q) => q.topic) as [string, ...string[]];
 
 export async function recordTeachback(

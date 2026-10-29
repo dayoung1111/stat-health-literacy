@@ -31,6 +31,8 @@ export type EducationCode = {
   extras: string[];
   /** 검사일 YYYY-MM-DD(한국 날짜) */
   examDate: string;
+  /** 피를 묽게 하는 약 중단 시작일 YYYY-MM-DD(선택). 아직 schema.prisma에 없는 칸이다(DB 단계에서 추가 승인 필요). */
+  bloodThinnerStopDate: string | null;
   birthDateHash: string;
   failedAttempts: number;
   lockedAt: Date | null;
@@ -106,6 +108,7 @@ export async function createEducationCode(input: {
   language: string;
   extras: string[];
   examDate: string;
+  bloodThinnerStopDate: string | null;
   birthDate: string;
 }) {
   await removeExpired();
@@ -186,6 +189,7 @@ export async function saveMedicationCheck(
 }
 
 // 티치백: 같은 안내의 같은 질문은 최신 결과로 바꾼다.
+// 복용약 확인 질문도 여기에 guide='medication', question=약 아이디로 저장한다.
 export async function saveTeachbackResult(
   code: string,
   guide: GuideKind,
@@ -229,6 +233,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
   const base = {
     extras: [] as string[],
     examDate,
+    bloodThinnerStopDate: null,
     failedAttempts: 0,
     lockedAt: null,
     expiresAt: new Date(now.getTime() + SEVEN_DAYS),

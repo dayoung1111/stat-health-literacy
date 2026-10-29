@@ -9,7 +9,11 @@ import {
   type TeachbackOutcome,
 } from '@/lib/education-store';
 import { guideCatalog, guideNames } from '@/lib/guide-catalog';
-import { medicationName } from '@/lib/medication-guide';
+import {
+  medicationName,
+  verdictLabels,
+  findMedication,
+} from '@/lib/medication-guide';
 import { extraLabels, settingLabel } from '@/lib/staff-options';
 
 import { Panel, StaffBack } from '../../../ui';
@@ -59,7 +63,15 @@ async function CodeDetail({ code }: { code: string }) {
   const item = await findCodeForStaff(staff.id, code);
   if (!item) notFound();
 
-  const wrong = item.teachbackResults.filter((r) => r.result === 'wrong');
+  // 복용약 확인 질문은 아래 "내가 먹는 약"에 약별로 따로 보여 준다.
+  const teachback = item.teachbackResults.filter(
+    (r) => r.guide !== 'medication',
+  );
+  const medQuiz = (id: string) =>
+    item.teachbackResults.find(
+      (r) => r.guide === 'medication' && r.question === id,
+    );
+  const wrong = teachback.filter((r) => r.result === 'wrong');
   const extras = extraLabels(item.extras);
 
   return (
@@ -73,6 +85,13 @@ async function CodeDetail({ code }: { code: string }) {
             {extras.length > 0 && ` · ${extras.join(', ')}`}
           </Row>
           <Row label="검사일">{item.examDate}</Row>
+          {item.guides.includes('medication') && (
+            <Row label="약 중단일">
+              피를 묽게 하는 약{' '}
+              {item.bloodThinnerStopDate ??
+                '날짜 입력 안 함(환자에게 "의사 선생님과 정한 날짜부터")'}
+            </Row>
+          )}
           <Row label="만료">{kstTime(item.expiresAt)}</Row>
         </dl>
         {item.lockedAt && (
@@ -84,7 +103,7 @@ async function CodeDetail({ code }: { code: string }) {
         )}
 
         <Section title="이해 확인 (티치백)">
-          {item.teachbackResults.length === 0 ? (
+          {teachback.length === 0 ? (
             <Empty>아직 티치백 결과가 없어요.</Empty>
           ) : (
             <>
@@ -107,7 +126,7 @@ async function CodeDetail({ code }: { code: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {item.teachbackResults.map((r) => (
+                  {teachback.map((r) => (
                     <tr
                       key={`${r.guide}-${r.question}`}
                       className="border-b border-zinc-200"
@@ -168,17 +187,47 @@ async function CodeDetail({ code }: { code: string }) {
                 {kstTime(item.medicationCheck.checkedAt)})
               </Empty>
             ) : (
-              <p className="text-lg">
-                <strong>
-                  {item.medicationCheck.medications
-                    .map(medicationName)
-                    .join(', ')}
-                </strong>
-                <span className="text-base text-zinc-500">
-                  {' '}
-                  · {kstTime(item.medicationCheck.checkedAt)}
-                </span>
-              </p>
+              <>
+                <p className="mb-2 text-base text-zinc-500">
+                  체크한 시간 {kstTime(item.medicationCheck.checkedAt)}
+                </p>
+                <table className="w-full text-left text-lg">
+                  <thead className="text-base text-zinc-600">
+                    <tr className="border-b border-zinc-200">
+                      <th className="px-2 py-2">고른 약</th>
+                      <th className="px-2 py-2">판정</th>
+                      <th className="px-2 py-2">확인 질문</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {item.medicationCheck.medications.map((id) => {
+                      const quiz = medQuiz(id);
+                      const verdict = findMedication(id)?.verdict;
+                      return (
+                        <tr key={id} className="border-b border-zinc-200">
+                          <td className="px-2 py-3 font-bold">
+                            {medicationName(id)}
+                          </td>
+                          <td className="px-2 py-3">
+                            {verdict ? verdictLabels[verdict] : ''}
+                          </td>
+                          <td
+                            className={`px-2 py-3 font-bold ${
+                              quiz
+                                ? resultLabel[quiz.result].className
+                                : 'font-normal text-zinc-500'
+                            }`}
+                          >
+                            {quiz
+                              ? resultLabel[quiz.result].text
+                              : '아직 안 풀었어요'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </>
             )}
           </Section>
         )}

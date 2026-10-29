@@ -61,7 +61,7 @@ async function PatientHome({ code }: { code: string }) {
               <GuideIconSvg name={guide.icon} className="size-14 shrink-0" />
               <span className="flex flex-col gap-1">
                 <span className="text-2xl font-bold break-keep">
-                  {guide.name}
+                  {guide.patientName ?? guide.name}
                 </span>
                 {guide.hint && (
                   <span className="text-xl break-keep text-zinc-700">

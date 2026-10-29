@@ -62,6 +62,14 @@ const issueSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, '검사일을 골라 주세요')
     .refine(isRealDate, '검사일을 다시 확인해 주세요'),
+  // 선택 칸. 비우면 환자 화면에 "의사 선생님과 정한 날짜부터"로 보인다.
+  bloodThinnerStopDate: z
+    .string()
+    .refine(
+      (v) => v === '' || (/^\d{4}-\d{2}-\d{2}$/.test(v) && isRealDate(v)),
+      '날짜를 다시 확인해 주세요',
+    )
+    .transform((v) => (v === '' ? null : v)),
   birthDate: z
     .string()
     .regex(/^\d{6}$/, '숫자 6자리를 넣어 주세요 (예: 590312)')
@@ -72,7 +80,11 @@ const issueSchema = z.object({
 });
 
 export type IssueState = {
-  fieldErrors?: { examDate?: string; birthDate?: string };
+  fieldErrors?: {
+    examDate?: string;
+    birthDate?: string;
+    bloodThinnerStopDate?: string;
+  };
   /** 화면에서 그 단계로 돌아가 고칠 수 있게 알려 준다. */
   step?: 'guides' | 'patient';
   message?: string;
@@ -91,6 +103,7 @@ export async function issueCode(
     language: formData.get('language'),
     extras: formData.getAll('extras'),
     examDate: String(formData.get('examDate') ?? ''),
+    bloodThinnerStopDate: String(formData.get('bloodThinnerStopDate') ?? ''),
     birthDate: String(formData.get('birthDate') ?? ''),
   });
   if (!parsed.success) {
@@ -98,6 +111,7 @@ export async function issueCode(
     return {
       fieldErrors: {
         examDate: errors.examDate?.[0],
+        bloodThinnerStopDate: errors.bloodThinnerStopDate?.[0],
         birthDate: errors.birthDate?.[0],
       },
       ...(errors.guides
