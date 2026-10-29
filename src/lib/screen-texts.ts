@@ -13,6 +13,9 @@ export const screenTexts = {
     checkWithStaff: '정확한 내용은 의료진에게 확인하세요.',
     mustNot: '하면 안 돼요: ',
   },
+  gastroscopy: {
+    title: '위내시경 준비',
+  },
   colonoscopy: {
     today: '오늘이 검사 날이에요',
     tomorrow: '내일이 검사 날이에요',

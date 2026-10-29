@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation';
 
 import { requireDemoPatient } from '@/lib/demo-patient';
 import { readyGuides } from '@/lib/guide-progress';
+import { screenTexts } from '@/lib/screen-texts';
+
+import { T } from '../../../translated';
 
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -30,7 +33,7 @@ async function Gastroscopy({ code }: { code: string }) {
       {/* 환자 화면 틀은 휴대폰 너비라서, PC에서는 수업이 넓게 보이도록 틀 밖으로 넓힌다(영상 수업과 같음). */}
       <div className="relative left-1/2 w-[min(calc(100vw-2rem),1280px)] -translate-x-1/2">
         <h1 className="mb-4 text-3xl leading-snug font-bold break-keep">
-          위내시경 준비
+          <T>{screenTexts.gastroscopy.title}</T>
         </h1>
         <GastroscopyFrame
           code={code}

@@ -2,19 +2,30 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import {
+  gastroLessonKo,
+  gastroLessonSources,
+  mapLessonStrings,
+  type GastroLessonTexts,
+} from '@/lib/gastro-lesson';
 import type { GuideKind } from '@/lib/guide-catalog';
 
+import { useLanguageOr } from '../../../language-provider';
 import { GuideBoard } from '../../guide-board';
 import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
+import { translateForPatient } from '../../translate-actions';
 
 // 위내시경 수업 액자. 검진 전날 수업 액자(day-before-frame.tsx)와 같은 방식이다.
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/gastroscopy.html)은 ?embed=1로 열면
 // 자체 "뒤로" 버튼을 숨기고, 앱의 소리 설정(stat-sound)을 따르고, 아래 두 가지를 알려 준다.
+// - stat-lesson-ready: 수업 파일이 열림 → 앱이 고른 언어로 번역한 글자(gastro-lesson.ts)를 stat-lesson-texts로 보낸다.
+//   수업 파일에는 글자가 없고, 화면 글자·말풍선·읽어 주는 목소리의 언어를 모두 이 글자와 언어에 따른다.
 // - stat-lesson-height: 수업 화면 높이가 바뀜 → 액자 높이를 맞춘다.
 // - stat-lesson-finished: 퀴즈까지 끝남 → "다 봤어요"를 기록하고 다음 안내 버튼을 보여 준다.
 //   다음 안내는 대장내시경 수업처럼 화면이 받은 목록으로 바로 정한다(GuideFinish). 서버 저장은 뒤에서 한다.
 type LessonMessage =
+  | { type: 'stat-lesson-ready'; lesson: 'gastroscopy' }
   | { type: 'stat-lesson-height'; lesson: 'gastroscopy'; height: number }
   | { type: 'stat-lesson-finished'; lesson: 'gastroscopy' };
 
@@ -22,7 +33,12 @@ function isLessonMessage(data: unknown): data is LessonMessage {
   if (typeof data !== 'object' || data === null) return false;
   const message = data as Record<string, unknown>;
   if (message.lesson !== 'gastroscopy') return false;
-  if (message.type === 'stat-lesson-finished') return true;
+  if (
+    message.type === 'stat-lesson-finished' ||
+    message.type === 'stat-lesson-ready'
+  ) {
+    return true;
+  }
   return (
     message.type === 'stat-lesson-height' &&
     typeof message.height === 'number' &&
@@ -33,6 +49,26 @@ function isLessonMessage(data: unknown): data is LessonMessage {
 
 // 처음 높이(수업이 높이를 알려 주기 전까지)
 const firstHeight = 720;
+
+// 고른 언어로 수업 글자를 번역한다(미리 번역 파일 → 저장된 번역 → AI, 대장내시경과 같은 서버 함수).
+// 번역이 안 된 글자는 한국어 그대로 남는다.
+async function translateLesson(language: string): Promise<GastroLessonTexts> {
+  if (language === 'ko') return gastroLessonKo;
+  const sources = gastroLessonSources();
+  const done = new Map<string, string>();
+  for (let start = 0; start < sources.length; start += 40) {
+    const chunk = sources.slice(start, start + 40);
+    try {
+      const out = await translateForPatient(language, chunk);
+      chunk.forEach((text, i) => {
+        if (out[i]) done.set(text, out[i]);
+      });
+    } catch {
+      // 이 묶음은 한국어로 보여 준다.
+    }
+  }
+  return mapLessonStrings(gastroLessonKo, (text) => done.get(text) ?? text);
+}
 
 export function GastroscopyFrame({
   code,
@@ -54,6 +90,33 @@ export function GastroscopyFrame({
   // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
   const completed = useCompletedGuides(code, fromServer);
   const recorded = useRef(false);
+  const { language: shown } = useLanguageOr(language);
+  const [texts, setTexts] = useState<GastroLessonTexts | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let current = true;
+    void translateLesson(shown).then((next) => {
+      if (current) setTexts(next);
+    });
+    return () => {
+      current = false;
+    };
+  }, [shown]);
+
+  // 수업 파일이 열렸고 글자가 준비되면(언어가 바뀔 때마다 다시) 수업에 보낸다.
+  useEffect(() => {
+    if (!ready || !texts) return;
+    frameRef.current?.contentWindow?.postMessage(
+      {
+        type: 'stat-lesson-texts',
+        lesson: 'gastroscopy',
+        language: shown,
+        texts,
+      },
+      window.location.origin,
+    );
+  }, [ready, texts, shown]);
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -62,6 +125,10 @@ export function GastroscopyFrame({
       if (event.source !== frameRef.current?.contentWindow) return;
       if (!isLessonMessage(event.data)) return;
 
+      if (event.data.type === 'stat-lesson-ready') {
+        setReady(true);
+        return;
+      }
       if (event.data.type === 'stat-lesson-height') {
         setHeight(Math.ceil(event.data.height));
         return;
@@ -81,7 +148,7 @@ export function GastroscopyFrame({
       <iframe
         ref={frameRef}
         src="/lessons/gastroscopy.html?embed=1"
-        title="위내시경 준비 수업"
+        title={texts?.ui.frameTitle ?? gastroLessonKo.ui.frameTitle}
         allow="fullscreen; autoplay"
         allowFullScreen
         style={{ height }}

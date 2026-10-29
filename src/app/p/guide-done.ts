@@ -7,7 +7,7 @@ import { guideKinds, type GuideKind } from '@/lib/guide-catalog';
 import { completeGuide } from './records';
 
 // 환자가 끝까지 마친 안내를 이 브라우저(localStorage)에 코드별로 남긴다.
-// 서버 기록은 메모리라 다시 켜거나(서버 여러 대면) 사라질 수 있어서, 화면 표시는 브라우저 기록을 함께 본다.
+// 서버 기록(DB)은 화면이 열릴 때 가져오므로, 방금 마친 안내가 바로 보이도록 브라우저 기록을 함께 본다.
 // localStorage를 못 쓰는 브라우저(사생활 보호 창 등)에서도 이 화면이 열려 있는 동안은 표시되도록 메모리에도 둔다.
 
 const storageKey = (code: string) => `stat-guide-done:${code}`;
