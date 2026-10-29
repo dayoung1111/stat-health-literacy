@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { demoGuide, getTodo, hospital } from '@/lib/demo-guide';
 import { getDemoSchedule } from '@/lib/demo-patient';
 
+import { Ttobagi } from '../../../ttobagi';
 import { PictureRow } from '../../pictures';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -26,7 +27,7 @@ function greeting(daysLeft: number) {
 }
 
 const menuClass =
-  'flex min-h-20 items-center gap-4 rounded-3xl px-6 text-2xl font-bold shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-blue-700';
+  'flex min-h-20 items-center gap-4 rounded-3xl px-6 text-2xl font-bold shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green';
 
 async function PatientHome({ code }: { code: string }) {
   const { examLabel, daysLeft } = await getDemoSchedule();
@@ -44,11 +45,14 @@ async function PatientHome({ code }: { code: string }) {
         {greeting(daysLeft)}
       </h1>
 
+      <div className="mt-5">
+        <Ttobagi pose="time" message={todo.speech} />
+      </div>
       <section
         aria-labelledby="todo-title"
-        className="mt-6 rounded-3xl bg-amber-100 p-6"
+        className="mt-2 rounded-3xl bg-stat-sun p-6"
       >
-        <h2 id="todo-title" className="text-xl font-bold text-amber-900">
+        <h2 id="todo-title" className="text-xl font-bold text-stat-ink">
           <span aria-hidden="true">⏰ </span>지금 할 일
         </h2>
         <p className="mt-1 text-3xl font-bold">{todo.title}</p>
@@ -61,7 +65,7 @@ async function PatientHome({ code }: { code: string }) {
       <nav aria-label="환자 메뉴" className="mt-8 flex flex-col gap-4">
         <Link
           href={`/p/${code}/guide/1`}
-          className={`${menuClass} bg-sky-100 text-sky-900`}
+          className={`${menuClass} bg-stat-mint text-stat-green`}
         >
           <span aria-hidden="true" className="text-4xl">
             📖
@@ -70,7 +74,7 @@ async function PatientHome({ code }: { code: string }) {
         </Link>
         <Link
           href={`/p/${code}/check`}
-          className={`${menuClass} bg-green-100 text-green-900`}
+          className={`${menuClass} bg-stat-sun text-stat-ink`}
         >
           <span aria-hidden="true" className="text-4xl">
             ✅
@@ -79,7 +83,7 @@ async function PatientHome({ code }: { code: string }) {
         </Link>
         <Link
           href={`/p/${code}/danger`}
-          className={`${menuClass} bg-red-100 text-red-800`}
+          className={`${menuClass} bg-stat-alert-soft text-stat-alert`}
         >
           <span aria-hidden="true" className="text-4xl">
             🚨

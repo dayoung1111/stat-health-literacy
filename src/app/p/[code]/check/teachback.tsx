@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 
 import type { Choice, Question } from '@/lib/demo-guide';
+import { ttobagiSays } from '@/lib/ttobagi-says';
+
+import { Ttobagi, type Pose } from '../../../ttobagi';
 
 import { Drawing, PictureRow } from '../../pictures';
 import { buttonClass, ButtonLink, CallButton } from '../../ui';
@@ -52,22 +55,15 @@ export function Teachback({
       )}
 
       {step.kind === 'correct' && (
-        <Result tone="good" onNext={next}>
-          맞아요! 👏
-        </Result>
+        <Result pose="cheer" message={ttobagiSays.cheer} onNext={next} />
       )}
 
       {step.kind === 'wrong' && (
         <>
-          <p
-            role="status"
-            className="mt-6 text-3xl leading-snug font-bold break-keep"
-          >
-            괜찮아요,
-            <br />
-            같이 다시 볼게요 🙂
-          </p>
-          <div className="mt-5 rounded-3xl bg-amber-100 p-6">
+          <div role="status" className="mt-4">
+            <Ttobagi pose="explain" message={ttobagiSays.retry} />
+          </div>
+          <div className="mt-2 rounded-3xl bg-stat-sun p-6">
             <PictureRow pictures={q.explain.pictures} />
             <div className="mt-5 text-center">
               {q.explain.lines.map((line) => (
@@ -104,18 +100,15 @@ export function Teachback({
       )}
 
       {step.kind === 'retryResult' && (
-        <Result tone={step.correct ? 'good' : 'soft'} onNext={next}>
-          {step.correct ? (
-            '맞아요! 👏'
-          ) : (
-            <>
-              정답은
-              <br />「{q.retry.choices.find((c) => c.correct)?.text}」예요.
-              <br />
-              간호사 선생님께 한 번 더 여쭤봐요 🙂
-            </>
-          )}
-        </Result>
+        <Result
+          pose={step.correct ? 'cheer' : 'explain'}
+          message={
+            step.correct
+              ? ttobagiSays.cheer
+              : `정답은 「${q.retry.choices.find((c) => c.correct)?.text}」예요. 간호사 선생님께 한 번 더 여쭤봐요.`
+          }
+          onNext={next}
+        />
       )}
     </>
   );
@@ -127,7 +120,7 @@ function Progress({ index, total }: { index: number; total: number }) {
     <p className="flex items-center gap-3 text-xl font-bold">
       <span
         aria-hidden="true"
-        className="text-2xl tracking-widest text-blue-700"
+        className="text-2xl tracking-widest text-stat-green"
       >
         {Array.from({ length: total }, (_, i) => (i <= index ? '●' : '○')).join(
           ' ',
@@ -164,7 +157,7 @@ function Ask({
             key={choice.text}
             type="button"
             onClick={() => onPick(choice)}
-            className="flex min-h-24 items-center gap-5 rounded-3xl border-2 border-sky-200 bg-white px-5 py-4 text-left shadow-sm hover:border-blue-700 hover:bg-sky-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+            className="flex min-h-24 items-center gap-5 rounded-3xl border-2 border-stat-green/30 bg-white px-5 py-4 text-left shadow-sm hover:border-stat-green hover:bg-stat-mint focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
           >
             <span
               aria-hidden="true"
@@ -185,31 +178,25 @@ function Ask({
   );
 }
 
+// 맞힘·틀림 결과를 또박이가 말해 준다.
 function Result({
-  tone,
+  pose,
+  message,
   onNext,
-  children,
 }: {
-  tone: 'good' | 'soft';
+  pose: Pose;
+  message: string;
   onNext: () => void;
-  children: ReactNode;
 }) {
   return (
     <>
-      <p
-        role="status"
-        className={`mt-6 rounded-3xl p-8 text-center text-3xl leading-snug font-bold break-keep ${
-          tone === 'good'
-            ? 'bg-green-100 text-green-900'
-            : 'bg-amber-100 text-amber-900'
-        }`}
-      >
-        {children}
-      </p>
+      <div role="status" className="mt-6">
+        <Ttobagi pose={pose} message={message} />
+      </div>
       <button
         type="button"
         onClick={onNext}
-        className={`mt-8 ${buttonClass.primary}`}
+        className={`mt-4 ${buttonClass.primary}`}
       >
         다음 ▶
       </button>
@@ -228,13 +215,20 @@ function Done({
 }) {
   return (
     <div className="text-center">
-      <p aria-hidden="true" className="mt-8 text-7xl">
-        🎉
-      </p>
-      <h1 className="mt-4 text-3xl font-bold">
+      <div role="status" className="mt-4 text-left">
+        {needHelp.length === 0 ? (
+          <Ttobagi pose="cheer" message={ttobagiSays.cheer} />
+        ) : (
+          <Ttobagi
+            pose="explain"
+            message="❓ 표시는 간호사 선생님께 여쭤봐요."
+          />
+        )}
+      </div>
+      <h1 className="text-3xl font-bold">
         {needHelp.length === 0 ? '모두 잘 이해하셨어요!' : '끝까지 잘하셨어요!'}
       </h1>
-      <ul className="mt-6 flex flex-col gap-2 rounded-3xl bg-green-100 p-6 text-left text-2xl leading-relaxed">
+      <ul className="mt-6 flex flex-col gap-2 rounded-3xl bg-stat-mint p-6 text-left text-2xl leading-relaxed">
         {questions.map((q) => (
           <li key={q.topic}>
             {needHelp.includes(q.topic) ? '❓' : '✅'} {q.topic}
@@ -243,7 +237,6 @@ function Done({
       </ul>
       {needHelp.length > 0 && (
         <div className="mt-4 flex flex-col gap-4">
-          <p className="text-xl">❓ 표시는 간호사 선생님께 다시 여쭤봐요 🙂</p>
           <CallButton variant="outline" />
         </div>
       )}

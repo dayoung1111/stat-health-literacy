@@ -33,7 +33,7 @@ export function PatientEntryForm({ code }: { code?: string }) {
       {state.message && (
         <p
           role="alert"
-          className="rounded-3xl bg-red-50 p-5 text-xl font-semibold text-red-700"
+          className="rounded-3xl bg-stat-alert-soft p-5 text-xl font-semibold text-stat-alert"
         >
           {state.message}
         </p>
@@ -120,12 +120,12 @@ function DigitBoxes({
                 boxes.current[i - 1]?.focus();
               }
             }}
-            className="h-16 w-full min-w-0 flex-1 rounded-xl border-2 border-blue-700 bg-white text-center font-mono text-3xl font-bold focus-visible:outline-4 focus-visible:outline-blue-200 aria-invalid:border-red-600"
+            className="h-16 w-full min-w-0 flex-1 rounded-xl border-2 border-stat-green bg-white text-center font-mono text-3xl font-bold focus-visible:outline-4 focus-visible:outline-stat-mint aria-invalid:border-stat-alert"
           />
         ))}
       </div>
       {error && (
-        <p id={errorId} className="mt-2 text-xl text-red-700">
+        <p id={errorId} className="mt-2 text-xl text-stat-alert">
           {error}
         </p>
       )}

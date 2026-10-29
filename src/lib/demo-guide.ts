@@ -291,6 +291,7 @@ export function getTodo(daysLeft: number): {
   title: string;
   pictures: Picture[];
   line: string;
+  speech: string;
 } {
   if (daysLeft > 1) {
     return {
@@ -300,6 +301,7 @@ export function getTodo(daysLeft: number): {
         { visual: emoji('🥬'), label: '김치·나물', no: true },
       ],
       line: '씨 있는 과일, 김치, 나물은 잠깐 쉬어요',
+      speech: '씨 있는 과일은 드시지 마세요.',
     };
   }
   if (daysLeft === 1) {
@@ -311,6 +313,7 @@ export function getTodo(daysLeft: number): {
         { visual: { kind: 'cups', count: 4 }, label: '물 1L (컵 4잔)' },
       ],
       line: '장 비우는 약 1봉지 + 물 1L',
+      speech: '저녁 8시예요. 약 드실 시간이에요.',
     };
   }
   if (daysLeft === 0) {
@@ -321,11 +324,13 @@ export function getTodo(daysLeft: number): {
         { visual: emoji('👨‍👩‍👧'), label: '보호자와 함께' },
       ],
       line: '아무것도 드시지 말고 보호자와 함께 오세요',
+      speech: '오늘은 아무것도 드시지 마세요.',
     };
   }
   return {
     title: '검사가 끝났어요',
     pictures: [{ visual: emoji('📞'), label: '이상하면 전화' }],
     line: '몸이 이상하면 바로 병원에 전화하세요',
+    speech: '몸이 이상하면 바로 전화하세요.',
   };
 }

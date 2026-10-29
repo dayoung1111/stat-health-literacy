@@ -11,8 +11,8 @@ function Clock({ hour }: { hour: number }) {
         cx="50"
         cy="50"
         r="45"
-        fill="#fff7e0"
-        stroke="#1d4ed8"
+        fill="#FFF6D6"
+        stroke="#0F6670"
         strokeWidth="6"
       />
       {Array.from({ length: 12 }, (_, i) => (
@@ -22,7 +22,7 @@ function Clock({ hour }: { hour: number }) {
           y1="11"
           x2="50"
           y2={i % 3 === 0 ? 20 : 16}
-          stroke="#1e3a8a"
+          stroke="#15262B"
           strokeWidth={i % 3 === 0 ? 4 : 2}
           strokeLinecap="round"
           transform={`rotate(${i * 30} 50 50)`}
@@ -33,7 +33,7 @@ function Clock({ hour }: { hour: number }) {
         y1="50"
         x2="50"
         y2="28"
-        stroke="#1e3a8a"
+        stroke="#15262B"
         strokeWidth="7"
         strokeLinecap="round"
         transform={`rotate(${angle} 50 50)`}
@@ -43,11 +43,11 @@ function Clock({ hour }: { hour: number }) {
         y1="50"
         x2="50"
         y2="18"
-        stroke="#1e3a8a"
+        stroke="#15262B"
         strokeWidth="4"
         strokeLinecap="round"
       />
-      <circle cx="50" cy="50" r="5" fill="#dc2626" />
+      <circle cx="50" cy="50" r="5" fill="#C2410C" />
     </svg>
   );
 }
@@ -57,8 +57,8 @@ function Pouch() {
     <svg viewBox="0 0 100 100" className="size-24">
       <path
         d="M22 22 L28 14 L34 22 L40 14 L46 22 L52 14 L58 22 L64 14 L70 22 L76 14 L80 22 L80 86 Q80 92 74 92 L26 92 Q20 92 20 86 L20 22 Z"
-        fill="#e0f2fe"
-        stroke="#0369a1"
+        fill="#DCEDEE"
+        stroke="#0F6670"
         strokeWidth="4"
         strokeLinejoin="round"
       />
@@ -69,7 +69,7 @@ function Pouch() {
         height="30"
         rx="6"
         fill="#fff"
-        stroke="#0369a1"
+        stroke="#0F6670"
         strokeWidth="3"
       />
       <text
@@ -78,7 +78,7 @@ function Pouch() {
         textAnchor="middle"
         fontSize="20"
         fontWeight="700"
-        fill="#0369a1"
+        fill="#0F6670"
       >
         약
       </text>
@@ -89,16 +89,16 @@ function Pouch() {
 function Bottle() {
   return (
     <svg viewBox="0 0 100 100" className="size-24">
-      <rect x="40" y="6" width="20" height="10" rx="3" fill="#1d4ed8" />
+      <rect x="40" y="6" width="20" height="10" rx="3" fill="#0F6670" />
       <path
         d="M38 16 L62 16 L62 26 Q74 32 74 44 L74 88 Q74 94 68 94 L32 94 Q26 94 26 88 L26 44 Q26 32 38 26 Z"
         fill="#fff"
-        stroke="#1d4ed8"
+        stroke="#0F6670"
         strokeWidth="4"
       />
       <path
         d="M28 50 L72 50 L72 88 Q72 92 68 92 L32 92 Q28 92 28 88 Z"
-        fill="#7dd3fc"
+        fill="#9FD3D6"
       />
       <text
         x="50"
@@ -106,7 +106,7 @@ function Bottle() {
         textAnchor="middle"
         fontSize="18"
         fontWeight="700"
-        fill="#0c4a6e"
+        fill="#15262B"
       >
         1L
       </text>
@@ -120,11 +120,11 @@ function Cup() {
       <path
         d="M4 6 L36 6 L32 46 L8 46 Z"
         fill="#fff"
-        stroke="#1d4ed8"
+        stroke="#0F6670"
         strokeWidth="3"
         strokeLinejoin="round"
       />
-      <path d="M7 18 L33 18 L30 44 L10 44 Z" fill="#7dd3fc" />
+      <path d="M7 18 L33 18 L30 44 L10 44 Z" fill="#9FD3D6" />
     </svg>
   );
 }
@@ -139,22 +139,22 @@ function Calendar({ text }: { text: string }) {
         height="74"
         rx="10"
         fill="#fff"
-        stroke="#b45309"
+        stroke="#15262B"
         strokeWidth="4"
       />
       <path
         d="M12 26 Q12 16 22 16 L78 16 Q88 16 88 26 L88 36 L12 36 Z"
-        fill="#f97316"
+        fill="#C2410C"
       />
-      <rect x="28" y="8" width="8" height="18" rx="4" fill="#78350f" />
-      <rect x="64" y="8" width="8" height="18" rx="4" fill="#78350f" />
+      <rect x="28" y="8" width="8" height="18" rx="4" fill="#15262B" />
+      <rect x="64" y="8" width="8" height="18" rx="4" fill="#15262B" />
       <text
         x="50"
         y="74"
         textAnchor="middle"
         fontSize="24"
         fontWeight="800"
-        fill="#78350f"
+        fill="#15262B"
       >
         {text}
       </text>
@@ -200,7 +200,7 @@ function Art({ picture }: { picture: Picture }) {
             cy="50"
             r="44"
             fill="none"
-            stroke="#dc2626"
+            stroke="#C2410C"
             strokeWidth="8"
           />
           <line
@@ -208,7 +208,7 @@ function Art({ picture }: { picture: Picture }) {
             y1="80"
             x2="80"
             y2="20"
-            stroke="#dc2626"
+            stroke="#C2410C"
             strokeWidth="8"
             strokeLinecap="round"
           />
@@ -240,7 +240,28 @@ export function PictureCard({ picture }: { picture: Picture }) {
 }
 
 // 그림 여러 개를 한 줄(좁으면 두 줄)로 보여 준다.
-export function PictureRow({ pictures }: { pictures: Picture[] }) {
+// compact: 그림을 조금 작게 해 휴대폰에서도 한 줄에 담는다(안내문 화면).
+export function PictureRow({
+  pictures,
+  compact = false,
+}: {
+  pictures: Picture[];
+  compact?: boolean;
+}) {
+  if (compact) {
+    return (
+      <div className="flex justify-center gap-3">
+        {pictures.map((picture) => (
+          <div
+            key={picture.label}
+            className="min-w-0 flex-1 [&_.size-24]:size-16 [&_.text-7xl]:text-5xl [&>figure>span]:h-16 [&>figure>span]:min-w-16"
+          >
+            <PictureCard picture={picture} />
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap justify-center gap-x-6 gap-y-5">
       {pictures.map((picture) => (

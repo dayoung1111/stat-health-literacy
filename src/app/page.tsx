@@ -5,6 +5,10 @@ import { useState } from 'react';
 
 import { hospital } from '@/lib/demo-guide';
 
+import { ttobagiSays } from '@/lib/ttobagi-says';
+
+import { Ttobagi } from './ttobagi';
+
 const texts = {
   ko: {
     label: '한국어',
@@ -49,10 +53,10 @@ export default function Home() {
   return (
     <div
       lang={lang}
-      className="flex min-h-screen flex-col bg-white px-4 text-zinc-900"
+      className="flex min-h-screen flex-col bg-stat-paper px-4 text-stat-ink"
     >
       <header className="mx-auto flex w-full max-w-md items-center justify-between py-4">
-        <p className="text-lg font-bold text-blue-700">S.T.A.T</p>
+        <p className="text-lg font-bold text-stat-green">S.T.A.T</p>
         <label className="flex items-center gap-1">
           <span aria-hidden="true">🌐</span>
           <span className="sr-only">언어 선택 / Language</span>
@@ -70,17 +74,18 @@ export default function Home() {
         </label>
       </header>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-10 py-8">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-6">
+        <Ttobagi pose="hello" message={ttobagiSays.hello} size="lg" />
         <h1 className="text-4xl leading-tight font-bold whitespace-pre-line break-keep">
           {t.headline}
         </h1>
         <div className="flex flex-col gap-5">
           <Link
             href="/p"
-            className="flex min-h-24 flex-col justify-center rounded-2xl bg-blue-700 px-6 py-5 text-white hover:bg-blue-800 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-blue-700"
+            className="flex min-h-24 flex-col justify-center rounded-2xl bg-stat-green px-6 py-5 text-white hover:bg-stat-green-dark focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green"
           >
             <span className="text-2xl font-bold">{t.enter}</span>
-            <span className="mt-1 text-lg text-blue-100">{t.enterHint}</span>
+            <span className="mt-1 text-lg text-stat-mint">{t.enterHint}</span>
           </Link>
           <a
             href={`tel:${hospital.phone}`}

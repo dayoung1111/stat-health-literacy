@@ -7,15 +7,15 @@ import { BackButton, backButtonClass } from '../back-button';
 
 // 환자 화면에서 반복되는 버튼·링크 모양. 글씨는 20px 이상, 둥근 모양을 유지한다.
 const focus =
-  'focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-blue-700';
+  'focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green';
 
 export const buttonClass = {
-  primary: `flex min-h-18 w-full items-center justify-center rounded-3xl bg-blue-700 px-6 text-2xl font-bold text-white hover:bg-blue-800 disabled:bg-zinc-400 ${focus}`,
-  outline: `flex min-h-18 w-full items-center justify-center rounded-3xl border-2 border-blue-700 bg-white px-6 text-xl font-bold text-blue-700 hover:bg-blue-50 ${focus}`,
-  danger: `flex min-h-18 w-full items-center justify-center rounded-3xl border-2 border-red-700 bg-white px-6 text-xl font-bold text-red-700 hover:bg-red-50 ${focus}`,
+  primary: `flex min-h-18 w-full items-center justify-center rounded-3xl bg-stat-green px-6 text-2xl font-bold text-white hover:bg-stat-green-dark disabled:bg-zinc-400 ${focus}`,
+  outline: `flex min-h-18 w-full items-center justify-center rounded-3xl border-2 border-stat-green bg-white px-6 text-xl font-bold text-stat-green hover:bg-stat-mint ${focus}`,
+  danger: `flex min-h-18 w-full items-center justify-center rounded-3xl border-2 border-stat-alert bg-white px-6 text-xl font-bold text-stat-alert hover:bg-stat-alert-soft ${focus}`,
   disabled:
     'flex min-h-18 w-full items-center justify-center rounded-3xl border-2 border-zinc-200 bg-white px-6 text-xl font-bold text-zinc-400',
-  call: `flex min-h-18 w-full items-center justify-center rounded-3xl bg-red-700 px-6 text-2xl font-bold text-white hover:bg-red-800 ${focus}`,
+  call: `flex min-h-18 w-full items-center justify-center rounded-3xl bg-stat-alert px-6 text-2xl font-bold text-white hover:bg-stat-alert-dark ${focus}`,
 };
 
 export function ButtonLink({
@@ -96,7 +96,7 @@ export function Loading() {
 
 export function CheckWithStaff() {
   return (
-    <p className="mt-10 border-t border-amber-200 pt-4 text-xl text-zinc-600">
+    <p className="mt-10 border-t border-stat-mint pt-4 text-xl text-zinc-600">
       정확한 내용은 의료진에게 확인하세요.
     </p>
   );
