@@ -41,6 +41,7 @@
     "home.guideCount": "{count}개 안내가 왔어요.",
     "home.guides": "받은 안내",
     "home.preparing": "준비 중이에요",
+    "home.dayBefore": "🎬 검진 전날 준비 수업 보기",
 
     "colon.daysLeft": "검사까지 {days}일 남았어요",
     "colon.tomorrow": "내일이 검사 날이에요",
@@ -61,6 +62,7 @@
 
     "video.title": "또박이 선생님 수업",
     "video.examPrep": "{exam} 준비",
+    "video.basic": "기본 검진",
 
     "guide.confused": "🤔 헷갈려요",
     "guide.pages": "안내문 넘기기",
@@ -131,6 +133,10 @@
     "lesson.ok": "○ 괜찮아요",
     "lesson.wave": "손을 흔들며 인사하는 또박이",
     "lesson.point": "지시봉으로 음식 사진을 가리키는 또박이",
-    "lesson.cheer": "두 팔을 들고 기뻐하는 또박이"
+    "lesson.cheer": "두 팔을 들고 기뻐하는 또박이",
+    "lesson.clock": "알람 시계를 든 또박이",
+    "lesson.palm": "손바닥을 내밀며 주의를 주는 또박이",
+    "lesson.goodSr": "좋아요: ",
+    "lesson.scenes": "장면 목록"
   }
 }

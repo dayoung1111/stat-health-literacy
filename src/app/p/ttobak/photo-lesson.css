@@ -449,6 +449,316 @@
   }
 }
 
+/* ===== 장면 수업(검진 전날 준비, 시안: docs/design/ttobak-day-before.html) ===== */
+
+/* 나무 탁자 배경 */
+.pl-table {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(150, 105, 60, 0.07) 0 2px,
+      transparent 2px 9cqw
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.18) 0 1px,
+      transparent 1px 3.1cqw
+    ),
+    linear-gradient(170deg, #f3e4cb 0%, #e8d2b0 55%, #dec39d 100%);
+}
+/* 장면마다 14초 동안 아주 조금 확대 */
+.pl-zoom {
+  position: absolute;
+  inset: 0;
+  transform-origin: 35% 45%;
+  animation: pl-kb-soft 14s ease-out forwards;
+}
+
+/* 왼쪽 2/3: 접시 그림. 크기는 그림 개수로 정한다(1개 31%, 2개 26%, 3개 19%, 4개 15%). */
+.pl-items {
+  --p: 15cqw;
+  position: absolute;
+  left: 3cqw;
+  top: 5.5cqw;
+  width: 65cqw;
+  height: 37cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 1.6cqw;
+}
+.pl-items[data-n='1'] {
+  --p: 31cqw;
+}
+.pl-items[data-n='2'] {
+  --p: 26cqw;
+  gap: 5cqw;
+}
+.pl-items[data-n='3'] {
+  --p: 19cqw;
+}
+.pl-item {
+  position: relative;
+  width: var(--p);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
+  opacity: 0;
+  transform: translateY(1.5cqw) scale(0.92);
+  transition:
+    opacity 0.5s,
+    transform 0.5s;
+}
+.pl-item.in {
+  opacity: 1;
+  transform: none;
+}
+.pl-plate {
+  display: grid;
+  width: var(--p);
+  height: var(--p);
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    #ffffff 0 55%,
+    #f2f2ee 56% 64%,
+    #e4e2da 65%
+  );
+  box-shadow: 0 1.2cqw 2cqw rgba(110, 70, 30, 0.18);
+}
+/* 사진은 흰 접시 안을 꽉 채운다. */
+.pl-plate.photo {
+  box-sizing: border-box;
+  padding: 0.7cqw;
+  background: #ffffff;
+}
+.pl-plate-photo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+}
+.pl-plate-photo img {
+  object-fit: cover;
+}
+.pl-clock {
+  width: 80%;
+  height: 80%;
+  overflow: visible;
+}
+.pl-item-label {
+  padding: 0.35cqw 1.2cqw;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #15262b;
+  font-size: 2.1cqw;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+/* 접시 위 X / 동그라미: 그림이 나타나고 0.5초 뒤 그린다. */
+.pl-item-mark {
+  position: absolute;
+  left: -1cqw;
+  top: -1cqw;
+  width: calc(var(--p) + 2cqw);
+  height: calc(var(--p) + 2cqw);
+  overflow: visible;
+  pointer-events: none;
+}
+.pl-item-mark path,
+.pl-item-mark circle {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: pl-draw 0.55s ease-out 0.5s forwards;
+}
+.pl-item-mark.x path {
+  stroke: #d9363e;
+}
+.pl-item-mark.x path:nth-child(2) {
+  animation-delay: 0.78s;
+}
+.pl-item-mark.o circle {
+  stroke: #2e9e6b;
+}
+
+/* 왼쪽 위 장면 제목 */
+.pl-chip {
+  position: absolute;
+  z-index: 4;
+  left: 3cqw;
+  top: 2.4cqw;
+  margin: 0;
+  padding: 1cqw 2cqw;
+  border-radius: 99px;
+  background: #0f6670;
+  box-shadow: 0 0.5cqw 1.2cqw rgba(15, 102, 112, 0.3);
+  color: #ffffff;
+  font-size: 2.3cqw;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 오른쪽 1/3: 또박이 */
+.pl-ttobak-box.scene {
+  top: 5cqw;
+  right: 4cqw;
+  bottom: auto;
+  width: 25cqw;
+}
+
+/* 자막: 아래쪽 작은 흰 말풍선. 한 문장으로 이어서, 한국어 단어가 중간에 잘리지 않게 */
+.pl-bubble.scene {
+  left: 4cqw;
+  right: 4cqw;
+  bottom: 2.8cqw;
+  min-height: 9.5cqw;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1cqw;
+  padding: 1.6cqw 3cqw;
+  border-radius: 2.4cqw;
+  box-shadow: 0 0.6cqw 0 rgba(21, 38, 43, 0.15);
+}
+.pl-bubble.scene::before {
+  top: -1.9cqw;
+  right: 15cqw;
+  width: 3cqw;
+  height: 3cqw;
+}
+.pl-bubble.scene .pl-replay {
+  align-self: center;
+}
+.pl-scene-sub {
+  margin: 0;
+  text-align: center;
+  font-size: 3cqw;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.pl-part {
+  padding: 0 0.3cqw;
+  border-radius: 0.6cqw;
+  font-weight: 900;
+}
+.pl-part.r {
+  background: #fde6e7;
+  color: #c42530;
+}
+.pl-part.g {
+  background: #e1f4ea;
+  color: #1f7d53;
+}
+.pl-part.k {
+  background: #dcedee;
+  color: #0f6670;
+}
+.pl-note {
+  display: block;
+  margin-top: 0.4cqw;
+  color: #5b6e72;
+  font-size: 2.1cqw;
+  font-weight: 500;
+}
+
+/* 깜짝 퀴즈 화면 */
+.pl-quiz {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqw;
+  padding: 4cqw;
+  background: rgba(255, 253, 248, 0.96);
+  text-align: center;
+}
+.pl-qtag {
+  padding: 0.9cqw 2cqw;
+  border-radius: 99px;
+  background: #d9363e;
+  color: #ffffff;
+  font-size: 2.2cqw;
+  font-weight: 700;
+  line-height: 1;
+}
+.pl-quiz h2 {
+  margin: 0;
+  color: #15262b;
+  font-size: 4.4cqw;
+  font-weight: 700;
+  line-height: 1.25;
+  word-break: keep-all;
+  text-wrap: balance;
+}
+.pl-opts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.4cqw;
+}
+.pl-opt {
+  min-width: 24cqw;
+  min-height: 44px;
+  padding: 2cqw 4cqw;
+  border: 0.4cqw solid #15262b;
+  border-radius: 2cqw;
+  background: #ffffff;
+  box-shadow: 0 0.6cqw 0 #15262b;
+  color: #15262b;
+  font-size: 3cqw;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.pl-opt:active {
+  transform: translateY(0.4cqw);
+  box-shadow: 0 0.2cqw 0 #15262b;
+}
+.pl-opt.wrong {
+  background: #fce3e1;
+}
+.pl-opt:disabled {
+  cursor: default;
+}
+.pl-feedback {
+  min-height: 3.6cqw;
+  margin: 0;
+  font-size: 2.8cqw;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.pl-feedback.ok {
+  color: #1f7d53;
+}
+.pl-feedback.no {
+  color: #c42530;
+}
+
+@keyframes pl-kb-soft {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+
 /* 움직임 줄이기: 확대·그리기 없이 바로 표시 */
 @media (prefers-reduced-motion: reduce) {
   .pl-stage *,
@@ -457,7 +767,9 @@
     transition: none !important;
   }
   .pl-draw-line,
-  .pl-draw-circle {
+  .pl-draw-circle,
+  .pl-item-mark path,
+  .pl-item-mark circle {
     stroke-dashoffset: 0;
   }
   .pl-photo.is-prev {

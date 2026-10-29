@@ -7,7 +7,8 @@ import { guideCatalog, guideKinds } from '@/lib/guide-catalog';
 import { GuideIconSvg } from '../../../guide-icon';
 import { Labeled, Source, T } from '../../../language';
 import { Ttobagi } from '../../../ttobagi';
-import { CheckWithStaff, PatientTopBar } from '../../ui';
+import { dayBeforeLessons } from '../../ttobak/photo-lesson';
+import { ButtonLink, CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
 // 환자 홈: 의료진이 코드 하나에 묶어 보낸 안내를 큰 카드로 보여 준다.
@@ -87,6 +88,15 @@ async function PatientHome({ code }: { code: string }) {
           );
         })}
       </Labeled>
+      {/* 기본 검진 "검진 전날 준비" 또박이 수업 */}
+      <div className="mt-6">
+        <ButtonLink
+          href={`/p/${code}/video?lesson=${dayBeforeLessons[0].id}`}
+          variant="outline"
+        >
+          <T id="home.dayBefore" />
+        </ButtonLink>
+      </div>
       <CheckWithStaff />
     </>
   );

@@ -7,6 +7,7 @@ import { getDemoSchedule, requireDemoPatient } from '@/lib/demo-patient';
 import { ByLang, Labeled, Source, T } from '../../../language';
 import { Ttobagi } from '../../../ttobagi';
 import { PictureRow } from '../../pictures';
+import { photoLessons } from '../../ttobak/photo-lesson';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
@@ -75,7 +76,7 @@ async function ColonoscopyHome({ code }: { code: string }) {
 
       <Labeled label="colon.menu" className="mt-8 flex flex-col gap-4">
         <Link
-          href={`/p/${code}/video`}
+          href={`/p/${code}/video?lesson=${photoLessons[0].id}`}
           className={`${menuClass} min-h-28 bg-stat-green text-3xl text-white`}
         >
           <span aria-hidden="true" className="text-5xl">

@@ -27,9 +27,10 @@ export function source(lang: Lang, korean: string) {
   return lang === 'en' ? (sourceEn[korean] ?? korean) : korean;
 }
 
-/** 화면 문장. {이름} 자리는 vars로 채운다. */
+/** 화면 문장. {이름} 자리는 vars로 채운다. 영어가 아직 비어 있으면("") 한국어를 보여 준다. */
 export function text(lang: Lang, id: TextId, vars?: Vars) {
-  return ui[lang][id].replace(/\{(\w+)\}/g, (all, name: string) => {
+  const template = ui[lang][id] || ui.ko[id];
+  return template.replace(/\{(\w+)\}/g, (all, name: string) => {
     const value = vars?.[name];
     if (value === undefined) return all;
     return typeof value === 'object'

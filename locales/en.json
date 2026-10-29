@@ -41,6 +41,7 @@
     "home.guideCount": "Guides for you: {count}.",
     "home.guides": "Your guides",
     "home.preparing": "Coming soon",
+    "home.dayBefore": "",
 
     "colon.daysLeft": "{days} days until your test",
     "colon.tomorrow": "Your test is tomorrow",
@@ -61,6 +62,7 @@
 
     "video.title": "Ttobagi's Class",
     "video.examPrep": "{exam} prep",
+    "video.basic": "",
 
     "guide.confused": "🤔 I am confused",
     "guide.pages": "Move through the guide",
@@ -131,7 +133,11 @@
     "lesson.ok": "○ Okay",
     "lesson.wave": "Ttobagi waving hello",
     "lesson.point": "Ttobagi pointing at the food photo",
-    "lesson.cheer": "Ttobagi cheering with both arms up"
+    "lesson.cheer": "Ttobagi cheering with both arms up",
+    "lesson.clock": "",
+    "lesson.palm": "",
+    "lesson.goodSr": "",
+    "lesson.scenes": ""
   },
   "source": {
     "○○병원": "○○ Hospital",

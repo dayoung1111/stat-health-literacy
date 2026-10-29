@@ -47,10 +47,10 @@ describe('화면 문장(ko.json·en.json ui)', () => {
     assert.deepEqual(Object.keys(en.ui).sort(), Object.keys(ko.ui).sort());
   });
 
-  it('{이름} 자리가 두 언어에 똑같이 있다', () => {
+  it('{이름} 자리가 두 언어에 똑같이 있다(영어를 아직 비워 둔 문장은 한국어로 보인다)', () => {
     for (const [id, korean] of Object.entries(ko.ui)) {
       const english = (en.ui as Record<string, string>)[id];
-      assert.ok(english.trim(), `영어 문장이 비어 있음: ${id}`);
+      if (!english) continue;
       assert.deepEqual(placeholders(english), placeholders(korean), id);
     }
   });
@@ -89,8 +89,10 @@ describe('영상 자막 강조', () => {
     };
     for (const lesson of photoLessons) {
       lesson.steps.forEach((step) => check(step.text, step.key));
-      check(lesson.quiz.question, lesson.quiz.key);
-      check(lesson.quiz.praise, '잘하셨어요');
+      for (const quiz of lesson.quizzes) {
+        check(quiz.question, quiz.key);
+        check(quiz.praise, quiz.praiseKey);
+      }
     }
   });
 });
