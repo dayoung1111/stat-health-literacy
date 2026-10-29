@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { hospital } from '@/lib/demo-guide';
 
 import { BackButton, backButtonClass } from '../back-button';
+import { SoundToggle } from '../ttobagi';
 
 // 환자 화면에서 반복되는 버튼·링크 모양. 글씨는 20px 이상, 둥근 모양을 유지한다.
 const focus =
@@ -81,11 +82,14 @@ export function PatientTopBar({
       className="mb-4 flex items-center justify-between"
     >
       <BackButton {...back} />
-      {showHome && (
-        <Link href={`/p/${code}/home`} className={backButtonClass}>
-          🏠 처음으로
-        </Link>
-      )}
+      <div className="flex items-center gap-2">
+        <SoundToggle />
+        {showHome && (
+          <Link href={`/p/${code}/home`} className={backButtonClass}>
+            🏠 처음으로
+          </Link>
+        )}
+      </div>
     </nav>
   );
 }

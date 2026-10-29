@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 
 // S.T.A.T 캐릭터 "또박이". 그림은 docs/reference/ttobagi.html의 포즈 5개를 그대로 옮겼다.
 // 말투: 짧은 존댓말, 한 번에 한 가지만.
@@ -333,9 +333,30 @@ export function TtobagiFigure({
   );
 }
 
-const subscribe = () => () => {};
+// ── 소리 ─────────────────────────────────────────────
+// 인터넷 창은 사람이 화면을 한 번도 누르지 않으면 소리를 막는다(광고 소리 막기 규칙).
+// 그래서 첫 화면은 또박이를 눌러야 말하고, 한 번이라도 누른 뒤에는 화면이 바뀔 때마다 자동으로 읽는다.
+// 화면 이동은 페이지를 새로 불러오지 않으므로 "눌렀는지"를 이 파일 안에 기억해 둔다.
+// 🔊/🔇 설정은 그 휴대폰에 저장해 다음에 열어도 유지한다.
 
-function speak(text: string) {
+const SOUND_KEY = 'stat-sound';
+const SOUND_EVENT = 'stat-sound-change';
+let hasInteracted = false;
+let lastSpoken = { text: '', at: 0 };
+
+function canSpeak() {
+  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+}
+
+// fromTap: 또박이를 직접 눌렀을 때는 같은 문장이라도 다시 읽는다.
+// 자동 읽기는 같은 문장이 1초 안에 또 오면 건너뛴다(개발 모드에서 화면 준비가 두 번 도는 경우 등).
+function speak(text: string, fromTap = false) {
+  if (!canSpeak()) return;
+  const now = Date.now();
+  if (!fromTap && lastSpoken.text === text && now - lastSpoken.at < 1000) {
+    return;
+  }
+  lastSpoken = { text, at: now };
   const synth = window.speechSynthesis;
   synth.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
@@ -344,6 +365,82 @@ function speak(text: string) {
   const korean = synth.getVoices().find((v) => v.lang.startsWith('ko'));
   if (korean) utterance.voice = korean;
   synth.speak(utterance);
+}
+
+// 첫 터치 때 한 번 소리를 "깨워" 둔다(아이폰 사파리는 터치 안에서 한 번 말해야 그 뒤 자동 읽기를 허락한다).
+function rememberFirstTouch() {
+  if (hasInteracted) return;
+  hasInteracted = true;
+  if (!canSpeak()) return;
+  const wake = new SpeechSynthesisUtterance(' ');
+  wake.volume = 0;
+  window.speechSynthesis.speak(wake);
+}
+
+function useFirstTouch() {
+  useEffect(() => {
+    if (hasInteracted) return;
+    const options = { capture: true } as const;
+    const kinds = ['pointerdown', 'click', 'keydown'] as const;
+    for (const kind of kinds) {
+      window.addEventListener(kind, rememberFirstTouch, options);
+    }
+    return () => {
+      for (const kind of kinds) {
+        window.removeEventListener(kind, rememberFirstTouch, options);
+      }
+    };
+  }, []);
+}
+
+function readSoundOn() {
+  try {
+    return window.localStorage.getItem(SOUND_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function subscribeSound(onChange: () => void) {
+  window.addEventListener(SOUND_EVENT, onChange);
+  window.addEventListener('storage', onChange);
+  return () => {
+    window.removeEventListener(SOUND_EVENT, onChange);
+    window.removeEventListener('storage', onChange);
+  };
+}
+
+function useSoundOn() {
+  return useSyncExternalStore(subscribeSound, readSoundOn, () => true);
+}
+
+function setSoundOn(on: boolean) {
+  try {
+    window.localStorage.setItem(SOUND_KEY, on ? 'on' : 'off');
+  } catch {
+    // 저장할 수 없어도 이번 화면에서는 아래 알림으로 바뀐다.
+  }
+  if (!on && canSpeak()) window.speechSynthesis.cancel();
+  window.dispatchEvent(new Event(SOUND_EVENT));
+}
+
+// 오른쪽 위 작은 🔊/🔇 버튼. 끄면 다시 켤 때까지 자동으로 읽지 않는다.
+export function SoundToggle() {
+  const on = useSoundOn();
+  useFirstTouch();
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      aria-label={
+        on ? '또박이 소리 켜짐. 누르면 꺼요' : '또박이 소리 꺼짐. 누르면 켜요'
+      }
+      onClick={() => setSoundOn(!on)}
+      className="flex size-12 shrink-0 items-center justify-center rounded-2xl border-2 border-zinc-300 bg-white text-2xl hover:border-stat-green focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
+    >
+      <span aria-hidden="true">{on ? '🔊' : '🔇'}</span>
+    </button>
+  );
 }
 
 function Sentences({ message }: { message: string }) {
@@ -355,13 +452,9 @@ function Sentences({ message }: { message: string }) {
   ));
 }
 
-const bubbleText = 'text-xl leading-snug font-bold break-keep text-stat-ink';
-const speakButton =
-  'items-center rounded-full bg-stat-mint text-xl font-bold text-stat-green hover:bg-stat-green/20 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green';
-
-// 또박이 + 옆 말풍선 + 🔊 듣기 버튼.
-// size="sm"은 작은 얼굴과 한 줄 말풍선으로, 내용이 많은 화면(안내문)에서 공간을 아낀다.
-// 화면이 바뀌면 새로 나타나며 짧게 움직인다.
+// 또박이 + 옆 작은 말풍선(글자에 딱 맞게). 또박이나 말풍선을 누르면 말한다.
+// 화면에 처음 나오거나 말이 바뀌면, 사용자가 한 번이라도 누른 뒤이고 소리가 켜져 있을 때 자동으로 읽는다.
+// size="sm"은 얼굴만 작게 보여 주어 내용이 많은 화면(안내문)에서 공간을 아낀다.
 export function Ttobagi({
   pose,
   message,
@@ -369,70 +462,40 @@ export function Ttobagi({
 }: {
   pose: Pose;
   message: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md';
 }) {
-  const canSpeak = useSyncExternalStore(
-    subscribe,
-    () => 'speechSynthesis' in window,
-    () => false,
-  );
-  const label = `또박이 말 소리로 듣기: ${message}`;
+  const soundOn = useSoundOn();
+  useFirstTouch();
 
-  if (size === 'sm') {
-    return (
-      <div className="flex items-center gap-3">
-        <div className={`w-16 shrink-0 ${bodyMotion[pose]}`}>
-          <TtobagiFigure pose={pose} face />
-        </div>
-        <div className="relative flex flex-1 items-center gap-2 rounded-3xl border-2 border-stat-green bg-white py-2 pr-2 pl-4 shadow-sm">
-          <span
-            aria-hidden="true"
-            className="absolute top-1/2 -left-[9px] size-4 -translate-y-1/2 rotate-45 border-b-2 border-l-2 border-stat-green bg-white"
-          />
-          <p className={`flex-1 ${bubbleText}`}>
-            <Sentences message={message} />
-          </p>
-          {canSpeak && (
-            <button
-              type="button"
-              onClick={() => speak(message)}
-              aria-label={label}
-              className={`flex size-12 shrink-0 justify-center ${speakButton}`}
-            >
-              🔊
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (soundOn && hasInteracted) speak(message);
+  }, [message, soundOn]);
 
   return (
-    <div className="flex items-end gap-2">
-      <div
-        className={`shrink-0 ${size === 'lg' ? 'w-36' : 'w-28'} ${bodyMotion[pose]}`}
+    <button
+      type="button"
+      onClick={() => {
+        rememberFirstTouch();
+        speak(message, true);
+      }}
+      aria-label={`또박이: ${message} (누르면 소리로 들어요)`}
+      className="flex w-full items-center gap-2 rounded-3xl text-left focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
+    >
+      <span
+        aria-hidden="true"
+        className={`shrink-0 ${size === 'sm' ? 'w-14' : 'w-20'} ${bodyMotion[pose]}`}
       >
-        <TtobagiFigure pose={pose} />
-      </div>
-      <div className="relative mb-8 flex flex-1 flex-col items-start gap-2 rounded-3xl border-2 border-stat-green bg-white px-4 py-3 shadow-sm">
+        <TtobagiFigure pose={pose} face={size === 'sm'} />
+      </span>
+      <span className="relative ml-1 max-w-full rounded-2xl border-2 border-stat-green bg-white px-3 py-2 shadow-sm">
         <span
           aria-hidden="true"
-          className="absolute bottom-5 -left-[9px] size-4 rotate-45 border-b-2 border-l-2 border-stat-green bg-white"
+          className="absolute top-1/2 -left-[9px] size-4 -translate-y-1/2 rotate-45 border-b-2 border-l-2 border-stat-green bg-white"
         />
-        <p className={bubbleText}>
+        <span className="relative block text-xl leading-snug font-bold break-keep text-stat-ink">
           <Sentences message={message} />
-        </p>
-        {canSpeak && (
-          <button
-            type="button"
-            onClick={() => speak(message)}
-            aria-label={label}
-            className={`flex min-h-12 gap-1 self-end px-4 ${speakButton}`}
-          >
-            🔊 듣기
-          </button>
-        )}
-      </div>
-    </div>
+        </span>
+      </span>
+    </button>
   );
 }

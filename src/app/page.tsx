@@ -7,7 +7,7 @@ import { hospital } from '@/lib/demo-guide';
 
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
-import { Ttobagi } from './ttobagi';
+import { SoundToggle, Ttobagi } from './ttobagi';
 
 const texts = {
   ko: {
@@ -57,25 +57,28 @@ export default function Home() {
     >
       <header className="mx-auto flex w-full max-w-md items-center justify-between py-4">
         <p className="text-lg font-bold text-stat-green">S.T.A.T</p>
-        <label className="flex items-center gap-1">
-          <span aria-hidden="true">🌐</span>
-          <span className="sr-only">언어 선택 / Language</span>
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as Lang)}
-            className="rounded-full border border-zinc-300 bg-white px-3 py-2 text-lg"
-          >
-            {Object.entries(texts).map(([code, { label }]) => (
-              <option key={code} value={code}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex items-center gap-2">
+          <SoundToggle />
+          <label className="flex items-center gap-1">
+            <span aria-hidden="true">🌐</span>
+            <span className="sr-only">언어 선택 / Language</span>
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as Lang)}
+              className="rounded-full border border-zinc-300 bg-white px-3 py-2 text-lg"
+            >
+              {Object.entries(texts).map(([code, { label }]) => (
+                <option key={code} value={code}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-6">
-        <Ttobagi pose="hello" message={ttobagiSays.hello} size="lg" />
+        <Ttobagi pose="hello" message={ttobagiSays.hello} />
         <h1 className="text-4xl leading-tight font-bold whitespace-pre-line break-keep">
           {t.headline}
         </h1>
