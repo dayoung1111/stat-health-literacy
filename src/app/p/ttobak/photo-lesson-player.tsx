@@ -25,14 +25,15 @@ import {
   type LessonState,
 } from './lesson-state';
 import type { GuideKind } from '@/lib/guide-catalog';
-import { guideFinish, guideLessonHref } from '@/lib/guide-progress';
+import { guideFinish } from '@/lib/guide-progress';
 
 import { screenTexts } from '@/lib/screen-texts';
 
 import { useLanguageOr } from '../../language-provider';
 import { T, useTranslatedTexts } from '../../translated';
 
-import { completeGuide } from '../records';
+import { GuideBoard } from '../guide-board';
+import { markGuideDone, useCompletedGuides } from '../guide-done';
 import { CardScene } from './card-scene';
 import { designedLessonCount, LessonDesign } from './lesson-design';
 import { photoLessons } from './photo-lesson';
@@ -103,7 +104,8 @@ export function PhotoLesson({
   const router = useRouter();
   // 환자가 고른 언어(없으면 의료진이 고른 언어). 안내 사이 이동 문구에 쓴다.
   const { t } = useLanguageOr(language);
-  const [completed, setCompleted] = useState(initialCompleted);
+  // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
+  const completed = useCompletedGuides(code, initialCompleted);
   // 아직 안 마친 다른 안내와 끝 인사. 모든 안내가 같은 guideFinish로 정한다.
   const {
     next,
@@ -227,14 +229,10 @@ export function PhotoLesson({
     };
   }, [immersive]);
 
-  // 마지막 교시까지 마치면 이 안내를 "완료"로 저장한다.
-  // 화면 표시(완료 목록)는 그리는 중에 바로 바꾸고, 서버 저장은 그린 뒤에 한다.
+  // 마지막 교시까지 마치면 이 안내를 "완료"로 저장한다(브라우저 + 서버).
   const finished = state.mode === 'done';
-  if (finished && !completed.includes(thisGuide)) {
-    setCompleted([...completed, thisGuide]);
-  }
   useEffect(() => {
-    if (finished) void completeGuide(code, thisGuide);
+    if (finished) markGuideDone(code, thisGuide);
   }, [finished, code]);
 
   // 다른 화면으로 나가면 음성을 멈춘다.
@@ -479,44 +477,13 @@ export function PhotoLesson({
       </div>
 
       <aside className="flex flex-col gap-4 text-[#15262B]">
-        {guides.length > 1 && (
-          <section className="flex flex-col gap-2 rounded-2xl border border-[#CAD6D6] bg-white p-4">
-            <h2 className="text-lg font-bold">{t.progressTitle}</h2>
-            <ul className="flex flex-col gap-1.5">
-              {guides.map((kind) => {
-                const done = completed.includes(kind);
-                const label = (
-                  <>
-                    <span className="text-base font-bold break-keep">
-                      {t.guides[kind]}
-                    </span>
-                    <span
-                      className={`flex-none text-sm font-bold ${done ? 'text-[#1D6E47]' : 'text-[#0F6670]'}`}
-                    >
-                      {done ? t.statusDone : t.statusLeft}
-                    </span>
-                  </>
-                );
-                const rowClass = `flex items-center justify-between gap-2 rounded-xl border-[1.5px] px-3 py-2.5 ${done ? 'border-[#2E9E6B] bg-[#DDF3E8]' : 'border-[#CAD6D6]'}`;
-                // 남은 다른 안내는 눌러서 바로 갈 수 있다.
-                return (
-                  <li key={kind}>
-                    {!done && kind !== thisGuide ? (
-                      <Link
-                        href={guideLessonHref(code, kind)}
-                        className={`${rowClass} hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]`}
-                      >
-                        {label}
-                      </Link>
-                    ) : (
-                      <div className={rowClass}>{label}</div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
+        <GuideBoard
+          code={code}
+          current={thisGuide}
+          guides={guides}
+          completed={completed}
+          language={language}
+        />
 
         <section className="flex flex-col gap-2.5 rounded-2xl border border-[#CAD6D6] bg-white p-4">
           <h2 className="text-lg font-bold">

@@ -55,4 +55,6 @@ export const zh: Messages = {
   progressTitle: '收到的指南',
   statusDone: '✅ 已完成',
   statusLeft: '▶ 还没看',
+  statusNow: '👀 正在看',
+  progressCount: (done, total) => `${total}个中已完成${done}个`,
 };

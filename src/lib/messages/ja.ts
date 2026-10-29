@@ -57,4 +57,6 @@ export const ja: Messages = {
   progressTitle: '受け取った案内',
   statusDone: '✅ 完了',
   statusLeft: '▶ 残りの案内',
+  statusNow: '👀 見ている',
+  progressCount: (done, total) => `${total}個中${done}個完了`,
 };

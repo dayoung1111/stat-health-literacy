@@ -56,4 +56,6 @@ export const vi: Messages = {
   progressTitle: 'Hướng dẫn đã nhận',
   statusDone: '✅ Đã xong',
   statusLeft: '▶ Còn lại',
+  statusNow: '👀 Đang xem',
+  progressCount: (done, total) => `Đã xong ${done}/${total}`,
 };

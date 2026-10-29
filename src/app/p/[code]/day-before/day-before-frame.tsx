@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { GuideKind } from '@/lib/guide-catalog';
 
+import { GuideBoard } from '../../guide-board';
+import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
-import { completeGuide } from '../../records';
 
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/day-before.html)은 ?embed=1로 열면
 // 자체 "뒤로" 버튼을 숨기고, 앱의 소리 설정(stat-sound)을 따르고, 아래 두 가지를 알려 준다.
@@ -36,7 +37,7 @@ export function DayBeforeFrame({
   code,
   language,
   guides,
-  completed,
+  completed: fromServer,
 }: {
   code: string;
   /** 의료진이 발급 때 고른 언어. 환자가 고른 언어가 있으면 그것을 쓴다. */
@@ -49,6 +50,8 @@ export function DayBeforeFrame({
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(firstHeight);
   const [finished, setFinished] = useState(false);
+  // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
+  const completed = useCompletedGuides(code, fromServer);
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -66,7 +69,7 @@ export function DayBeforeFrame({
       if (recorded.current) return;
       recorded.current = true;
       setFinished(true);
-      void completeGuide(code, 'checkup');
+      markGuideDone(code, 'checkup');
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -92,6 +95,16 @@ export function DayBeforeFrame({
           language={language}
         />
       )}
+      {/* 휴대폰에서는 수업 아래, 다 보면 다음 안내 버튼 아래에 보인다. */}
+      <div className="mt-6 max-w-xl">
+        <GuideBoard
+          code={code}
+          current="checkup"
+          guides={guides}
+          completed={completed}
+          language={language}
+        />
+      </div>
     </>
   );
 }

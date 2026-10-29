@@ -71,6 +71,9 @@ export const ko = {
   progressTitle: '받은 안내',
   statusDone: '✅ 완료',
   statusLeft: '▶ 남은 안내',
+  statusNow: '👀 보는 중',
+  progressCount: (done: number, total: number) =>
+    `${total}개 중 ${done}개 완료`,
 };
 
 export type Messages = typeof ko;

@@ -57,4 +57,6 @@ export const en: Messages = {
   progressTitle: 'Your guides',
   statusDone: '✅ Done',
   statusLeft: '▶ Still to see',
+  statusNow: '👀 Viewing now',
+  progressCount: (done, total) => `${done} of ${total} done`,
 };
