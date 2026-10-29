@@ -251,20 +251,6 @@ export function TtobakPlayer({
         </button>
         <button
           type="button"
-<<<<<<< Updated upstream:src/components/ttobak/TtobakPlayer.tsx
-          onClick={togglePlay}
-          aria-label={
-            isPlaying ? '일시정지' : isEnded ? '처음부터 다시 재생' : '재생'
-          }
-          className={`${controlClass} border-teal-700 bg-teal-700 text-white hover:bg-teal-800`}
-        >
-          <span aria-hidden="true">{isPlaying ? icons.pause : icons.play}</span>
-          {isPlaying ? '멈춤' : '재생'}
-        </button>
-        <button
-          type="button"
-=======
->>>>>>> Stashed changes:src/app/p/ttobak/ttobak-player.tsx
           onClick={() => goToScene(state.sceneIndex + 1)}
           disabled={!nextScene}
           aria-label={

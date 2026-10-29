@@ -254,7 +254,7 @@ export function PictureRow({
         {pictures.map((picture) => (
           <div
             key={picture.label}
-            className="min-w-0 flex-1 [&_.size-24]:size-16 [&_.text-7xl]:text-5xl [&>figure>span]:h-16 [&>figure>span]:min-w-16"
+            className="min-w-0 flex-1 [&_.h-14]:h-8 [&_.size-24]:size-16 [&_.text-7xl]:text-5xl [&_.w-11]:w-[15px] [&>figure>span]:h-16 [&>figure>span]:min-w-16"
           >
             <PictureCard picture={picture} />
           </div>

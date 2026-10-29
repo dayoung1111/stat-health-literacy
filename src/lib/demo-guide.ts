@@ -249,8 +249,8 @@ export const demoGuide = {
           action: 'alarm',
           pictures: [
             {
-              visual: { kind: 'clock', hour: 4 },
-              label: '당일 새벽 4~5시',
+              visual: { kind: 'clock', hour: 5 },
+              label: '당일 새벽 5시',
               lines: [1],
             },
             {
@@ -263,13 +263,13 @@ export const demoGuide = {
           ],
           // 검수 필요: 가소콜액 복용 방법(시점·섞는 법)은 확인 중이다. 확정 전까지 아래 문구만 쓴다.
           lines: [
-            '두 번째 약은 검사 당일 새벽 4시~5시에 드세요.',
+            '두 번째 약은 검사 당일 새벽 5시에 드세요.',
             '첫 번째 약과 같은 방법으로 드세요.',
             '가소콜액 1포도 함께 드세요.',
             '생수 500mL도 드세요.',
           ],
           easier: [
-            { visual: { kind: 'clock', hour: 4 }, label: '당일 새벽 4~5시' },
+            { visual: { kind: 'clock', hour: 5 }, label: '당일 새벽 5시' },
             { visual: { kind: 'cups', count: 4 }, label: '첫 번째와 똑같이' },
             // 검수 필요: 가소콜액
             { visual: emoji('🧴'), label: '가소콜액 1포도 함께' },
@@ -284,32 +284,32 @@ export const demoGuide = {
         {
           id: 'day-fasting',
           action: 'stop',
+          // 팀 확정(2026-10-29): 두 번째 약을 다 드신 뒤에는 검사 전까지 아무것도 드시지 않는다.
           pictures: [
             {
-              visual: { kind: 'clock', hour: 5 },
-              label: '새벽 5시부터',
-              lines: [1],
+              visual: { kind: 'pouch' },
+              label: '두 번째 약 후',
+              lines: [1, 2],
             },
-            { visual: emoji('💧'), label: '물', no: true, lines: [2] },
-            { visual: emoji('💊'), label: '약', no: true, lines: [2] },
-            { visual: emoji('🍬'), label: '껌', no: true, lines: [2] },
-            { visual: emoji('🚬'), label: '담배', no: true, lines: [2] },
-            { visual: emoji('🩺'), label: '혈압약은 괜찮아요', lines: [3] },
+            { visual: emoji('💧'), label: '물', no: true, lines: [3] },
+            { visual: emoji('💊'), label: '약', no: true, lines: [3] },
+            { visual: emoji('🍬'), label: '껌·담배', no: true, lines: [3] },
           ],
           lines: [
-            '검사 당일 새벽 5시부터는 완전히 금식해요.',
+            '두 번째 약을 다 드신 뒤에는',
+            '검사 전까지 아무것도 드시지 마세요.',
             '물, 약, 껌, 담배 모두 안 돼요.',
-            '혈압약만 드셔도 돼요.',
           ],
           term: '금식',
           easier: [
+            { visual: { kind: 'pouch' }, label: '두 번째 약을 다 드시면' },
             {
-              visual: { kind: 'clock', hour: 5 },
-              label: '새벽 5시부터 아무것도 안 돼요',
+              visual: emoji('🍚'),
+              label: '검사 전까지 아무것도 안 돼요',
               no: true,
             },
-            { visual: emoji('🚬'), label: '껌, 담배도 안 돼요', no: true },
-            { visual: emoji('🩺'), label: '혈압약만 괜찮아요' },
+            { visual: emoji('💧'), label: '물도 안 돼요', no: true },
+            { visual: emoji('💊'), label: '다른 약도 안 돼요', no: true },
           ],
         },
         {
@@ -379,30 +379,29 @@ export const demoGuide = {
       },
     },
     {
-      topic: '검사 당일 새벽 5시 금식',
-      question: '검사 날 새벽 5시가 지났어요.\n물을 마셔도 될까요?',
+      topic: '두 번째 약 후 금식',
+      question: '검사 날, 두 번째 약을\n다 드셨어요.\n물을 마셔도 될까요?',
       choices: [
         { visual: emoji('💧'), text: '마셔도 돼요' },
         { visual: emoji('🙅'), text: '마시면 안 돼요', correct: true },
       ],
       explain: {
         pictures: [
-          { visual: { kind: 'clock', hour: 5 }, label: '새벽 5시부터' },
+          { visual: { kind: 'pouch' }, label: '두 번째 약 다 드신 뒤' },
           { visual: emoji('💧'), label: '물', no: true },
-          { visual: emoji('🩺'), label: '혈압약은 괜찮아요' },
+          { visual: emoji('💊'), label: '약', no: true },
         ],
         lines: [
-          '새벽 5시부터는',
-          '물, 약, 껌, 담배 모두 안 돼요.',
-          '혈압약만 드셔도 돼요.',
+          '두 번째 약을 다 드신 뒤에는',
+          '검사 전까지 아무것도 드시지 마세요.',
         ],
       },
       retry: {
-        question: '검사 날 새벽 6시예요.\n먹어도 되는 것은?',
+        question: '검사 날 아침 7시, 검사 전이에요.\n어떻게 하실까요?',
         choices: [
-          { visual: emoji('💧'), text: '물 한 컵' },
-          { visual: emoji('🩺'), text: '혈압약', correct: true },
-          { visual: emoji('🍬'), text: '껌' },
+          { visual: emoji('💧'), text: '물 한 컵 마신다' },
+          { visual: emoji('🍬'), text: '껌을 씹는다' },
+          { visual: emoji('🙅'), text: '아무것도 먹지 않는다', correct: true },
         ],
       },
     },
@@ -460,7 +459,11 @@ export const videoScenes: VideoScene[] = [
 ];
 
 // 검사일까지 남은 날에 맞는 "지금 할 일".
-export function getTodo(daysLeft: number): {
+// 검사 당일은 두 번째 약(새벽 5시)을 1시간 동안 드시므로 6시부터는 "다 드신 뒤"로 본다.
+export function getTodo(
+  daysLeft: number,
+  afterSecondDose = false,
+): {
   title: string;
   pictures: Picture[];
   line: string;
@@ -475,12 +478,8 @@ export function getTodo(daysLeft: number): {
         { visual: emoji('🍙'), label: '김', no: true },
         { visual: emoji('🍉'), label: '씨 있는 과일', no: true },
       ],
-<<<<<<< Updated upstream
-      line: '씨 있는 과일, 김치, 나물은 잠깐 쉬어요',
-      speech: '씨 있는 과일은 드시지 마세요.',
-=======
       line: '잡곡밥, 김치, 김, 씨 있는 과일은 드시지 마세요',
->>>>>>> Stashed changes
+      speech: '씨 있는 과일은 드시지 마세요.',
     };
   }
   if (daysLeft === 1) {
@@ -491,32 +490,32 @@ export function getTodo(daysLeft: number): {
         { visual: { kind: 'clock', hour: 9 }, label: '밤 9~10시 첫 번째 약' },
         { visual: { kind: 'cups', count: 4 }, label: '15분마다 4번' },
       ],
-<<<<<<< Updated upstream
-      line: '장 비우는 약 1봉지 + 물 1L',
-      speech: '저녁 8시예요. 약 드실 시간이에요.',
-=======
       line: '음식은 밤 12시부터 금지, 약과 물은 안내 시간대로',
->>>>>>> Stashed changes
+      speech: '밤 9시예요. 첫 번째 약 드실 시간이에요.',
+    };
+  }
+  if (daysLeft === 0 && !afterSecondDose) {
+    return {
+      title: '새벽 5시 두 번째 약',
+      pictures: [
+        { visual: { kind: 'clock', hour: 5 }, label: '새벽 5시 두 번째 약' },
+        { visual: { kind: 'cups', count: 4 }, label: '15분마다 4번' },
+        { visual: emoji('💧'), label: '생수 500mL' },
+      ],
+      line: '두 번째 약을 다 드신 뒤에는 아무것도 드시지 마세요',
+      speech: '새벽 5시예요. 두 번째 약 드실 시간이에요.',
     };
   }
   if (daysLeft === 0) {
     return {
-      title: '오늘 검사 날',
+      title: '검사 전까지 금식',
       pictures: [
-        { visual: { kind: 'clock', hour: 4 }, label: '새벽 4~5시 두 번째 약' },
-        {
-          visual: { kind: 'clock', hour: 5 },
-          label: '새벽 5시부터 금식',
-          no: true,
-        },
+        { visual: emoji('💧'), label: '물', no: true },
+        { visual: emoji('💊'), label: '약', no: true },
         { visual: emoji('👨‍👩‍👧'), label: '보호자와 함께' },
       ],
-<<<<<<< Updated upstream
-      line: '아무것도 드시지 말고 보호자와 함께 오세요',
-      speech: '오늘은 아무것도 드시지 마세요.',
-=======
-      line: '새벽 5시부터 완전 금식, 혈압약만 드셔도 돼요',
->>>>>>> Stashed changes
+      line: '검사 전까지 아무것도 드시지 말고 보호자와 함께 오세요',
+      speech: '이제 검사 전까지 아무것도 드시지 마세요.',
     };
   }
   return {

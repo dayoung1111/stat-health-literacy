@@ -30,8 +30,8 @@ const menuClass =
   'flex min-h-20 items-center gap-4 rounded-3xl px-6 text-2xl font-bold shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green';
 
 async function PatientHome({ code }: { code: string }) {
-  const { examLabel, daysLeft } = await getDemoSchedule();
-  const todo = getTodo(daysLeft);
+  const { examLabel, daysLeft, afterSecondDose } = await getDemoSchedule();
+  const todo = getTodo(daysLeft, afterSecondDose);
 
   return (
     <>

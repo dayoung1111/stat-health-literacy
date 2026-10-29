@@ -56,5 +56,15 @@ export async function getDemoSchedule() {
     weekday: 'short',
   }).format(examDate);
 
-  return { examLabel, daysLeft };
+  // 검사 당일 두 번째 약(새벽 5시, 1시간)을 다 드신 뒤인지: 한국 시간 6시부터로 본다.
+  const kstHour = Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      hour: 'numeric',
+      hourCycle: 'h23',
+    }).format(new Date()),
+  );
+  const afterSecondDose = daysLeft === 0 && kstHour >= 6;
+
+  return { examLabel, daysLeft, afterSecondDose };
 }
