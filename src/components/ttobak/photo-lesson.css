@@ -1,0 +1,466 @@
+/* 또박이 선생님 사진 수업 (시안: docs/reference/PhotoLesson.dc.html, 영상 너비 896px 기준).
+   영상 안의 크기는 영상 너비 비율(cqw, 1cqw = 너비의 1%)로 정해
+   PC·휴대폰·가로 전체 화면 어디서나 같은 모양으로 커지고 작아진다. */
+
+.pl-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #c99a6b;
+  color: #15262b;
+  container-type: inline-size;
+}
+
+/* 음식 사진: 화면을 꽉 채우고 7초 동안 음식 쪽으로 천천히 확대 */
+.pl-photo {
+  position: absolute;
+  inset: 0;
+}
+.pl-photo img {
+  object-fit: cover;
+  transform-origin: 33% 46%;
+}
+.pl-photo.is-current {
+  z-index: 2;
+  animation: pl-fade 0.6s ease-out both;
+}
+.pl-photo.is-current img {
+  animation: pl-kb 7s ease-out forwards;
+}
+.pl-photo.is-current.alt img {
+  animation-name: pl-kb2;
+}
+/* 바로 전 사진은 새 사진이 겹쳐 나타나는 동안 아래에 남는다. */
+.pl-photo.is-prev {
+  z-index: 1;
+}
+.pl-photo.is-prev img {
+  transform: scale(1.14);
+}
+.pl-photo.is-prev.alt img {
+  transform: scale(1.02);
+}
+
+/* 음식 위 빨간 X / 초록 동그라미 */
+.pl-mark {
+  position: absolute;
+  z-index: 3;
+  width: 33.5cqw;
+  height: 33.5cqw;
+  left: calc(33% - 16.75cqw);
+  top: calc(46% - 16.75cqw);
+}
+.pl-draw-line,
+.pl-draw-circle {
+  animation: pl-draw 0.45s ease-out forwards;
+}
+.pl-draw-line {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+}
+.pl-draw-circle {
+  stroke-dasharray: 730;
+  stroke-dashoffset: 730;
+  animation-duration: 0.8s;
+}
+
+/* 왼쪽 위 "✕ 먹으면 안 돼요" + 음식 이름 */
+.pl-label {
+  position: absolute;
+  z-index: 4;
+  left: 2.7cqw;
+  top: 2.5cqw;
+  display: flex;
+  align-items: center;
+  gap: 1.1cqw;
+  animation: pl-pop 0.4s ease-out both;
+}
+.pl-pill {
+  padding: 0.7cqw 1.6cqw;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 2.2cqw;
+  font-weight: 700;
+}
+.pl-pill.no {
+  background: #d9363e;
+}
+.pl-pill.ok {
+  background: #2e9e6b;
+}
+.pl-name {
+  padding: 0.3cqw 1.6cqw;
+  border-radius: 1.3cqw;
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 2.7cqw;
+  font-weight: 700;
+}
+
+/* 인사·정리 장면의 사진 격자 */
+.pl-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: #e9d6bc;
+  animation: pl-fade 0.5s ease-out both;
+}
+.pl-grid-inner {
+  position: absolute;
+  left: 3.1cqw;
+  top: 2.9cqw;
+  width: 62.5cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3cqw;
+}
+.pl-grid-title {
+  font-size: 3.1cqw;
+  font-weight: 700;
+}
+.pl-grid-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.3cqw;
+}
+.pl-thumb {
+  position: relative;
+  height: 16.7cqw;
+  overflow: hidden;
+  border: 0.35cqw solid #ffffff;
+  border-radius: 1.6cqw;
+  background: #ffffff;
+}
+.pl-thumb.marked.no {
+  border-color: #d9363e;
+}
+.pl-thumb.marked.ok {
+  border-color: #2e9e6b;
+}
+.pl-thumb img {
+  object-fit: cover;
+  object-position: 33% 46%;
+}
+.pl-thumb-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 13.4cqw;
+  height: 13.4cqw;
+  transform: translate(-50%, -50%);
+}
+.pl-thumb-name {
+  position: absolute;
+  left: 0.9cqw;
+  bottom: 0.9cqw;
+  padding: 0.3cqw 1.1cqw;
+  border-radius: 999px;
+  background: rgba(21, 38, 43, 0.82);
+  color: #ffffff;
+  font-size: 1.8cqw;
+  font-weight: 700;
+}
+
+/* 또박이: 사진 오른쪽 빈 곳에 크게 서서 왼쪽을 가리킨다. */
+.pl-ttobak-box {
+  position: absolute;
+  z-index: 5;
+  right: 3cqw;
+  bottom: 10cqw;
+  width: 30cqw;
+}
+.pl-ttobak {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transform: scaleX(-1);
+}
+.pl-ttobak * {
+  transform-box: view-box;
+}
+.pl-bob {
+  animation: pl-bob 1.8s ease-in-out infinite;
+}
+.pl-wave {
+  transform-origin: 150px 116px;
+  animation: pl-wave 0.9s ease-in-out infinite;
+}
+.pl-point {
+  transform-origin: 150px 118px;
+  animation: pl-point 1.4s ease-in-out infinite;
+}
+.pl-talk {
+  animation: pl-talk 0.32s steps(1, end) infinite;
+}
+.pl-still .pl-bob,
+.pl-still .pl-wave,
+.pl-still .pl-point {
+  animation-play-state: paused;
+}
+
+/* 자막 말풍선: 흰 바탕, 검은 테두리, 꼬리는 또박이 쪽 */
+.pl-bubble {
+  position: absolute;
+  z-index: 6;
+  left: 2.2cqw;
+  right: 2.2cqw;
+  bottom: 1.8cqw;
+  min-height: 8.7cqw;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.8cqw;
+  padding: 1.3cqw 2.5cqw;
+  border: 0.35cqw solid #15262b;
+  border-radius: 2.2cqw;
+  background: #ffffff;
+}
+.pl-bubble::before {
+  content: '';
+  position: absolute;
+  top: -1.5cqw;
+  right: 16.7cqw;
+  width: 2.5cqw;
+  height: 2.5cqw;
+  box-sizing: border-box;
+  border-left: 0.35cqw solid #15262b;
+  border-top: 0.35cqw solid #15262b;
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+.pl-sub {
+  font-size: 2.9cqw;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+.pl-key {
+  padding: 0 0.7cqw;
+  border-radius: 0.9cqw;
+}
+.pl-key.no {
+  background: #fce3e1;
+  color: #a3262c;
+}
+.pl-key.ok {
+  background: #ddf3e8;
+  color: #1d6e47;
+}
+.pl-choices {
+  display: flex;
+  flex: none;
+  gap: 1.1cqw;
+}
+.pl-choice,
+.pl-replay {
+  min-width: 16.7cqw;
+  height: 6cqw;
+  min-height: 44px;
+  padding: 0 1.6cqw;
+  border-radius: 1.6cqw;
+  font-size: 2.2cqw;
+  font-weight: 700;
+}
+.pl-choice {
+  border: 0.3cqw solid #15262b;
+  background: #ffffff;
+  color: #15262b;
+}
+.pl-choice.wrong {
+  background: #fce3e1;
+}
+.pl-replay {
+  flex: none;
+  border: none;
+  background: #0f6670;
+  color: #ffffff;
+}
+.pl-stage button:focus-visible {
+  outline: 3px solid #0f6670;
+  outline-offset: 2px;
+}
+
+/* 처음 큰 재생 버튼 */
+.pl-start {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6cqw;
+  background: rgba(21, 38, 43, 0.55);
+  color: #ffffff;
+}
+.pl-start-button {
+  display: flex;
+  width: max(80px, 12.5cqw);
+  height: max(80px, 12.5cqw);
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #0f6670;
+}
+.pl-start-button svg {
+  width: 45%;
+  height: 45%;
+}
+.pl-start-title {
+  font-size: max(20px, 2.7cqw);
+  font-weight: 700;
+}
+.pl-start-sub {
+  font-size: max(15px, 1.8cqw);
+  color: #dcedee;
+}
+
+/* 휴대폰 전체 화면: 화면 전체에 고정하고, 세로로 들고 있으면 90도 돌려 16:9로 꽉 채운다. */
+.pl-immersive {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0b1416;
+}
+.pl-rotor {
+  --w: 100dvw;
+  --h: 100dvh;
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+}
+@media (orientation: portrait) {
+  .pl-immersive .pl-rotor {
+    --w: 100dvh;
+    --h: 100dvw;
+    inset: auto;
+    top: 0;
+    left: 100dvw;
+    width: 100dvh;
+    height: 100dvw;
+    transform-origin: top left;
+    transform: rotate(90deg);
+  }
+}
+.pl-immersive .pl-fit {
+  width: min(calc(var(--w) - 16px), calc((var(--h) - 72px) * 16 / 9));
+}
+.pl-close {
+  position: absolute;
+  z-index: 20;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: rgba(21, 38, 43, 0.85);
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+@keyframes pl-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pl-kb {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.14);
+  }
+}
+@keyframes pl-kb2 {
+  from {
+    transform: scale(1.14) translateX(-1.5%);
+  }
+  to {
+    transform: scale(1.02) translateX(0);
+  }
+}
+@keyframes pl-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes pl-pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes pl-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes pl-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-22deg);
+  }
+}
+@keyframes pl-point {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-12deg);
+  }
+}
+@keyframes pl-talk {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 움직임 줄이기: 확대·그리기 없이 바로 표시 */
+@media (prefers-reduced-motion: reduce) {
+  .pl-stage *,
+  .pl-stage *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .pl-draw-line,
+  .pl-draw-circle {
+    stroke-dashoffset: 0;
+  }
+  .pl-photo.is-prev {
+    display: none;
+  }
+}
