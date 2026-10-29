@@ -1,5 +1,6 @@
 import { demoGuide } from '@/lib/demo-guide';
 
+import { T } from '../../../language';
 import { PhotoLesson } from '../../ttobak/photo-lesson-player';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -15,9 +16,12 @@ export default function VideoPage({ params }: PageProps<'/p/[code]/video'>) {
           {/* 환자 화면 틀은 휴대폰 너비라서, PC에서는 영상과 수업 목록이 넓게 보이도록 틀 밖으로 넓힌다. */}
           <div className="relative left-1/2 w-[min(calc(100vw-2rem),1280px)] -translate-x-1/2">
             <h1 className="mb-4 text-3xl leading-snug font-bold break-keep">
-              또박이 선생님 수업
+              <T id="video.title" />
               <span className="ml-3 text-xl font-normal text-zinc-600">
-                {demoGuide.examName} 준비
+                <T
+                  id="video.examPrep"
+                  vars={{ exam: { source: demoGuide.examName } }}
+                />
               </span>
             </h1>
             <PhotoLesson />

@@ -55,12 +55,18 @@ export async function getDemoSchedule() {
   const daysLeft = Math.round(
     (examDate.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );
-  const examLabel = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'UTC',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  }).format(examDate);
+  // 환자 화면의 한국어/영어 바꾸기에 쓰도록 두 언어로 만든다.
+  const dateLabel = (locale: string) =>
+    new Intl.DateTimeFormat(locale, {
+      timeZone: 'UTC',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+    }).format(examDate);
 
-  return { examLabel, daysLeft };
+  return {
+    examLabel: dateLabel('ko-KR'),
+    examLabelEn: dateLabel('en-US'),
+    daysLeft,
+  };
 }

@@ -39,6 +39,15 @@ body {
   --color-stat-sun: #fff6d6;
 }
 
+/* 영어 화면: 좁은 칸(그림 이름·2칸 버튼)에서 긴 영어 단어가 칸 밖으로 넘치지 않게 한다.
+   10글자 이상 단어만 줄 끝에서 하이픈으로 나누고, 그래도 넘치면 줄을 바꾼다. 한국어 화면에는 적용하지 않는다. */
+:lang(en) {
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  hyphenate-limit-chars: 10 4 4;
+}
+
 /* 또박이가 화면이 바뀔 때 짧게 움직인다. 움직임 줄이기를 켠 사용자에게는 멈춰 있다. */
 @media (prefers-reduced-motion: no-preference) {
   .ttobagi-wave {

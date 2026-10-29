@@ -75,7 +75,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-6">
-        <Ttobagi pose="hello" message={ttobagiSays.hello} size="lg" />
+        <Ttobagi pose="hello" message={ttobagiSays.hello} size="lg" lang="ko" />
         <h1 className="text-4xl leading-tight font-bold whitespace-pre-line break-keep">
           {t.headline}
         </h1>

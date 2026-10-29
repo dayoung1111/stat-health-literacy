@@ -2,6 +2,10 @@
 
 import { useSyncExternalStore, type ReactNode } from 'react';
 
+import { say, speechLang, text, type Lang, type Said } from '@/lib/i18n';
+
+import { findVoice, useLang } from './language';
+
 // S.T.A.T 캐릭터 "또박이". 그림은 docs/reference/ttobagi.html의 포즈 5개를 그대로 옮겼다.
 // 말투: 짧은 존댓말, 한 번에 한 가지만.
 
@@ -335,14 +339,14 @@ export function TtobagiFigure({
 
 const subscribe = () => () => {};
 
-function speak(text: string) {
+function speak(message: string, lang: Lang) {
   const synth = window.speechSynthesis;
   synth.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ko-KR';
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.lang = speechLang[lang];
   utterance.rate = 0.9;
-  const korean = synth.getVoices().find((v) => v.lang.startsWith('ko'));
-  if (korean) utterance.voice = korean;
+  const voice = findVoice(synth.getVoices(), lang);
+  if (voice) utterance.voice = voice;
   synth.speak(utterance);
 }
 
@@ -362,21 +366,27 @@ const speakButton =
 // 또박이 + 옆 말풍선 + 🔊 듣기 버튼.
 // size="sm"은 작은 얼굴과 한 줄 말풍선으로, 내용이 많은 화면(안내문)에서 공간을 아낀다.
 // 화면이 바뀌면 새로 나타나며 짧게 움직인다.
+// 말은 고른 언어로 보여 주고 읽는다. lang을 주면 그 언어로 고정한다(첫 화면).
 export function Ttobagi({
   pose,
-  message,
+  message: said,
   size = 'md',
+  lang: fixedLang,
 }: {
   pose: Pose;
-  message: string;
+  message: Said;
   size?: 'sm' | 'md' | 'lg';
+  lang?: Lang;
 }) {
   const canSpeak = useSyncExternalStore(
     subscribe,
     () => 'speechSynthesis' in window,
     () => false,
   );
-  const label = `또박이 말 소리로 듣기: ${message}`;
+  const chosenLang = useLang();
+  const lang = fixedLang ?? chosenLang;
+  const message = say(lang, said);
+  const label = text(lang, 'ttobagi.listen', { message });
 
   if (size === 'sm') {
     return (
@@ -395,7 +405,7 @@ export function Ttobagi({
           {canSpeak && (
             <button
               type="button"
-              onClick={() => speak(message)}
+              onClick={() => speak(message, lang)}
               aria-label={label}
               className={`flex size-12 shrink-0 justify-center ${speakButton}`}
             >
@@ -425,11 +435,11 @@ export function Ttobagi({
         {canSpeak && (
           <button
             type="button"
-            onClick={() => speak(message)}
+            onClick={() => speak(message, lang)}
             aria-label={label}
             className={`flex min-h-12 gap-1 self-end px-4 ${speakButton}`}
           >
-            🔊 듣기
+            {text(lang, 'ttobagi.listenButton')}
           </button>
         )}
       </div>

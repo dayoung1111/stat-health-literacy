@@ -5,6 +5,7 @@ import { requireDemoPatient } from '@/lib/demo-patient';
 import { guideCatalog, guideKinds } from '@/lib/guide-catalog';
 
 import { GuideIconSvg } from '../../../guide-icon';
+import { Labeled, Source, T } from '../../../language';
 import { Ttobagi } from '../../../ttobagi';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -43,13 +44,18 @@ async function PatientHome({ code }: { code: string }) {
   return (
     <>
       <PatientTopBar code={code} back={{ href: '/' }} showHome={false} />
-      <p className="text-xl text-zinc-700">{hospital.name}</p>
+      <p className="text-xl text-zinc-700">
+        <Source text={hospital.name} />
+      </p>
       <h1 className="mt-2 mb-4 text-3xl leading-snug font-bold break-keep">
-        안녕하세요 🙂
+        <T id="home.hello" />
       </h1>
-      <Ttobagi pose="hello" message={`${guides.length}개 안내가 왔어요.`} />
+      <Ttobagi
+        pose="hello"
+        message={{ id: 'home.guideCount', vars: { count: guides.length } }}
+      />
 
-      <nav aria-label="받은 안내" className="mt-6 flex flex-col gap-4">
+      <Labeled label="home.guides" className="mt-6 flex flex-col gap-4">
         {guides.map((kind) => {
           const guide = guideCatalog[kind];
           return (
@@ -61,15 +67,17 @@ async function PatientHome({ code }: { code: string }) {
               <GuideIconSvg name={guide.icon} className="size-14 shrink-0" />
               <span className="flex flex-col gap-1">
                 <span className="text-2xl font-bold break-keep">
-                  {guide.patientName ?? guide.name}
+                  <Source text={guide.patientName ?? guide.name} />
                 </span>
                 {guide.hint && (
                   <span className="text-xl break-keep text-zinc-700">
-                    {guide.hint}
+                    <Source text={guide.hint} />
                   </span>
                 )}
                 {!guide.ready && (
-                  <span className="text-xl text-zinc-600">준비 중이에요</span>
+                  <span className="text-xl text-zinc-600">
+                    <T id="home.preparing" />
+                  </span>
                 )}
               </span>
               <span aria-hidden="true" className="ml-auto text-3xl">
@@ -78,7 +86,7 @@ async function PatientHome({ code }: { code: string }) {
             </Link>
           );
         })}
-      </nav>
+      </Labeled>
       <CheckWithStaff />
     </>
   );

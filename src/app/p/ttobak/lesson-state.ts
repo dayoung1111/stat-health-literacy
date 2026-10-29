@@ -1,6 +1,8 @@
 // 사진 수업의 진행 계산. 화면·음성과 분리해 테스트하기 쉽게 둔다.
 // 흐름: 인사 → 사진 → 정리 → 퀴즈 → (틀리면 "다시 볼까요?" → 그 사진 → 퀴즈) → 칭찬 → 다음 교시
 
+import { text, type TextId } from '@/lib/i18n';
+
 import type { Lesson, LessonStep } from './photo-lesson';
 
 /**
@@ -178,17 +180,22 @@ export function currentStep(lessons: Lesson[], state: LessonState): LessonStep {
   return lessons[state.lesson].steps[state.step];
 }
 
-/** 지금 자막(=읽을 말)과 강조할 단어 */
-export function getSubtitle(lessons: Lesson[], state: LessonState) {
+/**
+ * 지금 자막(=읽을 말)과 강조할 단어. 자막은 한국어 원문이고, 화면이 고른 언어로 바꾼다.
+ * id: 수업 내용이 아닌 안내 문장(locales/ko.json·en.json)
+ */
+export type Subtitle = { text: string; key: string; id?: TextId };
+
+export function getSubtitle(lessons: Lesson[], state: LessonState): Subtitle {
   const { quiz } = lessons[state.lesson];
   if (!state.started) {
-    return { text: '재생을 누르면 수업이 시작돼요.', key: '' };
+    return { text: text('ko', 'lesson.start'), key: '', id: 'lesson.start' };
   }
   switch (state.mode) {
     case 'quiz':
       return { text: quiz.question, key: quiz.key };
     case 'retry':
-      return { text: '다시 볼까요?', key: '' };
+      return { text: text('ko', 'lesson.retry'), key: '', id: 'lesson.retry' };
     case 'praise':
     case 'done':
       return { text: quiz.praise, key: '잘하셨어요' };
@@ -199,7 +206,7 @@ export function getSubtitle(lessons: Lesson[], state: LessonState) {
   }
 }
 
-/** 강조 단어 색: 괜찮은 말은 초록, 안 되는 말은 빨강 */
+/** 강조 단어 색: 괜찮은 말은 초록, 안 되는 말은 빨강(한국어 원문 단어로 정한다) */
 export function keyTone(key: string): 'ok' | 'no' {
   return /드셔도|괜찮|잘하셨/.test(key) ? 'ok' : 'no';
 }

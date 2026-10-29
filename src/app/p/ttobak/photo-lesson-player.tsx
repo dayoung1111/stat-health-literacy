@@ -32,8 +32,13 @@ import {
 import { Ttobak, type LessonPose } from './ttobak';
 import './photo-lesson.css';
 
+import { speechLang, subtitleKey, type Lang } from '@/lib/i18n';
+
+import { findVoice, useText } from '../../language';
+
 // 또박이 선생님 사진 수업: 음식 사진·또박이(SVG)·브라우저 음성으로 만든 영상.
 // 외부 영상·유료 서비스를 쓰지 않는다. 음성이 안 되는 기기에서는 자막이 시간에 맞춰 넘어간다.
+// 자막·글자는 고른 언어(한국어/영어)로 보여 주고, 음성도 그 언어(ko-KR / en-US)로 읽는다.
 
 const lessons = photoLessons;
 const total = totalSteps(lessons);
@@ -46,13 +51,13 @@ type WebkitElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
-function getSpeech() {
+function getSpeech(lang: Lang) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     return null;
   }
   const voices = window.speechSynthesis.getVoices();
-  const voice = voices.find((item) => item.lang.toLowerCase().startsWith('ko'));
-  // 목소리 목록은 있는데 한국어가 없으면 자막만 시간에 맞춰 넘긴다.
+  const voice = findVoice(voices, lang);
+  // 목소리 목록은 있는데 고른 언어 목소리가 없으면 자막만 시간에 맞춰 넘긴다.
   if (voices.length > 0 && !voice) return null;
   return { synth: window.speechSynthesis, voice };
 }
@@ -79,6 +84,7 @@ export function PhotoLesson() {
     initialLessonState,
   );
   const [immersive, setImmersive] = useState(false);
+  const { lang, t, src } = useText();
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const isPhone = useSyncExternalStore(
@@ -90,6 +96,9 @@ export function PhotoLesson() {
   const lesson = lessons[state.lesson];
   const step = currentStep(lessons, state);
   const subtitle = getSubtitle(lessons, state);
+  // 화면에 보이고 읽을 자막과 색으로 강조할 말(고른 언어)
+  const line = subtitle.id ? t(subtitle.id) : src(subtitle.text);
+  const lineKey = subtitleKey(lang, subtitle.key);
   const minMs = getMinDuration(lessons, state);
   const autoNext = advancesByItself(state.mode);
   const here = flatIndex(lessons, state.lesson, state.step);
@@ -113,17 +122,17 @@ export function PhotoLesson() {
     const tryFinish = () => {
       if (spoke && minDone) finish();
     };
-    const fallback = getFallbackDuration(subtitle.text, minMs);
+    const fallback = getFallbackDuration(line, minMs);
 
     later(() => {
       minDone = true;
       tryFinish();
     }, minMs);
 
-    const speech = getSpeech();
+    const speech = getSpeech(lang);
     if (speech) {
-      const utterance = new SpeechSynthesisUtterance(subtitle.text);
-      utterance.lang = 'ko-KR';
+      const utterance = new SpeechSynthesisUtterance(line);
+      utterance.lang = speechLang[lang];
       utterance.pitch = 1.3;
       utterance.rate = 0.88;
       if (speech.voice) utterance.voice = speech.voice;
@@ -146,7 +155,7 @@ export function PhotoLesson() {
       timers.forEach((timer) => window.clearTimeout(timer));
       speech?.synth.cancel();
     };
-  }, [state.playing, state.cue, subtitle.text, minMs, autoNext]);
+  }, [state.playing, state.cue, line, lang, minMs, autoNext]);
 
   // 전체 화면 동안 뒤 화면이 움직이지 않게 하고, 닫기 버튼에 초점을 둔다.
   // 키보드 Esc로도 닫을 수 있다.
@@ -249,7 +258,7 @@ export function PhotoLesson() {
         ? 'wave'
         : 'point';
 
-  const keyAt = subtitle.key ? subtitle.text.indexOf(subtitle.key) : -1;
+  const keyAt = lineKey ? line.indexOf(lineKey) : -1;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -260,17 +269,14 @@ export function PhotoLesson() {
               ref={closeRef}
               type="button"
               onClick={exitImmersive}
-              aria-label="전체 화면 닫기"
+              aria-label={t('lesson.close')}
               className="pl-close"
             >
               ✕
             </button>
           )}
 
-          <section
-            aria-label="또박이 선생님 사진 수업 영상"
-            className="pl-stage pl-fit"
-          >
+          <section aria-label={t('lesson.video')} className="pl-stage pl-fit">
             {showPhoto && prevPhoto && (
               <PhotoLayer
                 photo={prevPhoto}
@@ -286,9 +292,9 @@ export function PhotoLesson() {
                 <Mark tone={photo.tone} />
                 <div className="pl-label">
                   <span className={`pl-pill ${photo.tone}`}>
-                    {photo.tone === 'no' ? '✕ 먹으면 안 돼요' : '○ 드셔도 돼요'}
+                    {t(photo.tone === 'no' ? 'lesson.noPill' : 'lesson.okPill')}
                   </span>
-                  <span className="pl-name">{photo.name}</span>
+                  <span className="pl-name">{src(photo.name)}</span>
                 </div>
               </div>
             )}
@@ -297,7 +303,7 @@ export function PhotoLesson() {
               <div className="pl-grid" key={`grid-${state.lesson}-${marked}`}>
                 <div className="pl-grid-inner">
                   <p className="pl-grid-title">
-                    {marked ? lesson.summaryTitle : lesson.introTitle}
+                    {src(marked ? lesson.summaryTitle : lesson.introTitle)}
                   </p>
                   <ul className="pl-grid-list">
                     {lessonPhotos.map((item, index) => (
@@ -307,7 +313,7 @@ export function PhotoLesson() {
                       >
                         <Image
                           src={item.src}
-                          alt={item.alt}
+                          alt={src(item.alt)}
                           fill
                           sizes="(max-width: 900px) 33vw, 280px"
                         />
@@ -320,12 +326,14 @@ export function PhotoLesson() {
                         <span className="pl-thumb-name">
                           {marked && (
                             <span className="sr-only">
-                              {item.tone === 'no'
-                                ? '먹으면 안 돼요: '
-                                : '드셔도 돼요: '}
+                              {t(
+                                item.tone === 'no'
+                                  ? 'lesson.noSr'
+                                  : 'lesson.okSr',
+                              )}
                             </span>
                           )}
-                          {item.name}
+                          {src(item.name)}
                         </span>
                       </li>
                     ))}
@@ -346,18 +354,22 @@ export function PhotoLesson() {
               <p aria-live="polite" className="pl-sub">
                 {keyAt >= 0 ? (
                   <>
-                    {subtitle.text.slice(0, keyAt)}
+                    {line.slice(0, keyAt)}
                     <span className={`pl-key ${keyTone(subtitle.key)}`}>
-                      {subtitle.key}
+                      {lineKey}
                     </span>
-                    {subtitle.text.slice(keyAt + subtitle.key.length)}
+                    {line.slice(keyAt + lineKey.length)}
                   </>
                 ) : (
-                  subtitle.text
+                  line
                 )}
               </p>
               {state.mode === 'quiz' && (
-                <div className="pl-choices" role="group" aria-label="답 고르기">
+                <div
+                  className="pl-choices"
+                  role="group"
+                  aria-label={t('lesson.choices')}
+                >
                   {lesson.quiz.options.map((option, index) => (
                     <button
                       key={option}
@@ -365,14 +377,14 @@ export function PhotoLesson() {
                       onClick={() => answer(index)}
                       className={`pl-choice ${state.wrong === index ? 'wrong' : ''}`}
                     >
-                      {option}
+                      {src(option)}
                     </button>
                   ))}
                 </div>
               )}
               {state.mode === 'done' && (
                 <button type="button" onClick={play} className="pl-replay">
-                  처음부터 다시
+                  {t('lesson.replay')}
                 </button>
               )}
             </div>
@@ -382,15 +394,15 @@ export function PhotoLesson() {
                 <button
                   type="button"
                   onClick={play}
-                  aria-label="수업 시작. 소리가 나와요."
+                  aria-label={t('lesson.startLabel')}
                   className="pl-start-button"
                 >
                   <svg aria-hidden="true" viewBox="0 0 24 24">
                     <path d="M8 5 L19 12 L8 19 Z" fill="#FFFFFF" />
                   </svg>
                 </button>
-                <span className="pl-start-title">눌러서 수업 시작</span>
-                <span className="pl-start-sub">소리를 켜 주세요</span>
+                <span className="pl-start-title">{t('lesson.startTitle')}</span>
+                <span className="pl-start-sub">{t('lesson.startSub')}</span>
               </div>
             )}
           </section>
@@ -402,18 +414,20 @@ export function PhotoLesson() {
               disabled={here === 0}
               className={controlClass}
             >
-              이전
+              {t('lesson.prev')}
             </button>
             <button
               type="button"
               onClick={togglePlay}
               className="flex h-13 items-center justify-center rounded-2xl bg-[#0F6670] px-6 text-lg font-bold text-white hover:bg-[#0B4E56] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]"
             >
-              {state.playing
-                ? '일시정지'
-                : state.mode === 'done'
-                  ? '처음부터'
-                  : '재생'}
+              {t(
+                state.playing
+                  ? 'lesson.pause'
+                  : state.mode === 'done'
+                    ? 'lesson.fromStart'
+                    : 'lesson.play',
+              )}
             </button>
             <button
               type="button"
@@ -421,11 +435,11 @@ export function PhotoLesson() {
               disabled={here === total - 1}
               className={controlClass}
             >
-              다음
+              {t('lesson.next')}
             </button>
             <div
               role="progressbar"
-              aria-label="수업 진행"
+              aria-label={t('lesson.progress')}
               aria-valuemin={1}
               aria-valuemax={total}
               aria-valuenow={here + 1}
@@ -444,7 +458,7 @@ export function PhotoLesson() {
 
       <aside className="flex flex-col gap-4 text-[#15262B]">
         <section className="flex flex-col gap-2.5 rounded-2xl border border-[#CAD6D6] bg-white p-4">
-          <h2 className="text-lg font-bold">오늘의 수업</h2>
+          <h2 className="text-lg font-bold">{t('lesson.today')}</h2>
           <ol className="flex flex-col gap-1.5">
             {lessons.map((item, index) => {
               const done = index < state.lesson || state.mode === 'done';
@@ -455,9 +469,9 @@ export function PhotoLesson() {
                   aria-current={now ? 'step' : undefined}
                   className={`flex items-center justify-between rounded-xl border-[1.5px] px-3 py-2.5 ${now ? 'border-[#0F6670] bg-[#DCEDEE] text-[#0B4E56]' : 'border-[#CAD6D6] text-[#4A5D63]'}`}
                 >
-                  <span className="text-base font-bold">{item.title}</span>
+                  <span className="text-base font-bold">{src(item.title)}</span>
                   <span className="text-sm font-semibold">
-                    {now ? '지금' : done ? '완료' : ''}
+                    {now ? t('lesson.now') : done ? t('lesson.done') : ''}
                   </span>
                 </li>
               );
@@ -466,7 +480,7 @@ export function PhotoLesson() {
         </section>
 
         <section className="flex flex-col gap-2 rounded-2xl border border-[#CAD6D6] bg-white p-4">
-          <h2 className="text-lg font-bold">이번 시간에 배운 것</h2>
+          <h2 className="text-lg font-bold">{t('lesson.learned')}</h2>
           <ul className="flex flex-col gap-2">
             {foodPhotos.map((item) => {
               const at = learnedIndex(item.id);
@@ -493,17 +507,15 @@ export function PhotoLesson() {
                   <span
                     className={`flex-1 text-base font-semibold ${shown ? '' : 'text-[#8FA0A3]'}`}
                   >
-                    {item.name}
+                    {src(item.name)}
                   </span>
                   <span
                     className={`text-sm font-bold ${now ? 'text-[#0F6670]' : item.tone === 'no' ? 'text-[#A3262C]' : 'text-[#1D6E47]'}`}
                   >
                     {now
-                      ? '지금'
+                      ? t('lesson.now')
                       : heard
-                        ? item.tone === 'no'
-                          ? '✕ 안 돼요'
-                          : '○ 괜찮아요'
+                        ? t(item.tone === 'no' ? 'lesson.no' : 'lesson.ok')
                         : ''}
                   </span>
                 </li>
@@ -539,11 +551,12 @@ function PhotoLayer({
   photo: FoodPhoto;
   className: string;
 }) {
+  const { src } = useText();
   return (
     <div className={`pl-photo ${className}`}>
       <Image
         src={photo.src}
-        alt={photo.alt}
+        alt={src(photo.alt)}
         fill
         sizes="(max-width: 1000px) 100vw, 900px"
       />

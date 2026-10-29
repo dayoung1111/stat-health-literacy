@@ -1,5 +1,7 @@
 import type { Picture, Visual } from '@/lib/demo-guide';
 
+import { Source, T } from '../language';
+
 // 외부 이미지 없이 직접 그린 그림. 그림 뜻은 아래 글(label)로 함께 보여 주므로
 // 화면 읽기 프로그램에는 그림을 숨기고 글만 읽게 한다.
 
@@ -156,7 +158,7 @@ function Calendar({ text }: { text: string }) {
         fontWeight="800"
         fill="#15262B"
       >
-        {text}
+        <Source text={text} />
       </text>
     </svg>
   );
@@ -221,8 +223,12 @@ function Art({ picture }: { picture: Picture }) {
 function Label({ picture }: { picture: Picture }) {
   return (
     <>
-      {picture.no && <span className="sr-only">하면 안 돼요: </span>}
-      {picture.label}
+      {picture.no && (
+        <span className="sr-only">
+          <T id="common.no" />
+        </span>
+      )}
+      <Source text={picture.label} />
     </>
   );
 }
@@ -241,6 +247,7 @@ export function PictureCard({ picture }: { picture: Picture }) {
 
 // 그림 여러 개를 한 줄(좁으면 두 줄)로 보여 준다.
 // compact: 그림을 조금 작게 해 휴대폰에서도 한 줄에 담는다(안내문 화면).
+// 영어는 글자가 길어서 한 줄에 3개씩 나눠 보여 준다.
 export function PictureRow({
   pictures,
   compact = false,
@@ -250,11 +257,11 @@ export function PictureRow({
 }) {
   if (compact) {
     return (
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-3 [&:lang(en)]:flex-wrap">
         {pictures.map((picture) => (
           <div
             key={picture.label}
-            className="min-w-0 flex-1 [&_.h-14]:h-8 [&_.size-24]:size-16 [&_.text-7xl]:text-5xl [&_.w-11]:w-[15px] [&>figure>span]:h-16 [&>figure>span]:min-w-16"
+            className="min-w-0 flex-1 [&:lang(en)]:w-[calc((100%-1.5rem)/3)] [&:lang(en)]:flex-none [&_.h-14]:h-8 [&_.size-24]:size-16 [&_.text-7xl]:text-5xl [&_.w-11]:w-[15px] [&>figure>span]:h-16 [&>figure>span]:min-w-16"
           >
             <PictureCard picture={picture} />
           </div>

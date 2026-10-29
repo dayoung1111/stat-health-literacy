@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { guideSteps } from '@/lib/demo-guide';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
+import { Labeled, Source, T } from '../../../../language';
 import { Ttobagi } from '../../../../ttobagi';
 import { PictureRow } from '../../../pictures';
 import { buttonClass, CheckWithStaff, PatientTopBar } from '../../../ui';
@@ -45,7 +46,7 @@ async function GuideStep({
         <Ttobagi pose="explain" message={ttobagiSays.explain} size="sm" />
       </div>
       <p className="inline-block rounded-full bg-stat-mint px-4 py-1 text-xl font-bold text-stat-green">
-        {step.sectionNo}. {step.sectionTitle}
+        {step.sectionNo}. <Source text={step.sectionTitle} />
       </p>
 
       <section className="mt-3 rounded-3xl bg-stat-mint p-5">
@@ -53,11 +54,13 @@ async function GuideStep({
         <div className="mt-4 border-t-2 border-dashed border-stat-green/30 pt-4">
           {step.lines.map((line) => (
             <p key={line} className="text-2xl leading-relaxed break-keep">
-              {line}
+              <Source text={line} />
             </p>
           ))}
           {step.term && (
-            <p className="mt-2 text-xl text-zinc-600">({step.term})</p>
+            <p className="mt-2 text-xl text-zinc-600">
+              (<Source text={step.term} />)
+            </p>
           )}
         </div>
       </section>
@@ -68,12 +71,12 @@ async function GuideStep({
         href={`/p/${code}/guide/${number}/${step.id}`}
         className="mt-5 flex min-h-16 items-center justify-center gap-2 rounded-full border-2 border-stat-blush bg-stat-sun px-6 text-2xl font-bold text-stat-ink hover:bg-stat-sun focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green"
       >
-        🤔 헷갈려요
+        <T id="guide.confused" />
       </ConfusedLink>
       <CheckWithStaff />
 
-      <nav
-        aria-label="안내문 넘기기"
+      <Labeled
+        label="guide.pages"
         className="fixed inset-x-0 bottom-0 rounded-t-3xl border-t border-stat-mint bg-white px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
       >
         <div className="mx-auto max-w-md">
@@ -82,7 +85,9 @@ async function GuideStep({
               {guideSteps.map((_, i) => (i < number ? '●' : '○')).join(' ')}
             </span>
             <span>
-              <span className="sr-only">안내문 {total}개 중 </span>
+              <span className="sr-only">
+                <T id="guide.ofTotal" vars={{ total }} />
+              </span>
               {number} / {total}
             </span>
           </p>
@@ -92,11 +97,11 @@ async function GuideStep({
                 href={`/p/${code}/guide/${number - 1}`}
                 className={buttonClass.outline}
               >
-                ◀ 이전
+                <T id="common.prev" />
               </Link>
             ) : (
               <span aria-disabled="true" className={buttonClass.disabled}>
-                ◀ 이전
+                <T id="common.prev" />
               </span>
             )}
             <Link
@@ -107,11 +112,11 @@ async function GuideStep({
               }
               className={buttonClass.primary}
             >
-              {number < total ? '다음 ▶' : '이해 확인 ▶'}
+              <T id={number < total ? 'common.next' : 'guide.finish'} />
             </Link>
           </div>
         </div>
-      </nav>
+      </Labeled>
     </div>
   );
 }

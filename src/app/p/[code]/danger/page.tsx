@@ -1,6 +1,7 @@
 import { demoGuide } from '@/lib/demo-guide';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
+import { Source, T } from '../../../language';
 import { Ttobagi } from '../../../ttobagi';
 
 import { CallButton, PatientTopBar } from '../../ui';
@@ -13,7 +14,9 @@ export default function DangerPage({ params }: PageProps<'/p/[code]/danger'>) {
       render={(code) => (
         <>
           <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
-          <h1 className="sr-only">이럴 땐 바로 병원에 전화하세요</h1>
+          <h1 className="sr-only">
+            <T id="danger.title" />
+          </h1>
           <Ttobagi pose="stop" message={ttobagiSays.danger} />
           <ul className="mt-2 grid grid-cols-2 gap-3">
             {demoGuide.dangerSigns.map((sign) => (
@@ -25,7 +28,7 @@ export default function DangerPage({ params }: PageProps<'/p/[code]/danger'>) {
                   {sign.emoji}
                 </span>
                 <span className="text-xl leading-snug font-bold break-keep">
-                  {sign.text}
+                  <Source text={sign.text} />
                 </span>
               </li>
             ))}

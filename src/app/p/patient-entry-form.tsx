@@ -2,6 +2,9 @@
 
 import { useActionState, useRef, useState } from 'react';
 
+import type { TextId } from '@/lib/i18n';
+
+import { useText } from '../language';
 import { enterPatient, type EntryState } from './actions';
 import { buttonClass } from './ui';
 
@@ -11,6 +14,7 @@ export function PatientEntryForm({ code }: { code?: string }) {
     enterPatient,
     {},
   );
+  const { t } = useText();
 
   return (
     <form action={formAction} className="flex flex-col gap-8">
@@ -19,15 +23,15 @@ export function PatientEntryForm({ code }: { code?: string }) {
       ) : (
         <DigitBoxes
           name="code"
-          label="교육 번호 6자리"
-          hint="병원에서 받은 종이에 적혀 있어요"
+          label="entry.codeLabel"
+          hint="entry.codeHint"
           error={state.fieldErrors?.code}
         />
       )}
       <DigitBoxes
         name="birthDate"
-        label="생년월일 6자리"
-        hint="예: 1985년 7월 4일 → 850704"
+        label="entry.birthLabel"
+        hint="entry.birthHint"
         error={state.fieldErrors?.birthDate}
       />
       {state.message && (
@@ -35,11 +39,11 @@ export function PatientEntryForm({ code }: { code?: string }) {
           role="alert"
           className="rounded-3xl bg-stat-alert-soft p-5 text-xl font-semibold text-stat-alert"
         >
-          {state.message}
+          {t(state.message.id, state.message.vars)}
         </p>
       )}
       <button type="submit" disabled={pending} className={buttonClass.primary}>
-        {pending ? '확인 중…' : '확인 ▶'}
+        {pending ? t('entry.checking') : t('entry.submit')}
       </button>
     </form>
   );
@@ -55,10 +59,11 @@ function DigitBoxes({
   error,
 }: {
   name: string;
-  label: string;
-  hint: string;
-  error?: string;
+  label: TextId;
+  hint: TextId;
+  error?: TextId;
 }) {
+  const { t } = useText();
   const [digits, setDigits] = useState<string[]>(Array(length).fill(''));
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
   const labelId = `${name}-label`;
@@ -86,10 +91,10 @@ function DigitBoxes({
   return (
     <div role="group" aria-labelledby={labelId} aria-describedby={hintId}>
       <p id={labelId} className="text-2xl font-bold">
-        {label}
+        {t(label)}
       </p>
       <p id={hintId} className="mt-1 text-xl text-zinc-600">
-        {hint}
+        {t(hint)}
       </p>
       <input type="hidden" name={name} value={digits.join('')} />
       <div className="mt-3 flex gap-2">
@@ -102,7 +107,7 @@ function DigitBoxes({
             value={digit}
             inputMode="numeric"
             autoComplete="off"
-            aria-label={`${label} ${i + 1}번째 숫자`}
+            aria-label={t('entry.digit', { label: t(label), n: i + 1 })}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             onChange={(e) =>
@@ -126,7 +131,7 @@ function DigitBoxes({
       </div>
       {error && (
         <p id={errorId} className="mt-2 text-xl text-stat-alert">
-          {error}
+          {t(error)}
         </p>
       )}
     </div>
