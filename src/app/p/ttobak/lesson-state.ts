@@ -3,6 +3,7 @@
 // 퀴즈가 없는 교시는 마지막 장면 뒤 바로 다음 교시로 간다.
 
 import type { KeyTone, SayKey } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
 
 import type { Lesson, LessonStep } from './photo-lesson';
 
@@ -213,16 +214,16 @@ export function getSubtitle(
 ): { text: string; keys: SayKey[] } {
   const { quiz } = lessons[state.lesson];
   if (!state.started) {
-    return { text: '재생을 누르면 수업이 시작돼요.', keys: [] };
+    return { text: screenTexts.lesson.beforeStart, keys: [] };
   }
-  const praised = { word: '잘하셨어요', tone: 'ok' } as const;
+  const praised = { word: screenTexts.lesson.praiseWord, tone: 'ok' } as const;
   switch (state.mode) {
     case 'quiz':
       return quiz
         ? { text: quiz.question, keys: [{ word: quiz.key, tone: 'no' }] }
         : { text: '', keys: [] };
     case 'retry':
-      return { text: '다시 볼까요?', keys: [] };
+      return { text: screenTexts.lesson.retryLine, keys: [] };
     case 'praise':
     case 'done': {
       const last = state.lesson === lessons.length - 1;

@@ -1,4 +1,7 @@
 import type { PrepScene as SceneName } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
+
+import { FittedSvgText } from '../../translated';
 
 // 약 만들기 그림 애니메이션(5·6교시와 따라하기 화면). 외부 그림 없이 SVG로 그린다.
 // 애니메이션은 photo-lesson.css의 pp- 클래스. 움직임 줄이기 설정이면 마지막 모습만 보인다.
@@ -197,16 +200,17 @@ function Tag({ x, y, text }: { x: number; y: number; text: string }) {
         fill={ink}
         opacity="0.85"
       />
-      <text
+      <FittedSvgText
         x={x}
         y={y + 2}
         textAnchor="middle"
-        fontSize="22"
+        fontSize={22}
+        width={92}
         fontWeight="700"
         fill="#FFFFFF"
       >
         {text}
-      </text>
+      </FittedSvgText>
     </g>
   );
 }
@@ -218,7 +222,13 @@ function Cups({ hour, animate }: { hour: number; animate: boolean }) {
       {[0, 1, 2, 3].map((i) => (
         <g key={i}>
           <Cup x={160 + i * 110} y={110} at={animate ? 0.5 + i * 0.6 : 0} />
-          <Tag x={204 + i * 110} y={268} text={i === 0 ? '처음' : '15분'} />
+          <Tag
+            x={204 + i * 110}
+            y={268}
+            text={
+              i === 0 ? screenTexts.lesson.first : screenTexts.lesson.every15
+            }
+          />
         </g>
       ))}
     </>
@@ -287,17 +297,18 @@ export function PrepScene({
             strokeLinecap="round"
             className="pp-stream"
           />
-          <text
+          <FittedSvgText
             x="400"
             y="152"
-            fontSize="30"
+            fontSize={30}
+            width={180}
             fontWeight="800"
             fill="#D9363E"
             className="pp-pop"
             style={delay(2)}
           >
-            ← 표시선
-          </text>
+            {screenTexts.lesson.markLine}
+          </FittedSvgText>
         </>
       )}
 
@@ -360,26 +371,28 @@ export function PrepScene({
               fill="#FFFFFF"
               opacity="0.45"
             />
-            <text
+            <FittedSvgText
               x="300"
               y="190"
               textAnchor="middle"
-              fontSize="36"
+              fontSize={36}
+              width={250}
               fontWeight="800"
               fill={ink}
             >
-              가소콜액
-            </text>
-            <text
+              {screenTexts.lesson.gasocol}
+            </FittedSvgText>
+            <FittedSvgText
               x="300"
               y="240"
               textAnchor="middle"
-              fontSize="34"
+              fontSize={34}
+              width={150}
               fontWeight="800"
               fill={ink}
             >
-              1포
-            </text>
+              {screenTexts.lesson.onePack}
+            </FittedSvgText>
           </g>
         </>
       )}

@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 
 import { requireDemoPatient } from '@/lib/demo-patient';
 import { guideCatalog, guideKinds, type GuideKind } from '@/lib/guide-catalog';
+import { screenTexts } from '@/lib/screen-texts';
 
-import { Ttobagi } from '../../../../ttobagi';
+import { T, TranslatedTtobagi } from '../../../../translated';
 import { ButtonLink, CallButton, PatientTopBar } from '../../../ui';
 import { PatientPage } from '../../patient-page';
 
@@ -36,12 +37,19 @@ async function Preparing({
     <>
       <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
       <h1 className="mb-4 text-3xl font-bold break-keep">
-        {guideCatalog[kind].name}
+        <T>{guideCatalog[kind].name}</T>
       </h1>
-      <Ttobagi pose="explain" message="안내 내용 준비 중이에요." />
+      <TranslatedTtobagi
+        pose="explain"
+        message={screenTexts.preparing.message}
+      />
       <div className="mt-8 flex flex-col gap-4">
-        <ButtonLink href={`/p/${code}/home`}>🏠 다른 안내 보기</ButtonLink>
-        <CallButton variant="outline">📞 궁금하면 병원에 전화</CallButton>
+        <ButtonLink href={`/p/${code}/home`}>
+          🏠 <T>{screenTexts.preparing.other}</T>
+        </ButtonLink>
+        <CallButton variant="outline">
+          📞 <T>{screenTexts.preparing.callIfCurious}</T>
+        </CallButton>
       </div>
     </>
   );

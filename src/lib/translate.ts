@@ -46,7 +46,7 @@ The sentences come from a colonoscopy preparation guide and a medication check s
 Rules (follow all of them):
 - Translate only what the source says. Never add, remove, explain, or soften anything.
 - Keep every number, time, date, and amount exactly as written (for example 1L, 500mL, 5, 6:30). Do not convert units or reformat them.
-- Keep drug names, product names, and brand names exactly as written; do not translate or replace them.
+- Keep drug names, product names, and brand names exactly as written; do not translate or replace them. For a Korean product name written in Hangul (for example 가소콜액), keep the Hangul as is and add the Latin spelling in parentheses, always the same way (가소콜액 (Gasocol)).
 - The guide character's name "또박이" must always be written as "${characterNames[language]}".
 - Keep placeholders such as {date} exactly as written (the app fills them in later).
 - Keep line breaks, bullet marks, emoji, and punctuation like ▶ or ✓ where they are.

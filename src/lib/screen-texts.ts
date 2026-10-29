@@ -77,6 +77,67 @@ export const screenTexts = {
   danger: {
     title: '이럴 땐 바로 병원에 전화하세요',
   },
+  // 또박이 선생님 수업(사진·카드·약 만들기 장면)
+  lesson: {
+    noEat: '먹으면 안 돼요',
+    okEat: '드셔도 돼요',
+    noEatSr: '먹으면 안 돼요: ',
+    okEatSr: '드셔도 돼요: ',
+    startTitle: '눌러서 수업 시작',
+    startSub: '소리를 켜 주세요',
+    prev: '이전',
+    next: '다음',
+    pause: '일시정지',
+    again: '처음부터',
+    play: '재생',
+    title: '대장내시경 수업',
+    now: '지금',
+    ended: '끝난 교시',
+    followPrep: '따라하기로 직접 해보기',
+    beforeStart: '재생을 누르면 수업이 시작돼요.',
+    retryLine: '다시 볼까요?',
+    praiseWord: '잘하셨어요',
+    signNo: '안 돼요',
+    signOk: '돼요',
+    signCare: '주의',
+    // 카드 장면의 그림 설명(상황 / 할 일)
+    notes: {
+      period: '생리 중',
+      periodDo: '약 먹지 않기',
+      pregnant: '임신·수유 중',
+      pregnantDo: '먼저 확인',
+      vomit: '심한 구토',
+      vomitDo: '멈추고 전화',
+      stool: '변이 맑지 않음',
+      stoolDo: '접수 때 말하기',
+    },
+    // 약 만들기 그림 속 글자
+    first: '처음',
+    every15: '15분',
+    markLine: '← 표시선',
+    gasocol: '가소콜액',
+    onePack: '1포',
+  },
+  // 약 만들기 따라하기
+  prep: {
+    title: '약 만들기 따라하기',
+    stepOf: '{n}단계 / {total}',
+    allDrunk: '네 컵을 다 드셨어요.',
+    untilNext: '다음 컵까지 {time}',
+    drinkNow: '{n}번째 컵을 드세요.',
+    drank: '{n}번째 컵 마셨어요',
+    cupDone: '{n}번째 컵 마심',
+    cupNot: '{n}번째 컵 아직',
+  },
+  video: {
+    title: '또박이 선생님 수업',
+    prepare: '준비',
+  },
+  preparing: {
+    message: '안내 내용 준비 중이에요.',
+    other: '다른 안내 보기',
+    callIfCurious: '궁금하면 병원에 전화',
+  },
 };
 
 // 숫자가 들어가는 문구는 나올 수 있는 값을 모두 적어 미리 번역한다.

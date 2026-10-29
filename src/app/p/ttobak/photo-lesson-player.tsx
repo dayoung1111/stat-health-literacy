@@ -28,7 +28,10 @@ import {
 import type { GuideKind } from '@/lib/guide-catalog';
 import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
 
+import { screenTexts } from '@/lib/screen-texts';
+
 import { useLanguageOr } from '../../language-provider';
+import { T, useTranslatedTexts } from '../../translated';
 
 import { completeGuide } from '../records';
 import { CardScene } from './card-scene';
@@ -125,18 +128,30 @@ export function PhotoLesson({
   const lesson = lessons[state.lesson];
   const step = currentStep(lessons, state);
   const subtitle = getSubtitle(lessons, state, finish);
+  // 수업 글자(자막·강조 말)는 한국어 원문을 고른 언어로 번역해 보여 주고 읽는다.
+  // 번역이 올 때까지는 한국어를 보여 주고, 소리 내어 읽는 것은 번역이 온 뒤에 시작한다.
+  const spoken = useTranslatedTexts([
+    subtitle.text,
+    ...subtitle.keys.map((key) => key.word),
+  ]);
+  const [lineText, ...keyWords] = spoken.texts;
+  const lineKeys = subtitle.keys.map((key, i) => ({
+    ...key,
+    word: keyWords[i],
+  }));
   // 수업 본문은 한국어, 마지막 교시 뒤 이동 문구만 번역된 말이다. 말의 언어에 맞는 목소리로 읽는다.
   const translatedLine =
     (state.mode === 'praise' || state.mode === 'done') &&
     state.lesson === lessons.length - 1;
-  const speechLang = translatedLine ? t.speechLang : 'ko-KR';
+  const speechLang =
+    translatedLine || lineText !== subtitle.text ? t.speechLang : 'ko-KR';
   const minMs = getMinDuration(lessons, state);
   const autoNext = advancesByItself(state.mode);
   const here = flatIndex(lessons, state.lesson, state.step);
 
   // 말하기: 음성이 끝나고 최소 시간이 지나면 다음으로. 음성이 없으면 시간에 맞춰 넘어간다.
   useEffect(() => {
-    if (!state.playing) return;
+    if (!state.playing || spoken.pending) return;
 
     let finished = false;
     let spoke = false;
@@ -153,7 +168,7 @@ export function PhotoLesson({
     const tryFinish = () => {
       if (spoke && minDone) finish();
     };
-    const fallback = getFallbackDuration(subtitle.text, minMs);
+    const fallback = getFallbackDuration(lineText, minMs);
 
     later(() => {
       minDone = true;
@@ -162,7 +177,7 @@ export function PhotoLesson({
 
     const speech = getSpeech(speechLang);
     if (speech) {
-      const utterance = new SpeechSynthesisUtterance(subtitle.text);
+      const utterance = new SpeechSynthesisUtterance(lineText);
       utterance.lang = speechLang;
       utterance.pitch = 1.3;
       utterance.rate = 0.88;
@@ -186,7 +201,15 @@ export function PhotoLesson({
       timers.forEach((timer) => window.clearTimeout(timer));
       speech?.synth.cancel();
     };
-  }, [state.playing, state.cue, subtitle.text, minMs, autoNext, speechLang]);
+  }, [
+    state.playing,
+    state.cue,
+    lineText,
+    spoken.pending,
+    minMs,
+    autoNext,
+    speechLang,
+  ]);
 
   // 전체 화면 동안 뒤 화면이 움직이지 않게 하고, 닫기 버튼에 초점을 둔다.
   // 키보드 Esc로도 닫을 수 있다.
@@ -308,7 +331,7 @@ export function PhotoLesson({
         ? 'wave'
         : 'point';
 
-  const parts = splitKeys(subtitle.text, subtitle.keys);
+  const parts = splitKeys(lineText, lineKeys);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -345,9 +368,19 @@ export function PhotoLesson({
                 <Mark tone={photo.tone} />
                 <div className="pl-label">
                   <span className={`pl-pill ${photo.tone}`}>
-                    {photo.tone === 'no' ? '✕ 먹으면 안 돼요' : '○ 드셔도 돼요'}
+                    {photo.tone === 'no' ? (
+                      <>
+                        ✕ <T>{screenTexts.lesson.noEat}</T>
+                      </>
+                    ) : (
+                      <>
+                        ○ <T>{screenTexts.lesson.okEat}</T>
+                      </>
+                    )}
                   </span>
-                  <span className="pl-name">{photo.name}</span>
+                  <span className="pl-name">
+                    <T>{photo.name}</T>
+                  </span>
                 </div>
               </div>
             )}
@@ -356,7 +389,7 @@ export function PhotoLesson({
               <div className="pl-grid" key={`grid-${state.lesson}-${marked}`}>
                 <div className="pl-grid-inner">
                   <p className="pl-grid-title">
-                    {marked ? lesson.summaryTitle : lesson.introTitle}
+                    <T>{marked ? lesson.summaryTitle : lesson.introTitle}</T>
                   </p>
                   <ul className="pl-grid-list">
                     {lessonPhotos.map((item, index) => (
@@ -379,12 +412,14 @@ export function PhotoLesson({
                         <span className="pl-thumb-name">
                           {marked && (
                             <span className="sr-only">
-                              {item.tone === 'no'
-                                ? '먹으면 안 돼요: '
-                                : '드셔도 돼요: '}
+                              <T>
+                                {item.tone === 'no'
+                                  ? screenTexts.lesson.noEatSr
+                                  : screenTexts.lesson.okEatSr}
+                              </T>
                             </span>
                           )}
-                          {item.name}
+                          <T>{item.name}</T>
                         </span>
                       </li>
                     ))}
@@ -402,7 +437,9 @@ export function PhotoLesson({
 
             {state.started && step.kind === 'prep' && (
               <div key={sceneKey}>
-                <p className="pp-badge">{step.badge}</p>
+                <p className="pp-badge">
+                  <T>{step.badge}</T>
+                </p>
                 <div className="pp-stage-scene">
                   <PrepScene scene={step.scene} hour={lesson.hour} />
                 </div>
@@ -438,7 +475,7 @@ export function PhotoLesson({
                       onClick={() => answer(index)}
                       className={`pl-choice ${state.wrong === index ? 'wrong' : ''}`}
                     >
-                      {option}
+                      <T>{option}</T>
                     </button>
                   ))}
                 </div>
@@ -467,8 +504,12 @@ export function PhotoLesson({
                     <path d="M8 5 L19 12 L8 19 Z" fill="#FFFFFF" />
                   </svg>
                 </button>
-                <span className="pl-start-title">눌러서 수업 시작</span>
-                <span className="pl-start-sub">소리를 켜 주세요</span>
+                <span className="pl-start-title">
+                  <T>{screenTexts.lesson.startTitle}</T>
+                </span>
+                <span className="pl-start-sub">
+                  <T>{screenTexts.lesson.startSub}</T>
+                </span>
               </div>
             )}
           </section>
@@ -480,18 +521,20 @@ export function PhotoLesson({
               disabled={here === 0}
               className={controlClass}
             >
-              이전
+              <T>{screenTexts.lesson.prev}</T>
             </button>
             <button
               type="button"
               onClick={togglePlay}
               className="flex h-13 items-center justify-center rounded-2xl bg-[#0F6670] px-6 text-lg font-bold text-white hover:bg-[#0B4E56] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]"
             >
-              {state.playing
-                ? '일시정지'
-                : state.mode === 'done'
-                  ? '처음부터'
-                  : '재생'}
+              <T>
+                {state.playing
+                  ? screenTexts.lesson.pause
+                  : state.mode === 'done'
+                    ? screenTexts.lesson.again
+                    : screenTexts.lesson.play}
+              </T>
             </button>
             {/* 마지막 장면에서는 남은 안내가 있으면 그 안내로 간다. */}
             <button
@@ -504,7 +547,7 @@ export function PhotoLesson({
               disabled={here === total - 1 && !nextHref}
               className={controlClass}
             >
-              다음
+              <T>{screenTexts.lesson.next}</T>
             </button>
             <div
               role="progressbar"
@@ -566,7 +609,9 @@ export function PhotoLesson({
         )}
 
         <section className="flex flex-col gap-2.5 rounded-2xl border border-[#CAD6D6] bg-white p-4">
-          <h2 className="text-lg font-bold">대장내시경 수업</h2>
+          <h2 className="text-lg font-bold">
+            <T>{screenTexts.lesson.title}</T>
+          </h2>
           <ol className="flex flex-col gap-1.5">
             {lessons.map((item, index) => {
               const done = index < state.lesson || state.mode === 'done';
@@ -580,15 +625,17 @@ export function PhotoLesson({
                     className={`flex w-full items-center justify-between gap-2 rounded-xl border-[1.5px] px-3 py-2.5 text-left hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670] ${now ? 'border-[#0F6670] bg-[#DCEDEE] text-[#0B4E56]' : 'border-[#CAD6D6] text-[#4A5D63]'}`}
                   >
                     <span className="text-base font-bold break-keep">
-                      {item.title}
+                      <T>{item.title}</T>
                     </span>
                     <span className="flex-none text-sm font-semibold">
                       {now ? (
-                        '지금'
+                        <T>{screenTexts.lesson.now}</T>
                       ) : done ? (
                         <span className="flex size-6 items-center justify-center rounded-full bg-[#2E9E6B] text-white">
                           <span aria-hidden="true">✓</span>
-                          <span className="sr-only">끝난 교시</span>
+                          <span className="sr-only">
+                            <T>{screenTexts.lesson.ended}</T>
+                          </span>
                         </span>
                       ) : (
                         ''
@@ -606,7 +653,7 @@ export function PhotoLesson({
             href={`/p/${code}/prep`}
             className="flex min-h-14 items-center justify-center rounded-2xl bg-[#0F6670] px-4 text-center text-lg font-bold text-white hover:bg-[#0B4E56] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]"
           >
-            따라하기로 직접 해보기
+            <T>{screenTexts.lesson.followPrep}</T>
           </Link>
         )}
       </aside>

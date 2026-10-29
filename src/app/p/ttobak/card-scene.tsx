@@ -2,15 +2,18 @@ import Image from 'next/image';
 
 import type { CardItem, KeyTone, LessonCard } from '@/lib/demo-guide';
 
+import { screenTexts } from '@/lib/screen-texts';
+
+import { T } from '../../translated';
 import { Drawing } from '../pictures';
 
 // 3·4·7·8교시 카드 장면: 위에 큰 안내 카드, 아래에 이름표 붙은 사진(그림) 카드.
 // 사진 위 X / O / 노란 ! 는 하나씩 차례로 그려진다.
 
 const signs: Record<KeyTone, { say: string }> = {
-  no: { say: '안 돼요' },
-  ok: { say: '돼요' },
-  care: { say: '주의' },
+  no: { say: screenTexts.lesson.signNo },
+  ok: { say: screenTexts.lesson.signOk },
+  care: { say: screenTexts.lesson.signCare },
 };
 
 // 안내 카드 왼쪽 동그라미 속 ✕ / ○ / !
@@ -64,30 +67,30 @@ const pictureNotesByCard: Record<string, PictureNote[]> = {
   'tell-us': [
     {
       emoji: '🩸',
-      situation: '생리 중',
+      situation: screenTexts.lesson.notes.period,
       actionIcon: '✋',
-      action: '약 먹지 않기',
+      action: screenTexts.lesson.notes.periodDo,
       tone: 'stop',
     },
     {
       emoji: '🤰',
-      situation: '임신·수유 중',
+      situation: screenTexts.lesson.notes.pregnant,
       actionIcon: '📞',
-      action: '먼저 확인',
+      action: screenTexts.lesson.notes.pregnantDo,
       tone: 'tell',
     },
     {
       emoji: '🤮',
-      situation: '심한 구토',
+      situation: screenTexts.lesson.notes.vomit,
       actionIcon: '✋',
-      action: '멈추고 전화',
+      action: screenTexts.lesson.notes.vomitDo,
       tone: 'stop',
     },
     {
       emoji: '💩',
-      situation: '변이 맑지 않음',
+      situation: screenTexts.lesson.notes.stool,
       actionIcon: '🗣️',
-      action: '접수 때 말하기',
+      action: screenTexts.lesson.notes.stoolDo,
       tone: 'tell',
     },
   ],
@@ -107,11 +110,19 @@ export function CardScene({ card }: { card: LessonCard }) {
       <div className={`pc-guide ${card.sign}`}>
         <span className={`pc-sign ${card.sign}`}>
           <SignMark tone={card.sign} />
-          <span className="sr-only">{sign.say}: </span>
+          <span className="sr-only">
+            <T>{sign.say}</T>:{' '}
+          </span>
         </span>
         <span className="pc-guide-text">
-          <span className="pc-title">{card.title}</span>
-          {!pictureNotes && <span className="pc-sub">{card.sub}</span>}
+          <span className="pc-title">
+            <T>{card.title}</T>
+          </span>
+          {!pictureNotes && (
+            <span className="pc-sub">
+              <T>{card.sub}</T>
+            </span>
+          )}
         </span>
       </div>
 
@@ -126,10 +137,12 @@ export function CardScene({ card }: { card: LessonCard }) {
               <span aria-hidden="true" className="pc-picnote-emoji">
                 {note.emoji}
               </span>
-              <span className="pc-picnote-situation">{note.situation}</span>
+              <span className="pc-picnote-situation">
+                <T>{note.situation}</T>
+              </span>
               <span className="pc-picnote-band">
                 <span aria-hidden="true">{note.actionIcon} </span>
-                {note.action}
+                <T>{note.action}</T>
               </span>
             </li>
           ))}
@@ -168,15 +181,17 @@ export function CardScene({ card }: { card: LessonCard }) {
                   className="pc-tag"
                   style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
                 >
-                  {tag.text}
+                  <T>{tag.text}</T>
                 </span>
               ))}
               {!wide && (
                 <span className="pc-item-name">
                   {item.mark && (
-                    <span className="sr-only">{signs[item.mark].say}: </span>
+                    <span className="sr-only">
+                      <T>{signs[item.mark].say}</T>:{' '}
+                    </span>
                   )}
-                  {item.label}
+                  <T>{item.label}</T>
                 </span>
               )}
             </li>

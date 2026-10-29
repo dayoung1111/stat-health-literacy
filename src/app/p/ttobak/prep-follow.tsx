@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 
 import { prepSteps } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
+
+import { Fill, T } from '../../translated';
 
 import { PrepScene } from './prep-scene';
 import './photo-lesson.css';
@@ -25,7 +28,11 @@ export function PrepFollow() {
   return (
     <div className="flex flex-col gap-5 text-[#15262B]">
       <p className="text-lg font-bold text-[#0F6670]">
-        {index + 1}단계 / {prepSteps.length} · {step.name}
+        <Fill
+          template={screenTexts.prep.stepOf}
+          values={{ n: index + 1, total: prepSteps.length }}
+        />{' '}
+        · <T>{step.name}</T>
       </p>
       <div
         key={step.id}
@@ -37,7 +44,7 @@ export function PrepFollow() {
         aria-live="polite"
         className="text-2xl leading-snug font-bold break-keep"
       >
-        {step.line.say}
+        <T>{step.line.say}</T>
       </p>
 
       {step.scene === 'cups' && <CupTimer />}
@@ -49,7 +56,7 @@ export function PrepFollow() {
           disabled={index === 0}
           className={outline}
         >
-          이전
+          <T>{screenTexts.lesson.prev}</T>
         </button>
         <button
           type="button"
@@ -57,7 +64,7 @@ export function PrepFollow() {
           disabled={index === prepSteps.length - 1}
           className={filled}
         >
-          다음
+          <T>{screenTexts.lesson.next}</T>
         </button>
       </div>
     </div>
@@ -107,7 +114,12 @@ function CupTimer() {
           >
             <span aria-hidden="true">{i < drunk ? '✓' : i + 1}</span>
             <span className="sr-only">
-              {i + 1}번째 컵 {i < drunk ? '마심' : '아직'}
+              <Fill
+                template={
+                  i < drunk ? screenTexts.prep.cupDone : screenTexts.prep.cupNot
+                }
+                values={{ n: i + 1 }}
+              />
             </span>
           </li>
         ))}
@@ -116,11 +128,19 @@ function CupTimer() {
         aria-live="polite"
         className="text-center text-2xl font-bold break-keep"
       >
-        {allDone
-          ? '네 컵을 다 드셨어요.'
-          : waiting
-            ? `다음 컵까지 ${format(left)}`
-            : `${drunk + 1}번째 컵을 드세요.`}
+        {allDone ? (
+          <T>{screenTexts.prep.allDrunk}</T>
+        ) : waiting ? (
+          <Fill
+            template={screenTexts.prep.untilNext}
+            values={{ time: format(left) }}
+          />
+        ) : (
+          <Fill
+            template={screenTexts.prep.drinkNow}
+            values={{ n: drunk + 1 }}
+          />
+        )}
       </p>
       {!allDone && (
         <button
@@ -129,7 +149,7 @@ function CupTimer() {
           disabled={waiting}
           className={filled}
         >
-          {drunk + 1}번째 컵 마셨어요
+          <Fill template={screenTexts.prep.drank} values={{ n: drunk + 1 }} />
         </button>
       )}
     </section>

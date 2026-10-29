@@ -1,3 +1,6 @@
+import { screenTexts } from '@/lib/screen-texts';
+
+import { T } from '../../../translated';
 import { PrepFollow } from '../../ttobak/prep-follow';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -11,7 +14,7 @@ export default function PrepPage({ params }: PageProps<'/p/[code]/prep'>) {
         <>
           <PatientTopBar code={code} back={{ fallback: `/p/${code}/video` }} />
           <h1 className="mb-4 text-3xl leading-snug font-bold break-keep">
-            약 만들기 따라하기
+            <T>{screenTexts.prep.title}</T>
           </h1>
           <PrepFollow />
           <CheckWithStaff />
