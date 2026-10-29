@@ -145,11 +145,12 @@ Tailwind CSS 4가 구성되어 있습니다. 기준 생성 결과처럼 src/app/
 
 DB가 필요할 때 [Supabase DB 설정과 연결하기](SUPABASE_SETUP.md)을 순서대로 따라 하세요. 회원가입·DB 생성, 공개 CA 다운로드, 두 연결 주소 확인, `.env` 등록, 테이블 생성과 오류 해결을 자세히 설명합니다.
 
-| 준비할 항목    | 저장 위치·역할                                                                 |
-| -------------- | ------------------------------------------------------------------------------ |
-| 공개 CA 인증서 | `certs/supabase-ca.crt`: 앱과 Prisma CLI가 함께 사용하며 저장소에 포함합니다.  |
-| `DATABASE_URL` | 프로젝트 루트 `.env`: 앱 실행용 Transaction pooler 연결 주소입니다.            |
-| `DIRECT_URL`   | 프로젝트 루트 `.env`: Prisma CLI용 Direct 또는 Session pooler 연결 주소입니다. |
+| 준비할 항목      | 저장 위치·역할                                                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 공개 CA 인증서   | `certs/supabase-ca.crt`: 앱과 Prisma CLI가 함께 사용하며 저장소에 포함합니다.                                     |
+| `DATABASE_URL`   | 프로젝트 루트 `.env`: 앱 실행용 Transaction pooler 연결 주소입니다.                                               |
+| `DIRECT_URL`     | 프로젝트 루트 `.env`: Prisma CLI용 Direct 또는 Session pooler 연결 주소입니다.                                    |
+| `SESSION_SECRET` | 프로젝트 루트 `.env`: 로그인 쿠키 서명용 비밀값(32글자 이상 무작위)입니다. `.env.example`의 만드는 방법을 보세요. |
 
 실제 `.env`는 Git에서 제외합니다. `.env.example`에는 비밀값을 넣지 않습니다. 기본 첫 화면은 DB를 사용하지 않으므로 화면 표시만으로 연결 성공을 판단하지 마세요.
 

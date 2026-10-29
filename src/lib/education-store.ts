@@ -1,17 +1,14 @@
 import 'server-only';
 
-import {
-  randomBytes,
-  randomInt,
-  scryptSync,
-  timingSafeEqual,
-} from 'node:crypto';
+import { randomInt } from 'node:crypto';
 
 import { connection } from 'next/server';
 
+import { isOwnedBy } from './code-access';
 import { demoGuide } from './demo-guide';
 import type { GuideKind } from './guide-catalog';
 import type { MedicationId } from './medication-guide';
+import { hashSecret, matchesSecret } from './password';
 
 // 교육 코드와 환자 기록의 "시연용 임시 저장소"(앱 서버 메모리).
 // prisma/schema.prisma의 EducationCode·MedicationCheck·TeachbackResult·ConfusionMark와 같은 모양이다.
@@ -67,19 +64,18 @@ export const MAX_ATTEMPTS = 5;
 const RESERVED_CODES = new Set(['000000', '482917']);
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
-// 생년월일 6자리를 되돌릴 수 없게 바꾼다(코드마다 다른 소금). DB 단계에서도 같은 방식을 쓴다.
-function hashBirthDate(birthDate: string) {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(birthDate, salt, 32).toString('hex');
-  return `${salt}:${hash}`;
-}
-
-function matchesBirthDate(birthDate: string, stored: string) {
-  const [salt, hash] = stored.split(':');
-  const expected = Buffer.from(hash, 'hex');
-  const actual = scryptSync(birthDate, salt, 32);
-  return expected.length === actual.length && timingSafeEqual(expected, actual);
-}
+// 시연용 코드의 생년월일은 해시로만 둔다(원래 값은 README의 시연 안내에 있다).
+const demoBirthHash = {
+  backup:
+    '10d3b4f10fd575df1a89657a5890e7ee:b5dbbded40bd859c439897bbde0a680bf91f2e2cc38a0ef98571fa116a2a9ed0',
+  gastro:
+    'c0f4d6f634164a00a98b84b8e716c9e1:1b2c60ac621ce1922b45347aff5d2ddedb79760239da176a557419c2e3830d93',
+  colon:
+    'e1081659c0ee20b75ed6867ca0949767:57a09b145a6d3a04dd78bcd7c0d497580e97432ac5e978953233f73b44fc1a54',
+  vi: 'e7dcd26e697aedcbfd9340576e02a800:b86ea6aa037d5fa609a7819af946cb02377aa06be635167dfd744d8e6d986dd6',
+  checkup:
+    '9654a4eff1dbf5f2bd9574845300ddc6:a00beee9378349a23b70d13d7cc34cbd678cdb24e773462c46307a9ac7ecda51',
+};
 
 // 개발 중 화면을 고쳐도 지워지지 않도록 전역에 둔다.
 const memory = globalThis as unknown as {
@@ -128,7 +124,7 @@ export async function createEducationCode(input: {
   const row: EducationCode = {
     ...rest,
     code: newCode(),
-    birthDateHash: hashBirthDate(birthDate),
+    birthDateHash: hashSecret(birthDate),
     failedAttempts: 0,
     lockedAt: null,
     expiresAt: new Date(now.getTime() + SEVEN_DAYS),
@@ -161,7 +157,7 @@ export async function checkPatientEntry(
   const row = await findActiveCode(code);
   if (!row) return { ok: false, reason: 'not-found' };
   if (row.lockedAt) return { ok: false, reason: 'locked' };
-  if (matchesBirthDate(birthDate, row.birthDateHash)) {
+  if (matchesSecret(birthDate, row.birthDateHash)) {
     row.failedAttempts = 0;
     return { ok: true };
   }
@@ -189,13 +185,13 @@ export async function listAllCodes() {
 export async function listCodesForStaff(staffId: string) {
   await removeExpired();
   return [...codes().values()]
-    .filter((row) => row.staffId === staffId)
+    .filter((row) => isOwnedBy(row, staffId))
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function findCodeForStaff(staffId: string, code: string) {
   const row = await findActiveCode(code);
-  return row && row.staffId === staffId ? row : null;
+  return row && isOwnedBy(row, staffId) ? row : null;
 }
 
 // "내가 먹는 약": 다시 저장하면 최신 목록으로 바꾼다(추가·빼기 모두).
@@ -291,7 +287,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       ageGroup: '60',
       level: 'easy',
       language: 'ko',
-      birthDateHash: hashBirthDate('111111'),
+      birthDateHash: demoBirthHash.backup,
       createdAt: minutesAgo(10),
     },
     {
@@ -302,7 +298,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       ageGroup: '60',
       level: 'easy',
       language: 'ko',
-      birthDateHash: hashBirthDate('590312'),
+      birthDateHash: demoBirthHash.colon,
       createdAt: minutesAgo(5),
     },
     {
@@ -313,7 +309,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       ageGroup: '50',
       level: 'normal',
       language: 'vi',
-      birthDateHash: hashBirthDate('700101'),
+      birthDateHash: demoBirthHash.vi,
       createdAt: minutesAgo(60),
       teachbackResults: [
         {
@@ -359,7 +355,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       level: 'very-easy',
       language: 'ko',
       extras: ['large-text', 'guardian'],
-      birthDateHash: hashBirthDate('480215'),
+      birthDateHash: demoBirthHash.gastro,
       createdAt: minutesAgo(120),
       medicationCheck: {
         medications: ['blood-pressure', 'blood-thinner'],
@@ -378,7 +374,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       ageGroup: '10-40',
       level: 'normal',
       language: 'ko',
-      birthDateHash: hashBirthDate('900101'),
+      birthDateHash: demoBirthHash.checkup,
       createdAt: minutesAgo(30),
     },
   ];

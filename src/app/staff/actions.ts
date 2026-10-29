@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import {
   endStaffSession,
-  findDemoAccount,
+  checkStaffLogin,
   homeFor,
   requireStaff,
   startStaffSession,
@@ -16,9 +16,15 @@ import { ages, extras, languages, levels } from '@/lib/staff-options';
 
 export type LoginState = { message?: string };
 
+// 길이·글자를 제한해서 너무 긴 값이나 이상한 값으로 서버를 괴롭히지 못하게 한다.
 const loginSchema = z.object({
-  id: z.string().trim().min(1),
-  password: z.string().min(1),
+  id: z
+    .string()
+    .trim()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9_-]+$/),
+  password: z.string().min(1).max(64),
 });
 
 export async function loginStaff(
@@ -30,9 +36,14 @@ export async function loginStaff(
     password: String(formData.get('password') ?? ''),
   });
   const account = parsed.success
-    ? findDemoAccount(parsed.data.id, parsed.data.password)
+    ? await checkStaffLogin(parsed.data.id, parsed.data.password)
     : null;
-  if (!account) {
+  if (account && !account.ok && account.reason === 'locked') {
+    return {
+      message: '5번 틀려서 잠시 잠겼어요. 10분 뒤에 다시 해 주세요',
+    };
+  }
+  if (!account?.ok) {
     return { message: '아이디나 비밀번호를 다시 확인해 주세요' };
   }
 
