@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -32,8 +31,8 @@ import { useLanguageOr } from '../../language-provider';
 
 import { completeGuide } from '../records';
 import { CardScene } from './card-scene';
-import { getPhoto, photoLessons, type FoodPhoto } from './photo-lesson';
-import { PrepScene } from './prep-scene';
+import { designedLessonCount, LessonDesign } from './lesson-design';
+import { photoLessons } from './photo-lesson';
 import { Ttobak, type LessonPose } from './ttobak';
 import './photo-lesson.css';
 
@@ -284,22 +283,9 @@ export function PhotoLesson({
   }
 
   // 퀴즈·칭찬 중에는 그 교시의 마지막(또는 다시 볼) 장면을 그대로 둔다.
-  const isPhotoLesson = lesson.format === 'photo';
-  const showPhoto =
-    state.started && state.mode === 'step' && step.kind === 'photo';
-  const showGrid = state.started && isPhotoLesson && !showPhoto;
-  const marked = state.mode !== 'step' || step.kind === 'summary';
+  // 1~7교시는 제목 카드 화면(lesson-design.tsx), 8교시는 안내 카드 화면.
+  const designed = state.lesson < designedLessonCount;
   const card = step.kind === 'card' ? lesson.cards[step.card] : null;
-  const lessonPhotos = lesson.steps.flatMap((item) =>
-    item.kind === 'photo' ? [getPhoto(item.photo)] : [],
-  );
-  const photo = step.kind === 'photo' ? getPhoto(step.photo) : null;
-  const prevStep = lesson.steps[state.step - 1];
-  const prevPhoto =
-    !state.reviewing && prevStep?.kind === 'photo'
-      ? getPhoto(prevStep.photo)
-      : null;
-  const sceneKey = `${state.lesson}-${state.step}-${state.reviewing}`;
 
   const pose: LessonPose =
     state.mode === 'praise' || state.mode === 'done'
@@ -328,85 +314,23 @@ export function PhotoLesson({
 
           <section
             aria-label="또박이 선생님 사진 수업 영상"
-            className="pl-stage pl-fit"
+            className={`pl-stage pl-fit ${designed ? 'pl-designed' : ''} ${designed && state.lesson < 2 ? 'pl-wide' : ''}`}
           >
-            {showPhoto && prevPhoto && (
-              <PhotoLayer
-                photo={prevPhoto}
-                className={`is-prev ${photoAlt(lessonPhotos, prevPhoto)}`}
+            {state.started && designed && (
+              <LessonDesign
+                key={`design-${state.lesson}`}
+                lessonIndex={state.lesson}
+                lesson={lesson}
+                step={step}
+                stepIndex={state.step}
               />
             )}
-            {showPhoto && photo && (
-              <div key={sceneKey}>
-                <PhotoLayer
-                  photo={photo}
-                  className={`is-current ${photoAlt(lessonPhotos, photo)}`}
-                />
-                <Mark tone={photo.tone} />
-                <div className="pl-label">
-                  <span className={`pl-pill ${photo.tone}`}>
-                    {photo.tone === 'no' ? '✕ 먹으면 안 돼요' : '○ 드셔도 돼요'}
-                  </span>
-                  <span className="pl-name">{photo.name}</span>
-                </div>
-              </div>
-            )}
 
-            {showGrid && (
-              <div className="pl-grid" key={`grid-${state.lesson}-${marked}`}>
-                <div className="pl-grid-inner">
-                  <p className="pl-grid-title">
-                    {marked ? lesson.summaryTitle : lesson.introTitle}
-                  </p>
-                  <ul className="pl-grid-list">
-                    {lessonPhotos.map((item, index) => (
-                      <li
-                        key={item.id}
-                        className={`pl-thumb ${item.tone} ${marked ? 'marked' : ''}`}
-                      >
-                        <Image
-                          src={item.src}
-                          alt={item.alt}
-                          fill
-                          sizes="(max-width: 900px) 33vw, 280px"
-                        />
-                        {marked && (
-                          <ThumbMark
-                            tone={item.tone}
-                            delay={0.3 + index * 0.35}
-                          />
-                        )}
-                        <span className="pl-thumb-name">
-                          {marked && (
-                            <span className="sr-only">
-                              {item.tone === 'no'
-                                ? '먹으면 안 돼요: '
-                                : '드셔도 돼요: '}
-                            </span>
-                          )}
-                          {item.name}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {state.started && card && (
+            {state.started && !designed && card && (
               <CardScene
                 key={`card-${state.lesson}-${step.kind === 'card' ? step.card : 0}-${state.reviewing}`}
                 card={card}
               />
-            )}
-
-            {state.started && step.kind === 'prep' && (
-              <div key={sceneKey}>
-                <p className="pp-badge">{step.badge}</p>
-                <div className="pp-stage-scene">
-                  <PrepScene scene={step.scene} hour={lesson.hour} />
-                </div>
-              </div>
             )}
 
             <div className="pl-ttobak-box">
@@ -417,7 +341,7 @@ export function PhotoLesson({
               />
             </div>
 
-            <div className="pl-bubble">
+            <div className={`pl-bubble ${designed ? 'is-center' : ''}`}>
               <p aria-live="polite" className="pl-sub">
                 {parts.map((part, index) =>
                   part.tone ? (
@@ -611,115 +535,5 @@ export function PhotoLesson({
         )}
       </aside>
     </div>
-  );
-}
-
-// 사진마다 확대 방향을 번갈아 바꾼다.
-function photoAlt(list: FoodPhoto[], photo: FoodPhoto) {
-  return list.indexOf(photo) % 2 === 1 ? 'alt' : '';
-}
-
-function PhotoLayer({
-  photo,
-  className,
-}: {
-  photo: FoodPhoto;
-  className: string;
-}) {
-  return (
-    <div className={`pl-photo ${className}`}>
-      <Image
-        src={photo.src}
-        alt={photo.alt}
-        fill
-        sizes="(max-width: 1000px) 100vw, 900px"
-      />
-    </div>
-  );
-}
-
-// 사진 위 큰 X(\ 다음 /) 또는 동그라미
-function Mark({ tone }: { tone: FoodPhoto['tone'] }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 300 300" className="pl-mark">
-      {tone === 'no' ? (
-        <>
-          <path
-            d="M40 40 L260 260"
-            stroke="#D9363E"
-            strokeWidth="22"
-            strokeLinecap="round"
-            className="pl-draw-line"
-            style={{ animationDelay: '1.1s' }}
-          />
-          <path
-            d="M260 40 L40 260"
-            stroke="#D9363E"
-            strokeWidth="22"
-            strokeLinecap="round"
-            className="pl-draw-line"
-            style={{ animationDelay: '1.55s' }}
-          />
-        </>
-      ) : (
-        <circle
-          cx="150"
-          cy="150"
-          r="112"
-          fill="none"
-          stroke="#2E9E6B"
-          strokeWidth="20"
-          strokeLinecap="round"
-          transform="rotate(-90 150 150)"
-          className="pl-draw-circle"
-          style={{ animationDelay: '1.1s' }}
-        />
-      )}
-    </svg>
-  );
-}
-
-function ThumbMark({
-  tone,
-  delay,
-}: {
-  tone: FoodPhoto['tone'];
-  delay: number;
-}) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 120 120" className="pl-thumb-mark">
-      {tone === 'no' ? (
-        <>
-          <path
-            d="M14 14 L106 106"
-            stroke="#D9363E"
-            strokeWidth="12"
-            strokeLinecap="round"
-            className="pl-draw-line"
-            style={{ animationDelay: `${delay}s` }}
-          />
-          <path
-            d="M106 14 L14 106"
-            stroke="#D9363E"
-            strokeWidth="12"
-            strokeLinecap="round"
-            className="pl-draw-line"
-            style={{ animationDelay: `${delay + 0.2}s` }}
-          />
-        </>
-      ) : (
-        <circle
-          cx="60"
-          cy="60"
-          r="44"
-          fill="none"
-          stroke="#2E9E6B"
-          strokeWidth="11"
-          strokeLinecap="round"
-          className="pl-draw-circle"
-          style={{ animationDelay: `${delay}s` }}
-        />
-      )}
-    </svg>
   );
 }
