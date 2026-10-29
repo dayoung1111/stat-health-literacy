@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { getMyCode, type QuestionResult } from '@/lib/demo-staff';
 
-import { Panel, PanelLink } from '../../../ui';
+import { Panel, StaffBack } from '../../../ui';
 import { StaffPage } from '../../../staff-page';
 
 const resultLabel: Record<
@@ -32,43 +32,43 @@ async function CodeDetail({ code }: { code: string }) {
   if (!item) notFound();
 
   return (
-    <Panel
-      title={`⑥ ${item.code} · ${item.exam} · ${item.setting}`}
-      action={<PanelLink href="/staff/codes">← 목록</PanelLink>}
-    >
-      {item.relearn ? (
-        <div className="rounded-lg bg-red-50 px-5 py-4 text-lg leading-relaxed">
-          <p>
-            <strong className="text-red-700">재교육 필요:</strong>{' '}
-            {item.relearn}
+    <>
+      <StaffBack fallback="/staff/codes" />
+      <Panel title={`⑥ ${item.code} · ${item.exam} · ${item.setting}`}>
+        {item.relearn ? (
+          <div className="rounded-lg bg-red-50 px-5 py-4 text-lg leading-relaxed">
+            <p>
+              <strong className="text-red-700">재교육 필요:</strong>{' '}
+              {item.relearn}
+            </p>
+            {item.confused && <p>「헷갈려요」 누른 곳: {item.confused}</p>}
+          </div>
+        ) : (
+          <p className="rounded-lg bg-green-50 px-5 py-4 text-lg font-bold text-green-800">
+            이해 완료 · 재교육 필요 없음
           </p>
-          {item.confused && <p>「헷갈려요」 누른 곳: {item.confused}</p>}
-        </div>
-      ) : (
-        <p className="rounded-lg bg-green-50 px-5 py-4 text-lg font-bold text-green-800">
-          이해 완료 · 재교육 필요 없음
-        </p>
-      )}
-      <table className="mt-6 w-full text-left text-lg">
-        <thead className="sr-only">
-          <tr>
-            <th>질문</th>
-            <th>결과</th>
-          </tr>
-        </thead>
-        <tbody>
-          {item.results.map((r) => (
-            <tr key={r.question} className="border-b border-zinc-200">
-              <td className="px-2 py-3">{r.question}</td>
-              <td
-                className={`px-2 py-3 font-bold ${resultLabel[r.result].className}`}
-              >
-                {resultLabel[r.result].text}
-              </td>
+        )}
+        <table className="mt-6 w-full text-left text-lg">
+          <thead className="sr-only">
+            <tr>
+              <th>질문</th>
+              <th>결과</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </Panel>
+          </thead>
+          <tbody>
+            {item.results.map((r) => (
+              <tr key={r.question} className="border-b border-zinc-200">
+                <td className="px-2 py-3">{r.question}</td>
+                <td
+                  className={`px-2 py-3 font-bold ${resultLabel[r.result].className}`}
+                >
+                  {resultLabel[r.result].text}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Panel>
+    </>
   );
 }

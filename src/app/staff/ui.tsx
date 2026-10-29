@@ -1,5 +1,6 @@
-import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
+
+import { BackButton } from '../back-button';
 
 // 의료진 화면 공통 모양. 그림(docs/design/2_의료진_화면_간단버전.png)의 남색 머리띠 카드.
 export const navy = 'bg-[#1f3a5f]';
@@ -34,17 +35,12 @@ export function Panel({
   );
 }
 
-export function PanelLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) {
+// 로그인 뒤 의료진 화면 왼쪽 위의 "← 뒤로".
+export function StaffBack(props: ComponentProps<typeof BackButton>) {
   return (
-    <Link href={href} className="text-base text-white hover:underline">
-      {children}
-    </Link>
+    <div className="mb-4">
+      <BackButton {...props} />
+    </div>
   );
 }
 

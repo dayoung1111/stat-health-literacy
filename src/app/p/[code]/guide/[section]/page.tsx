@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { demoGuide } from '@/lib/demo-guide';
+import { guideSteps } from '@/lib/demo-guide';
 
-import { BackLink, CheckWithStaff } from '../../../ui';
+import { PictureRow } from '../../../pictures';
+import { buttonClass, CheckWithStaff, PatientTopBar } from '../../../ui';
 import { PatientPage } from '../../patient-page';
 
+// 안내문을 한 화면에 내용 하나씩 보여 준다. 주소의 [section]은 몇 번째 화면인지(1부터).
 export default function GuidePage({
   params,
 }: PageProps<'/p/[code]/guide/[section]'>) {
@@ -13,86 +15,98 @@ export default function GuidePage({
     <PatientPage
       params={params}
       render={(code) => (
-        <GuideSection code={code} section={params.then((p) => p.section)} />
+        <GuideStep code={code} step={params.then((p) => p.section)} />
       )}
     />
   );
 }
 
-async function GuideSection({
+async function GuideStep({
   code,
-  section: sectionParam,
+  step: stepParam,
 }: {
   code: string;
-  section: Promise<string>;
+  step: Promise<string>;
 }) {
-  const number = Number(await sectionParam);
-  const sections = demoGuide.sections;
-  const section = sections[number - 1];
-  if (!Number.isInteger(number) || !section) notFound();
+  const number = Number(await stepParam);
+  const step = guideSteps[number - 1];
+  if (!Number.isInteger(number) || !step) notFound();
 
-  const prev = sections[number - 2];
-  const next = sections[number];
+  const total = guideSteps.length;
 
   return (
-    <>
-      <BackLink href={`/p/${code}/home`}>홈</BackLink>
-      <p className="mt-4 text-lg text-zinc-600">
-        {demoGuide.examName} 안내 {number} / {sections.length}
+    // 아래 고정 막대에 마지막 내용이 가리지 않도록 아래 여백을 둔다.
+    <div className="pb-48">
+      <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
+      {number === 1 && (
+        <p className="mb-3 text-2xl font-bold">같이 볼까요? 🙂</p>
+      )}
+      <p className="inline-block rounded-full bg-sky-100 px-4 py-1 text-xl font-bold text-sky-900">
+        {step.sectionNo}. {step.sectionTitle}
       </p>
-      <h1 className="mt-1 text-3xl font-bold">
-        {number}. {section.title}
-      </h1>
 
-      <div className="mt-6 flex flex-col gap-4">
-        {section.paragraphs.map((paragraph) => (
-          <section key={paragraph.id} className="rounded-2xl bg-blue-50 p-5">
-            {paragraph.lines.map((line) => (
-              <p key={line} className="text-xl leading-relaxed">
-                {line}
-              </p>
-            ))}
-            {paragraph.term && (
-              <p className="mt-1 text-lg text-zinc-600">({paragraph.term})</p>
-            )}
-            <Link
-              href={`/p/${code}/guide/${number}/${paragraph.id}`}
-              className="mt-3 inline-flex min-h-12 items-center rounded-full border-2 border-blue-700 bg-white px-4 text-lg font-bold text-blue-700 hover:bg-blue-100"
-            >
-              🤔 헷갈려요
-            </Link>
-          </section>
-        ))}
-      </div>
+      <section className="mt-4 rounded-3xl bg-sky-50 p-6">
+        <PictureRow pictures={step.pictures} />
+        <div className="mt-6 border-t-2 border-dashed border-sky-200 pt-5">
+          {step.lines.map((line) => (
+            <p key={line} className="text-2xl leading-relaxed break-keep">
+              {line}
+            </p>
+          ))}
+          {step.term && (
+            <p className="mt-2 text-xl text-zinc-600">({step.term})</p>
+          )}
+        </div>
+      </section>
+
+      <Link
+        href={`/p/${code}/guide/${number}/${step.id}`}
+        className="mt-5 flex min-h-16 items-center justify-center gap-2 rounded-full border-2 border-amber-400 bg-amber-50 px-6 text-2xl font-bold text-amber-900 hover:bg-amber-100 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-blue-700"
+      >
+        🤔 헷갈려요
+      </Link>
+      <CheckWithStaff />
 
       <nav
-        aria-label="안내문 단계 이동"
-        className="mt-8 flex justify-between gap-4 text-lg"
+        aria-label="안내문 넘기기"
+        className="fixed inset-x-0 bottom-0 rounded-t-3xl border-t border-amber-200 bg-white px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
       >
-        {prev ? (
-          <Link
-            href={`/p/${code}/guide/${number - 1}`}
-            className="py-2 underline"
-          >
-            ◀ {number - 1}. {prev.title}
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link
-            href={`/p/${code}/guide/${number + 1}`}
-            className="py-2 underline"
-          >
-            {number + 1}. {next.title} ▶
-          </Link>
-        ) : (
-          <Link href={`/p/${code}/check`} className="py-2 font-bold underline">
-            이해 확인하기 ▶
-          </Link>
-        )}
+        <div className="mx-auto max-w-md">
+          <p className="flex items-center justify-center gap-3 text-xl font-bold">
+            <span aria-hidden="true" className="tracking-wider text-blue-700">
+              {guideSteps.map((_, i) => (i < number ? '●' : '○')).join(' ')}
+            </span>
+            <span>
+              <span className="sr-only">안내문 {total}개 중 </span>
+              {number} / {total}
+            </span>
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {number > 1 ? (
+              <Link
+                href={`/p/${code}/guide/${number - 1}`}
+                className={buttonClass.outline}
+              >
+                ◀ 이전
+              </Link>
+            ) : (
+              <span aria-disabled="true" className={buttonClass.disabled}>
+                ◀ 이전
+              </span>
+            )}
+            <Link
+              href={
+                number < total
+                  ? `/p/${code}/guide/${number + 1}`
+                  : `/p/${code}/check`
+              }
+              className={buttonClass.primary}
+            >
+              {number < total ? '다음 ▶' : '이해 확인 ▶'}
+            </Link>
+          </div>
+        </div>
       </nav>
-      <CheckWithStaff />
-    </>
+    </div>
   );
 }

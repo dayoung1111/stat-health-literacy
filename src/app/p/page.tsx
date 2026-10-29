@@ -6,9 +6,11 @@ export default function PatientEntryPage() {
     <>
       <BackLink href="/">처음으로</BackLink>
       <h1 className="mt-4 mb-8 text-3xl leading-snug font-bold break-keep">
-        번호와 생년월일을
+        안녕하세요 🙂
         <br />
-        넣어 주세요
+        병원에서 받은 번호를
+        <br />
+        넣어 주시면 돼요
       </h1>
       <PatientEntryForm />
       <div className="mt-6">

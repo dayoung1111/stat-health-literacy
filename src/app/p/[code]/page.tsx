@@ -11,11 +11,11 @@ export default function BirthDatePage({ params }: PageProps<'/p/[code]'>) {
   return (
     <>
       <h1 className="mt-4 mb-8 text-3xl leading-snug font-bold break-keep">
-        안녕하세요 👋
+        안녕하세요 🙂
         <br />
-        본인 확인을 위해
+        생년월일 6자리만
         <br />
-        생년월일 6자리를 넣어 주세요
+        넣어 주시면 돼요
       </h1>
       <Suspense fallback={<Loading />}>
         {params.then(({ code }) => (
@@ -26,7 +26,7 @@ export default function BirthDatePage({ params }: PageProps<'/p/[code]'>) {
         <CallButton variant="outline">📞 잘 안 되면 병원에 전화</CallButton>
         <Link
           href="/p"
-          className="py-2 text-center text-lg text-zinc-600 underline underline-offset-4"
+          className="py-2 text-center text-xl text-zinc-600 underline underline-offset-4"
         >
           교육 번호를 직접 넣을게요
         </Link>

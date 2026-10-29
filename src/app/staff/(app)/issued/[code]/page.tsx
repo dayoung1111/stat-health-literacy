@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { getExpiryLabel, getMyCode } from '@/lib/demo-staff';
 
-import { Panel } from '../../../ui';
+import { Panel, StaffBack } from '../../../ui';
 import { StaffPage } from '../../../staff-page';
 import { IssuedActions } from './issued-actions';
 
@@ -25,6 +25,9 @@ async function Issued({ code }: { code: string }) {
 
   return (
     <div className="mx-auto max-w-xl print:max-w-none">
+      <div className="print:hidden">
+        <StaffBack fallback="/staff/new" />
+      </div>
       <Panel title="④ 발급 완료">
         <div className="text-center">
           <p className="text-base font-semibold text-zinc-600">

@@ -4,14 +4,15 @@ import { useState, type ReactNode } from 'react';
 
 import type { Choice, Question } from '@/lib/demo-guide';
 
-import { ButtonLink, CallButton, buttonClass } from '../../ui';
+import { Drawing, PictureRow } from '../../pictures';
+import { buttonClass, ButtonLink, CallButton } from '../../ui';
 
-// 질문 → (틀리면) 다시 설명 → 다른 질문으로 재확인 → 다음 질문.
+// 질문 → (틀리면) 그림으로 다시 설명 → 다른 질문으로 재확인 → 다음 질문.
 // 시연 단계에서는 결과를 저장하지 않는다. DB 단계에서 의료진 화면으로 보낸다.
 type Step =
   | { kind: 'ask' }
   | { kind: 'correct' }
-  | { kind: 'wrong'; picked: number }
+  | { kind: 'wrong' }
   | { kind: 'retry' }
   | { kind: 'retryResult'; correct: boolean };
 
@@ -38,71 +39,64 @@ export function Teachback({
 
   return (
     <>
-      <p className="text-lg text-zinc-600">
-        {step.kind === 'retry' || step.kind === 'retryResult'
-          ? '다시 확인'
-          : `질문 ${index + 1} / ${questions.length}`}
-      </p>
-      <div
-        aria-hidden="true"
-        className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-200"
-      >
-        <div
-          className="h-full bg-blue-700"
-          style={{ width: `${((index + 1) / questions.length) * 100}%` }}
-        />
-      </div>
+      <Progress index={index} total={questions.length} />
 
       {step.kind === 'ask' && (
         <Ask
           question={q.question}
           choices={q.choices}
-          onPick={(i) =>
-            setStep(
-              q.choices[i].correct
-                ? { kind: 'correct' }
-                : { kind: 'wrong', picked: i },
-            )
+          onPick={(choice) =>
+            setStep({ kind: choice.correct ? 'correct' : 'wrong' })
           }
         />
       )}
 
       {step.kind === 'correct' && (
-        <Result correct onNext={next}>
+        <Result tone="good" onNext={next}>
           맞아요! 👏
         </Result>
       )}
 
       {step.kind === 'wrong' && (
         <>
-          <Title>{q.question}</Title>
-          <p className="mt-6 rounded-xl border-2 border-red-600 bg-red-50 p-4 text-xl font-bold">
-            ✕ {q.choices[step.picked].text}
+          <p
+            role="status"
+            className="mt-6 text-3xl leading-snug font-bold break-keep"
+          >
+            괜찮아요,
+            <br />
+            같이 다시 볼게요 🙂
           </p>
-          <div className="mt-4 rounded-2xl bg-red-50 p-5 text-xl leading-relaxed">
-            <p>괜찮아요, 다시 볼게요 🙂</p>
-            {q.explain.map((line) => (
-              <p key={line} className="font-bold">
-                {line}
-              </p>
-            ))}
+          <div className="mt-5 rounded-3xl bg-amber-100 p-6">
+            <PictureRow pictures={q.explain.pictures} />
+            <div className="mt-5 text-center">
+              {q.explain.lines.map((line) => (
+                <p
+                  key={line}
+                  className="text-2xl leading-relaxed font-bold break-keep"
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setStep({ kind: 'retry' })}
             className={`mt-8 ${buttonClass.primary}`}
           >
-            다른 질문으로 다시 확인 ▶
+            한 번 더 볼까요? ▶
           </button>
         </>
       )}
 
       {step.kind === 'retry' && (
         <Ask
+          intro="다른 질문으로 한 번 더 볼게요"
           question={q.retry.question}
           choices={q.retry.choices}
-          onPick={(i) => {
-            const correct = Boolean(q.retry.choices[i].correct);
+          onPick={(choice) => {
+            const correct = Boolean(choice.correct);
             if (!correct) setNeedHelp([...needHelp, q.topic]);
             setStep({ kind: 'retryResult', correct });
           }}
@@ -110,14 +104,15 @@ export function Teachback({
       )}
 
       {step.kind === 'retryResult' && (
-        <Result correct={step.correct} onNext={next}>
+        <Result tone={step.correct ? 'good' : 'soft'} onNext={next}>
           {step.correct ? (
             '맞아요! 👏'
           ) : (
             <>
-              정답은 「{q.retry.choices.find((c) => c.correct)?.text}」예요.
+              정답은
+              <br />「{q.retry.choices.find((c) => c.correct)?.text}」예요.
               <br />
-              간호사에게 꼭 다시 물어보세요.
+              간호사 선생님께 한 번 더 여쭤봐요 🙂
             </>
           )}
         </Result>
@@ -126,39 +121,64 @@ export function Teachback({
   );
 }
 
-function Title({ children }: { children: string }) {
+// 위쪽 동그라미 진행 표시: ● ○ ○
+function Progress({ index, total }: { index: number; total: number }) {
   return (
-    <h1 className="mt-6 text-3xl leading-snug font-bold whitespace-pre-line break-keep">
-      {children}
-    </h1>
+    <p className="flex items-center gap-3 text-xl font-bold">
+      <span
+        aria-hidden="true"
+        className="text-2xl tracking-widest text-blue-700"
+      >
+        {Array.from({ length: total }, (_, i) => (i <= index ? '●' : '○')).join(
+          ' ',
+        )}
+      </span>
+      <span>
+        <span className="sr-only">질문 {total}개 중 </span>
+        {index + 1} / {total}
+      </span>
+    </p>
   );
 }
 
 function Ask({
+  intro,
   question,
   choices,
   onPick,
 }: {
+  intro?: string;
   question: string;
   choices: Choice[];
-  onPick: (index: number) => void;
+  onPick: (choice: Choice) => void;
 }) {
   return (
     <>
-      <Title>{question}</Title>
-      <div className="mt-6 flex flex-col gap-3">
-        {choices.map((choice, i) => (
+      {intro && <p className="mt-4 text-xl text-zinc-700">{intro} 🙂</p>}
+      <h1 className="mt-4 text-3xl leading-snug font-bold whitespace-pre-line break-keep">
+        {question}
+      </h1>
+      <div className="mt-6 flex flex-col gap-4">
+        {choices.map((choice) => (
           <button
             key={choice.text}
             type="button"
-            onClick={() => onPick(i)}
-            className="min-h-16 rounded-xl border-2 border-zinc-300 bg-white px-5 py-3 text-left text-xl font-bold hover:border-blue-700 focus-visible:outline-4 focus-visible:outline-blue-700"
+            onClick={() => onPick(choice)}
+            className="flex min-h-24 items-center gap-5 rounded-3xl border-2 border-sky-200 bg-white px-5 py-4 text-left shadow-sm hover:border-blue-700 hover:bg-sky-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
           >
-            {choice.text}
+            <span
+              aria-hidden="true"
+              className="flex size-24 shrink-0 items-center justify-center [&_.text-7xl]:text-6xl"
+            >
+              <Drawing visual={choice.visual} />
+            </span>
+            <span className="text-2xl leading-snug font-bold break-keep">
+              {choice.text}
+            </span>
           </button>
         ))}
       </div>
-      <p className="mt-4 text-center text-lg text-zinc-600">
+      <p className="mt-5 text-center text-xl text-zinc-600">
         천천히 골라 주세요
       </p>
     </>
@@ -166,11 +186,11 @@ function Ask({
 }
 
 function Result({
-  correct,
+  tone,
   onNext,
   children,
 }: {
-  correct: boolean;
+  tone: 'good' | 'soft';
   onNext: () => void;
   children: ReactNode;
 }) {
@@ -178,8 +198,10 @@ function Result({
     <>
       <p
         role="status"
-        className={`mt-6 rounded-2xl p-6 text-2xl leading-relaxed font-bold ${
-          correct ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-900'
+        className={`mt-6 rounded-3xl p-8 text-center text-3xl leading-snug font-bold break-keep ${
+          tone === 'good'
+            ? 'bg-green-100 text-green-900'
+            : 'bg-amber-100 text-amber-900'
         }`}
       >
         {children}
@@ -206,29 +228,29 @@ function Done({
 }) {
   return (
     <div className="text-center">
-      <p aria-hidden="true" className="mt-8 text-6xl">
+      <p aria-hidden="true" className="mt-8 text-7xl">
         🎉
       </p>
       <h1 className="mt-4 text-3xl font-bold">
-        {needHelp.length === 0 ? '모두 이해하셨어요!' : '끝까지 잘하셨어요!'}
+        {needHelp.length === 0 ? '모두 잘 이해하셨어요!' : '끝까지 잘하셨어요!'}
       </h1>
-      <ul className="mt-6 rounded-2xl bg-green-50 p-5 text-left text-xl leading-relaxed">
+      <ul className="mt-6 flex flex-col gap-2 rounded-3xl bg-green-100 p-6 text-left text-2xl leading-relaxed">
         {questions.map((q) => (
           <li key={q.topic}>
-            {needHelp.includes(q.topic) ? '❓' : '✓'} {q.topic}
+            {needHelp.includes(q.topic) ? '❓' : '✅'} {q.topic}
           </li>
         ))}
       </ul>
       {needHelp.length > 0 && (
         <div className="mt-4 flex flex-col gap-4">
-          <p className="text-xl">❓ 표시는 간호사에게 다시 물어보세요.</p>
+          <p className="text-xl">❓ 표시는 간호사 선생님께 다시 여쭤봐요 🙂</p>
           <CallButton variant="outline" />
         </div>
       )}
       <div className="mt-8">
-        <ButtonLink href={`/p/${code}/home`}>홈으로</ButtonLink>
+        <ButtonLink href={`/p/${code}/home`}>🏠 홈으로</ButtonLink>
       </div>
-      <p className="mt-4 text-lg text-zinc-600">헷갈리면 언제든 다시 보세요</p>
+      <p className="mt-4 text-xl text-zinc-600">헷갈리면 언제든 다시 보세요</p>
     </div>
   );
 }

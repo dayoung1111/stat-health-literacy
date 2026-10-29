@@ -2,13 +2,14 @@ import Link from 'next/link';
 
 import { exams } from '@/lib/staff-options';
 
-import { Notice, Panel } from '../../ui';
+import { Notice, Panel, StaffBack } from '../../ui';
 import { StaffPage } from '../../staff-page';
 
 // ① 검사 고르기: 누르면 바로 다음 단계로 간다.
 export default function ChooseExamPage() {
   return (
     <StaffPage>
+      <StaffBack href="/" />
       <Panel title="① 검사 고르기">
         <h2 className="text-2xl font-bold">어떤 안내문을 줄까요?</h2>
         <ul className="mt-6 grid grid-cols-2 gap-4">

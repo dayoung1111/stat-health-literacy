@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import {
   startTransition,
   useActionState,
@@ -18,7 +17,7 @@ import {
 } from '@/lib/staff-options';
 
 import { issueCode, type IssueState } from '../../../actions';
-import { Notice, Panel, staffButton } from '../../../ui';
+import { Notice, Panel, StaffBack, staffButton } from '../../../ui';
 
 type AgeId = (typeof ages)[number]['id'];
 type LevelId = (typeof levels)[number]['id'];
@@ -50,16 +49,15 @@ export function IssueForm({ exam }: { exam: Exam }) {
       }}
     >
       <input type="hidden" name="exam" value={exam.id} />
+      {/* ③에서 뒤로는 ②로, ②에서 뒤로는 ① 검사 고르기로 간다. */}
+      {step === 'date' ? (
+        <StaffBack onClick={() => setStep('patient')} />
+      ) : (
+        <StaffBack href="/staff/new" />
+      )}
 
       <div hidden={step !== 'patient'}>
-        <Panel
-          title={`② 환자 고르기 — ${exam.name}`}
-          action={
-            <Link href="/staff/new" className="text-white hover:underline">
-              ← 뒤로
-            </Link>
-          }
-        >
+        <Panel title={`② 환자 고르기 — ${exam.name}`}>
           <ChipGroup legend="나이대">
             {ages.map((a) => (
               <Chip
@@ -135,18 +133,7 @@ export function IssueForm({ exam }: { exam: Exam }) {
       </div>
 
       <div hidden={step !== 'date'}>
-        <Panel
-          title={`③ ${summary}`}
-          action={
-            <button
-              type="button"
-              onClick={() => setStep('patient')}
-              className="text-white hover:underline"
-            >
-              ← 뒤로
-            </button>
-          }
-        >
+        <Panel title={`③ ${summary}`}>
           <div className="flex flex-col gap-5">
             <Field
               id="examDate"

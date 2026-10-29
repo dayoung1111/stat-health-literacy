@@ -33,7 +33,7 @@ export function PatientEntryForm({ code }: { code?: string }) {
       {state.message && (
         <p
           role="alert"
-          className="rounded-xl bg-red-50 p-4 text-lg font-semibold text-red-700"
+          className="rounded-3xl bg-red-50 p-5 text-xl font-semibold text-red-700"
         >
           {state.message}
         </p>
@@ -85,10 +85,10 @@ function DigitBoxes({
 
   return (
     <div role="group" aria-labelledby={labelId} aria-describedby={hintId}>
-      <p id={labelId} className="text-xl font-bold">
+      <p id={labelId} className="text-2xl font-bold">
         {label}
       </p>
-      <p id={hintId} className="mt-1 text-lg text-zinc-600">
+      <p id={hintId} className="mt-1 text-xl text-zinc-600">
         {hint}
       </p>
       <input type="hidden" name={name} value={digits.join('')} />
@@ -125,7 +125,7 @@ function DigitBoxes({
         ))}
       </div>
       {error && (
-        <p id={errorId} className="mt-2 text-lg text-red-700">
+        <p id={errorId} className="mt-2 text-xl text-red-700">
           {error}
         </p>
       )}

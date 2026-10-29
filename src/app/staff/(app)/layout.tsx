@@ -10,11 +10,14 @@ export default function StaffAppLayout({ children }: LayoutProps<'/staff'>) {
   return (
     <>
       <header className={`text-white ${navy}`}>
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-3">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-3 whitespace-nowrap">
           <Link href="/staff/new" className="text-lg font-semibold">
             S.T.A.T 의료진
           </Link>
-          <nav aria-label="의료진 메뉴" className="flex items-center gap-5">
+          <nav
+            aria-label="의료진 메뉴"
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm sm:gap-x-5 sm:text-base"
+          >
             <Link href="/staff/new" className="hover:underline">
               새 코드 발급
             </Link>

@@ -1,6 +1,6 @@
 import { demoGuide } from '@/lib/demo-guide';
 
-import { BackLink, CallButton } from '../../ui';
+import { CallButton, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
 export default function DangerPage({ params }: PageProps<'/p/[code]/danger'>) {
@@ -9,16 +9,24 @@ export default function DangerPage({ params }: PageProps<'/p/[code]/danger'>) {
       params={params}
       render={(code) => (
         <>
-          <BackLink href={`/p/${code}/home`}>홈</BackLink>
-          <h1 className="mt-4 text-3xl leading-snug font-bold text-red-700">
-            🚨 이럴 땐
+          <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
+          <h1 className="text-3xl leading-snug font-bold text-red-700">
+            🚨 이럴 땐 참지 마시고
             <br />
-            바로 병원에 오세요
+            바로 병원에 전화하세요
           </h1>
-          <ul className="mt-6 flex list-disc flex-col gap-2 rounded-2xl bg-red-50 py-5 pr-5 pl-10">
+          <ul className="mt-6 grid grid-cols-2 gap-3">
             {demoGuide.dangerSigns.map((sign) => (
-              <li key={sign} className="text-2xl leading-relaxed">
-                {sign}
+              <li
+                key={sign.text}
+                className="flex flex-col items-center gap-2 rounded-3xl bg-red-50 p-4 text-center"
+              >
+                <span aria-hidden="true" className="text-6xl">
+                  {sign.emoji}
+                </span>
+                <span className="text-xl leading-snug font-bold break-keep">
+                  {sign.text}
+                </span>
               </li>
             ))}
           </ul>
