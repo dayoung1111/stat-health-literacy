@@ -3,10 +3,11 @@
 import { useState } from 'react';
 
 import type { Choice, Question } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
-import { Ttobagi, type Pose } from '../../../ttobagi';
-
+import { T, TranslatedTtobagi } from '../../../translated';
+import type { Pose } from '../../../ttobagi';
 import { Drawing, PictureRow } from '../../pictures';
 import { recordTeachback } from '../../records';
 import { buttonClass, ButtonLink, CallButton } from '../../ui';
@@ -64,7 +65,7 @@ export function Teachback({
       {step.kind === 'wrong' && (
         <>
           <div role="status" className="mt-4">
-            <Ttobagi pose="explain" message={ttobagiSays.retry} />
+            <TranslatedTtobagi pose="explain" message={ttobagiSays.retry} />
           </div>
           <div className="mt-2 rounded-3xl bg-stat-sun p-6">
             <PictureRow pictures={q.explain.pictures} />
@@ -74,7 +75,7 @@ export function Teachback({
                   key={line}
                   className="text-2xl leading-relaxed font-bold break-keep"
                 >
-                  {line}
+                  <T>{line}</T>
                 </p>
               ))}
             </div>
@@ -84,14 +85,14 @@ export function Teachback({
             onClick={() => setStep({ kind: 'retry' })}
             className={`mt-8 ${buttonClass.primary}`}
           >
-            한 번 더 볼까요? ▶
+            <T>{screenTexts.teachback.seeAgain}</T> ▶
           </button>
         </>
       )}
 
       {step.kind === 'retry' && (
         <Ask
-          intro="다른 질문으로 한 번 더 볼게요"
+          intro={screenTexts.teachback.retryIntro}
           question={q.retry.question}
           choices={q.retry.choices}
           onPick={(choice) => {
@@ -113,7 +114,9 @@ export function Teachback({
           message={
             step.correct
               ? ttobagiSays.cheer
-              : `정답은 「${q.retry.choices.find((c) => c.correct)?.text}」예요. 간호사 선생님께 한 번 더 여쭤봐요.`
+              : screenTexts.teachback.answerIs(
+                  q.retry.choices.find((c) => c.correct)?.text ?? '',
+                )
           }
           onNext={next}
         />
@@ -135,7 +138,9 @@ function Progress({ index, total }: { index: number; total: number }) {
         )}
       </span>
       <span>
-        <span className="sr-only">질문 {total}개 중 </span>
+        <span className="sr-only">
+          <T>{screenTexts.teachback.count(total)}</T>
+        </span>
         {index + 1} / {total}
       </span>
     </p>
@@ -155,9 +160,13 @@ function Ask({
 }) {
   return (
     <>
-      {intro && <p className="mt-4 text-xl text-zinc-700">{intro} 🙂</p>}
+      {intro && (
+        <p className="mt-4 text-xl text-zinc-700">
+          <T>{intro}</T> 🙂
+        </p>
+      )}
       <h1 className="mt-4 text-3xl leading-snug font-bold whitespace-pre-line break-keep">
-        {question}
+        <T>{question}</T>
       </h1>
       <div className="mt-6 flex flex-col gap-4">
         {choices.map((choice) => (
@@ -174,13 +183,13 @@ function Ask({
               <Drawing visual={choice.visual} />
             </span>
             <span className="text-2xl leading-snug font-bold break-keep">
-              {choice.text}
+              <T>{choice.text}</T>
             </span>
           </button>
         ))}
       </div>
       <p className="mt-5 text-center text-xl text-zinc-600">
-        천천히 골라 주세요
+        <T>{screenTexts.teachback.slowly}</T>
       </p>
     </>
   );
@@ -199,14 +208,14 @@ function Result({
   return (
     <>
       <div role="status" className="mt-6">
-        <Ttobagi pose={pose} message={message} />
+        <TranslatedTtobagi pose={pose} message={message} />
       </div>
       <button
         type="button"
         onClick={onNext}
         className={`mt-4 ${buttonClass.primary}`}
       >
-        다음 ▶
+        <T>{screenTexts.teachback.next}</T> ▶
       </button>
     </>
   );
@@ -225,21 +234,25 @@ function Done({
     <div className="text-center">
       <div role="status" className="mt-4 text-left">
         {needHelp.length === 0 ? (
-          <Ttobagi pose="cheer" message={ttobagiSays.cheer} />
+          <TranslatedTtobagi pose="cheer" message={ttobagiSays.cheer} />
         ) : (
-          <Ttobagi
+          <TranslatedTtobagi
             pose="explain"
-            message="❓ 표시는 간호사 선생님께 여쭤봐요."
+            message={screenTexts.teachback.askNurse}
           />
         )}
       </div>
       <h1 className="text-3xl font-bold">
-        {needHelp.length === 0 ? '모두 잘 이해하셨어요!' : '끝까지 잘하셨어요!'}
+        <T>
+          {needHelp.length === 0
+            ? screenTexts.teachback.allGood
+            : screenTexts.teachback.wellDone}
+        </T>
       </h1>
       <ul className="mt-6 flex flex-col gap-2 rounded-3xl bg-stat-mint p-6 text-left text-2xl leading-relaxed">
         {questions.map((q) => (
           <li key={q.topic}>
-            {needHelp.includes(q.topic) ? '❓' : '✅'} {q.topic}
+            {needHelp.includes(q.topic) ? '❓' : '✅'} <T>{q.topic}</T>
           </li>
         ))}
       </ul>
@@ -249,9 +262,13 @@ function Done({
         </div>
       )}
       <div className="mt-8">
-        <ButtonLink href={`/p/${code}/home`}>🏠 홈으로</ButtonLink>
+        <ButtonLink href={`/p/${code}/home`}>
+          🏠 <T>{screenTexts.teachback.toHome}</T>
+        </ButtonLink>
       </div>
-      <p className="mt-4 text-xl text-zinc-600">헷갈리면 언제든 다시 보세요</p>
+      <p className="mt-4 text-xl text-zinc-600">
+        <T>{screenTexts.teachback.reviewAnytime}</T>
+      </p>
     </div>
   );
 }

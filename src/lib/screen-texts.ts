@@ -1,4 +1,4 @@
-import { guideSteps } from './demo-guide';
+import { demoGuide, guideSteps } from './demo-guide';
 import { medications } from './medication-guide';
 
 // 환자 화면 파일에 직접 쓰는 한국어 문구. 화면에서는 <T>(src/app/translated.tsx)로 보여 주고,
@@ -60,6 +60,23 @@ export const screenTexts = {
     stopUnknownLine: '의사 선생님과 정한 날짜부터 중단',
     stopTemplate: '{date}부터 중단',
   },
+  teachback: {
+    count: (total: number) => `질문 ${total}개 중 `,
+    slowly: '천천히 골라 주세요',
+    retryIntro: '다른 질문으로 한 번 더 볼게요',
+    seeAgain: '한 번 더 볼까요?',
+    next: '다음',
+    answerIs: (answer: string) =>
+      `정답은 「${answer}」예요. 간호사 선생님께 한 번 더 여쭤봐요.`,
+    askNurse: '❓ 표시는 간호사 선생님께 여쭤봐요.',
+    allGood: '모두 잘 이해하셨어요!',
+    wellDone: '끝까지 잘하셨어요!',
+    toHome: '홈으로',
+    reviewAnytime: '헷갈리면 언제든 다시 보세요',
+  },
+  danger: {
+    title: '이럴 땐 바로 병원에 전화하세요',
+  },
 };
 
 // 숫자가 들어가는 문구는 나올 수 있는 값을 모두 적어 미리 번역한다.
@@ -68,6 +85,12 @@ export const screenFunctionTexts = [
     screenTexts.colonoscopy.daysLeft(i + 2),
   ),
   screenTexts.guide.count(guideSteps.length),
+  screenTexts.teachback.count(demoGuide.questions.length),
+  ...demoGuide.questions.flatMap((question) =>
+    question.retry.choices
+      .filter((choice) => choice.correct)
+      .map((choice) => screenTexts.teachback.answerIs(choice.text)),
+  ),
   ...Array.from({ length: medications.length }, (_, i) => [
     screenTexts.medication.pickedCount(i + 1),
     screenTexts.medication.newCount(i + 1),
