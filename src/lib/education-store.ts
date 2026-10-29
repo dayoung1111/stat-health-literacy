@@ -31,14 +31,14 @@ export type EducationCode = {
   extras: string[];
   /** 검사일 YYYY-MM-DD(한국 날짜) */
   examDate: string;
-  /** 피를 묽게 하는 약 중단 시작일 YYYY-MM-DD(선택). 아직 schema.prisma에 없는 칸이다(DB 단계에서 추가 승인 필요). */
+  /** 피를 묽게 하는 약 중단 시작일 YYYY-MM-DD(선택). schema.prisma EducationCode.bloodThinnerStopDate와 같은 칸. */
   bloodThinnerStopDate: string | null;
   birthDateHash: string;
   failedAttempts: number;
   lockedAt: Date | null;
   expiresAt: Date;
   createdAt: Date;
-  /** 환자가 고른 "드시는 약". pickedAt은 약마다 처음 고른 시간(지금은 schema.prisma에 없는 칸, DB 단계에서 추가 승인 필요). */
+  /** 환자가 고른 "드시는 약". pickedAt은 약마다 처음 고른 시간(schema.prisma MedicationCheck.pickedAt과 같은 칸). */
   medicationCheck: {
     medications: MedicationId[];
     checkedAt: Date;

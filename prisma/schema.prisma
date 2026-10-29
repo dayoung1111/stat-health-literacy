@@ -20,30 +20,33 @@ model User {
 /// 의료진이 발급한 교육 코드. 고른 안내 여러 개를 코드 1개·QR 1개·링크 1개로 묶는다.
 /// 환자 이름·등록번호·전화번호는 저장하지 않는다.
 model EducationCode {
-  id             String    @id @default(uuid()) @db.Uuid
+  id                   String    @id @default(uuid()) @db.Uuid
   /// 환자에게 주는 6자리 숫자. 만료된 코드는 지운 뒤 다시 쓸 수 있다.
-  code           String    @unique @db.VarChar(6)
+  code                 String    @unique @db.VarChar(6)
   /// 발급한 간호사 아이디(지금은 시연용 nurse01). 이 간호사만 조회할 수 있게 서버에서 확인한다.
-  staffId        String    @map("staff_id")
+  staffId              String    @map("staff_id")
   /// 묶어 보낸 안내: checkup / colonoscopy / gastroscopy / medication
-  guides         String[]
+  guides               String[]
   /// 맞춤 설정. 나이대: 10-40 / 50 / 60 / 70. 복용약 안내에는 언어·큰 글씨만 적용한다.
-  ageGroup       String    @map("age_group")
+  ageGroup             String    @map("age_group")
   /// 설명 단계: normal / easy / very-easy
-  level          String
-  language       String
+  level                String
+  language             String
   /// 추가 도움: large-text / guardian / developmental
-  extras         String[]
+  extras               String[]
   /// 검사일. 시각 없는 날짜이며 한국 날짜 기준이다.
-  examDate       DateTime  @map("exam_date") @db.Date
+  examDate             DateTime  @map("exam_date") @db.Date
+  /// 피를 묽게 하는 약 중단 시작일(선택). 시각 없는 날짜이며 한국 날짜 기준이다.
+  /// 비우면 환자 화면에 "의사 선생님과 정한 날짜부터"로 보인다.
+  bloodThinnerStopDate DateTime? @map("blood_thinner_stop_date") @db.Date
   /// 생년월일 6자리를 되돌릴 수 없게 암호화한 값(scrypt, 코드마다 다른 소금 포함)
-  birthDateHash  String    @map("birth_date_hash")
+  birthDateHash        String    @map("birth_date_hash")
   /// 생년월일을 틀린 횟수. 5번이 되면 lockedAt을 기록하고 더는 들어올 수 없다.
-  failedAttempts Int       @default(0) @map("failed_attempts")
-  lockedAt       DateTime? @map("locked_at") @db.Timestamptz
+  failedAttempts       Int       @default(0) @map("failed_attempts")
+  lockedAt             DateTime? @map("locked_at") @db.Timestamptz
   /// 발급 7일 뒤(UTC로 저장). 지나면 화면에서 숨기고, 묶인 기록과 함께 지운다.
-  expiresAt      DateTime  @map("expires_at") @db.Timestamptz
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt            DateTime  @map("expires_at") @db.Timestamptz
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   medicationCheck  MedicationCheck?
   teachbackResults TeachbackResult[]
@@ -58,9 +61,12 @@ model MedicationCheck {
   codeId      String        @id @map("code_id") @db.Uuid
   /// 코드가 지워지면 함께 지워진다.
   code        EducationCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
-  /// blood-pressure / diabetes / blood-thinner / iron / supplement / other
+  /// blood-pressure(혈압약) / diabetes(당뇨약) / insulin(인슐린) / blood-thinner(피를 묽게 하는 약) / supplement(영양제·한약) / other(기타 약)
   medications String[]
   checkedAt   DateTime      @map("checked_at") @db.Timestamptz
+  /// 약마다 처음 고른 시각(UTC). {"blood-pressure": "2026-10-29T09:59:00Z"} 모양이다.
+  /// 약을 더하거나 빼도 이미 고른 약의 시각은 그대로 둔다. 뺀 약의 확인 질문 결과는 TeachbackResult에 남는다.
+  pickedAt    Json          @map("picked_at")
 
   @@map("medication_checks")
 }
