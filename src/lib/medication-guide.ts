@@ -92,7 +92,7 @@ export const medications: Medication[] = [
     icon: 'pill',
     verdict: 'stop',
     details: [
-      { kind: 'clock', hour: 6, text: '검사날 아침 안 먹어요', no: true },
+      { kind: 'clock', hour: 6, text: '검사날 아침' },
       { kind: 'icon', icon: 'bag', text: '약은 챙겨 오기' },
     ],
     quiz: {
@@ -110,7 +110,7 @@ export const medications: Medication[] = [
       {
         kind: 'icon',
         icon: 'syringe',
-        text: '검사날 아침 주사 안 돼요',
+        text: '검사날 아침 주사',
         no: true,
       },
       { kind: 'icon', icon: 'candy', text: '사탕 챙겨 오기' },
@@ -129,7 +129,7 @@ export const medications: Medication[] = [
     icon: 'drop',
     verdict: 'ask',
     details: [
-      { kind: 'icon', icon: 'hand', text: '혼자 끊으면 안 돼요', no: true },
+      { kind: 'icon', icon: 'hand', text: '혼자 끊기', no: true },
       { kind: 'icon', icon: 'doctor', text: '검사 2주 전 의사 상담' },
       { kind: 'stop-date' },
     ],
@@ -159,7 +159,7 @@ export const medications: Medication[] = [
     verdict: 'ask',
     details: [
       { kind: 'calendar', label: '7일 전', text: '검사 일주일 전' },
-      { kind: 'icon', icon: 'phone', text: '병원에 전화' },
+      { kind: 'icon', icon: 'phone', text: '병원 전화' },
     ],
     quiz: {
       question: '모르는 약,\n병원에 전화해요?',
