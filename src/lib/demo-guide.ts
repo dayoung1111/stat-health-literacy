@@ -39,6 +39,14 @@ export type Question = {
 
 const emoji = (e: string): Visual => ({ kind: 'emoji', emoji: e });
 
+// 검사 당일 금식과 혈압약 예외. 혈압약은 물 없이 못 먹으므로 물 한두 모금만 예외다.
+// 앱 전체(안내문·헷갈려요·티치백·지금 할 일·또박이 대사·복용약 화면)가 이 문장을 그대로 쓴다.
+// 혈압약을 먹는 시각은 검수 예정(2026-10-30)이라 여기에 넣지 않는다.
+export const FASTING_FROM_5AM = '새벽 5시부터는 물도 드시지 마세요.';
+export const BLOOD_PRESSURE_SIP = '단, 혈압약은 물 한두 모금과 함께 드세요.';
+/** 그림 아래 짧은 말 */
+export const BLOOD_PRESSURE_SIP_LABEL = '혈압약은 물 한두 모금과 함께';
+
 // 1) 검사 3일 전 음식. 안내문 그림과 사진 수업 영상이 같은 목록을 쓴다.
 // say: 안내문 한 줄이자 영상 자막. photo: 사진 수업에 나오는 사진(없으면 영상 정리 장면에서 말로만).
 export type FoodGroup = {
@@ -346,12 +354,12 @@ export const demoGuide = {
             { visual: emoji('💊'), label: '약', no: true },
             { visual: emoji('🍬'), label: '껌 · 은단', no: true },
             { visual: emoji('🚬'), label: '담배', no: true },
-            { visual: emoji('🩺'), label: '혈압약은 괜찮아요' },
+            { visual: emoji('🩺'), label: BLOOD_PRESSURE_SIP_LABEL },
           ],
           lines: [
             '검사 당일 새벽 5시부터는 완전히 금식해요.',
             '물, 약, 껌, 은단, 담배 모두 안 돼요.',
-            '혈압약만 드셔도 돼요.',
+            BLOOD_PRESSURE_SIP,
           ],
           term: '금식',
           easier: [
@@ -365,7 +373,7 @@ export const demoGuide = {
               label: '껌, 은단, 담배도 안 돼요',
               no: true,
             },
-            { visual: emoji('🩺'), label: '혈압약만 괜찮아요' },
+            { visual: emoji('🩺'), label: BLOOD_PRESSURE_SIP_LABEL },
           ],
         },
       ],
@@ -482,12 +490,12 @@ export const demoGuide = {
         pictures: [
           { visual: { kind: 'clock', hour: 5 }, label: '새벽 5시부터' },
           { visual: emoji('💧'), label: '물', no: true },
-          { visual: emoji('🩺'), label: '혈압약은 괜찮아요' },
+          { visual: emoji('🩺'), label: BLOOD_PRESSURE_SIP_LABEL },
         ],
         lines: [
           '새벽 5시부터는',
           '물, 약, 껌, 은단, 담배 모두 안 돼요.',
-          '혈압약만 드셔도 돼요.',
+          BLOOD_PRESSURE_SIP,
         ],
       },
       retry: {
@@ -635,8 +643,8 @@ export function getTodo(daysLeft: number): {
         },
         { visual: emoji('👨‍👩‍👧'), label: '보호자와 함께' },
       ],
-      line: '새벽 5시부터 완전 금식, 혈압약만 드셔도 돼요',
-      speech: '새벽 5시부터는 물도 드시면 안 돼요. 보호자와 함께 오세요.',
+      line: `${FASTING_FROM_5AM} ${BLOOD_PRESSURE_SIP}`,
+      speech: `${FASTING_FROM_5AM} ${BLOOD_PRESSURE_SIP}`,
     };
   }
   return {

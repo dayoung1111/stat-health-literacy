@@ -103,6 +103,24 @@ function Shape({ name }: { name: MedIconName }) {
           <path d="M26 22 L74 22 L68 84 L32 84 Z" {...line} />
         </>
       );
+    case 'sip':
+      // 물 한두 모금: 작은 물방울 두 개
+      return (
+        <>
+          <path
+            d="M36 26 C28 40 22 48 22 56 A14 14 0 0 0 50 56 C50 48 44 40 36 26 Z"
+            fill="#7CC4E0"
+            stroke={ink}
+            strokeWidth={4}
+          />
+          <path
+            d="M66 40 C60 50 56 56 56 62 A10 10 0 0 0 76 62 C76 56 72 50 66 40 Z"
+            fill="#7CC4E0"
+            stroke={ink}
+            strokeWidth={4}
+          />
+        </>
+      );
     case 'bag':
       return (
         <>

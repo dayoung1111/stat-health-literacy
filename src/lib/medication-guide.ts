@@ -30,6 +30,7 @@ export type MedIconName =
   | 'leaf'
   | 'clipboard'
   | 'half-cup'
+  | 'sip'
   | 'bag'
   | 'candy'
   | 'hand'
@@ -77,7 +78,8 @@ export const medications: Medication[] = [
     verdict: 'ok',
     details: [
       { kind: 'clock', hour: 6, text: '검사날 아침 6시' },
-      { kind: 'icon', icon: 'half-cup', text: '물 반 컵' },
+      // 금식 중이라도 혈압약을 먹을 때 물 한두 모금은 예외(demo-guide.ts의 BLOOD_PRESSURE_SIP과 같은 뜻).
+      { kind: 'icon', icon: 'sip', text: '물 한두 모금' },
     ],
     quiz: {
       question: '검사날 아침\n혈압약 먹어요?',
