@@ -8,6 +8,8 @@ type Row = {
   guides: string;
   examDate: string;
   setting: string;
+  /** 드시는 약 한 줄. 예: "혈압약·당뇨약⚠" */
+  meds: { text: string; muted: boolean };
   passed: number;
   total: number;
 };
@@ -36,6 +38,7 @@ export function CodeTable({ rows }: { rows: Row[] }) {
             <th className="px-3 py-3">묶은 안내</th>
             <th className="px-3 py-3">검사일</th>
             <th className="px-3 py-3">설정</th>
+            <th className="px-3 py-3">드시는 약</th>
             <th className="px-3 py-3">이해 확인</th>
           </tr>
         </thead>
@@ -56,6 +59,11 @@ export function CodeTable({ rows }: { rows: Row[] }) {
                 <td className="px-3 py-3">{row.examDate}</td>
                 <td className="px-3 py-3">{row.setting}</td>
                 <td
+                  className={`px-3 py-3 ${row.meds.muted ? 'text-zinc-500' : 'font-semibold'}`}
+                >
+                  {row.meds.text}
+                </td>
+                <td
                   className={`px-3 py-3 font-bold ${
                     row.total === 0
                       ? 'font-normal text-zinc-500'
@@ -73,7 +81,7 @@ export function CodeTable({ rows }: { rows: Row[] }) {
           })}
           {shown.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-3 py-6 text-center text-zinc-600">
+              <td colSpan={6} className="px-3 py-6 text-center text-zinc-600">
                 맞는 코드가 없어요
               </td>
             </tr>

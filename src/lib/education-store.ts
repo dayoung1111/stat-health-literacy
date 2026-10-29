@@ -38,7 +38,12 @@ export type EducationCode = {
   lockedAt: Date | null;
   expiresAt: Date;
   createdAt: Date;
-  medicationCheck: { medications: MedicationId[]; checkedAt: Date } | null;
+  /** 환자가 고른 "드시는 약". pickedAt은 약마다 처음 고른 시간(지금은 schema.prisma에 없는 칸, DB 단계에서 추가 승인 필요). */
+  medicationCheck: {
+    medications: MedicationId[];
+    checkedAt: Date;
+    pickedAt: Partial<Record<MedicationId, Date>>;
+  } | null;
   teachbackResults: {
     guide: GuideKind;
     question: string;
@@ -190,14 +195,19 @@ export async function findCodeForStaff(staffId: string, code: string) {
   return row && row.staffId === staffId ? row : null;
 }
 
-// "내가 먹는 약": 다시 체크하면 최신으로 바꾼다.
+// "내가 먹는 약": 다시 저장하면 최신 목록으로 바꾼다(추가·빼기 모두).
 export async function saveMedicationCheck(
   code: string,
   medications: MedicationId[],
 ) {
   const row = await findActiveCode(code);
   if (!row) return;
-  row.medicationCheck = { medications, checkedAt: new Date() };
+  // 약을 더하거나 빼도, 이미 고른 약의 "고른 시간"은 그대로 둔다.
+  const now = new Date();
+  const before = row.medicationCheck?.pickedAt ?? {};
+  const pickedAt: Partial<Record<MedicationId, Date>> = {};
+  for (const id of medications) pickedAt[id] = before[id] ?? now;
+  row.medicationCheck = { medications, checkedAt: now, pickedAt };
 }
 
 // 티치백: 같은 안내의 같은 질문은 최신 결과로 바꾼다.
@@ -243,7 +253,8 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
   const examDate = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul',
   }).format(tomorrow);
-  const base = {
+  // 코드마다 목록(배열)을 새로 만든다. 같은 배열을 나눠 쓰면 한 환자의 기록이 다른 코드에도 보인다.
+  const base = () => ({
     extras: [] as string[],
     examDate,
     bloodThinnerStopDate: null,
@@ -253,13 +264,13 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
     medicationCheck: null,
     teachbackResults: [] as EducationCode['teachbackResults'],
     confusionMarks: [] as EducationCode['confusionMarks'],
-  };
+  });
   const topics = demoGuide.questions.map((q) => q.topic);
   const minutesAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);
 
   const rows: EducationCode[] = [
     {
-      ...base,
+      ...base(),
       code: '000000',
       staffId: 'nurse01',
       guides: ['colonoscopy', 'medication'],
@@ -270,7 +281,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       createdAt: minutesAgo(10),
     },
     {
-      ...base,
+      ...base(),
       code: '482917',
       staffId: 'nurse01',
       guides: ['colonoscopy', 'medication'],
@@ -281,7 +292,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       createdAt: minutesAgo(5),
     },
     {
-      ...base,
+      ...base(),
       code: '305566',
       staffId: 'nurse01',
       guides: ['colonoscopy'],
@@ -326,7 +337,7 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       ],
     },
     {
-      ...base,
+      ...base(),
       code: '771204',
       staffId: 'nurse01',
       guides: ['gastroscopy', 'medication'],
@@ -339,10 +350,14 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
       medicationCheck: {
         medications: ['blood-pressure', 'blood-thinner'],
         checkedAt: minutesAgo(100),
+        pickedAt: {
+          'blood-pressure': minutesAgo(100),
+          'blood-thinner': minutesAgo(100),
+        },
       },
     },
     {
-      ...base,
+      ...base(),
       code: '550031',
       staffId: 'nurse02',
       guides: ['checkup'],

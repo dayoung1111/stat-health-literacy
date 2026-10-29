@@ -6,6 +6,7 @@ import { listAllCodes, type EducationCode } from '@/lib/education-store';
 import { guideCatalog, guideKinds, guideNames } from '@/lib/guide-catalog';
 import { confusionLabel } from '@/lib/guide-labels';
 import { medications } from '@/lib/medication-guide';
+import { medicationCell, teachbackOnly } from '@/lib/medication-summary';
 
 import { Panel } from '../../ui';
 import { StaffPage } from '../../staff-page';
@@ -23,8 +24,9 @@ export default function AdminPage() {
 const percent = (part: number, total: number) =>
   total === 0 ? '—' : `${Math.round((part / total) * 100)}%`;
 
+// 전체 코드 표의 "이해 확인"은 티치백만 센다(의료진 목록과 같게).
 function passed(code: EducationCode) {
-  return code.teachbackResults.filter((r) => r.result !== 'wrong').length;
+  return teachbackOnly(code).filter((r) => r.result !== 'wrong').length;
 }
 
 async function AdminOverview() {
@@ -144,10 +146,17 @@ async function AdminOverview() {
       <section id="codes" className="scroll-mt-4">
         <Panel title={`전체 코드 (${codes.length}개)`}>
           <Table
-            head={['코드', '발급 간호사', '묶은 안내', '검사일', '이해 확인']}
+            head={[
+              '코드',
+              '발급 간호사',
+              '묶은 안내',
+              '검사일',
+              '드시는 약',
+              '이해 확인',
+            ]}
           >
             {codes.map((c) => {
-              const total = c.teachbackResults.length;
+              const total = teachbackOnly(c).length;
               const ok = passed(c) === total;
               return (
                 <tr key={c.code} className="border-b border-zinc-200">
@@ -164,6 +173,11 @@ async function AdminOverview() {
                     {guideNames(c.guides).join(', ')}
                   </td>
                   <td className="px-3 py-3">{c.examDate}</td>
+                  <td
+                    className={`px-3 py-3 ${medicationCell(c).muted ? 'text-zinc-500' : 'font-semibold'}`}
+                  >
+                    {medicationCell(c).text}
+                  </td>
                   <td
                     className={`px-3 py-3 font-bold ${
                       total === 0

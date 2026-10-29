@@ -9,11 +9,8 @@ import {
 } from '@/lib/education-store';
 import { guideCatalog, guideNames } from '@/lib/guide-catalog';
 import { confusionLabel } from '@/lib/guide-labels';
-import {
-  medicationName,
-  verdictLabels,
-  findMedication,
-} from '@/lib/medication-guide';
+import { verdictLabels } from '@/lib/medication-guide';
+import { medicationRows, verdictMarks } from '@/lib/medication-summary';
 import { extraLabels, settingLabel } from '@/lib/staff-options';
 
 import { Panel, StaffBack } from '../../../ui';
@@ -39,7 +36,7 @@ const kstTime = (date: Date) =>
     hour12: false,
   }).format(date);
 
-// ⑥ 코드 상세: 묶은 안내, 티치백 결과, "헷갈려요" 누른 곳, 환자가 체크한 약.
+// ⑥ 코드 상세: 묶은 안내, 티치백 결과, "헷갈려요" 누른 곳, 환자가 고른 약(약별 판정·확인 질문·고른 시간).
 // 다른 간호사의 코드는 "페이지 없음"으로 막는다.
 export default function CodeDetailPage({
   params,
@@ -62,10 +59,7 @@ async function CodeDetail({ code }: { code: string }) {
   const teachback = item.teachbackResults.filter(
     (r) => r.guide !== 'medication',
   );
-  const medQuiz = (id: string) =>
-    item.teachbackResults.find(
-      (r) => r.guide === 'medication' && r.question === id,
-    );
+  const medRows = medicationRows(item);
   const wrong = teachback.filter((r) => r.result === 'wrong');
   const extras = extraLabels(item.extras);
 
@@ -173,10 +167,10 @@ async function CodeDetail({ code }: { code: string }) {
         </Section>
 
         {item.guides.includes('medication') && (
-          <Section title="환자가 체크한 「내가 먹는 약」">
+          <Section title="드시는 약 (환자가 고른 약)">
             {!item.medicationCheck ? (
-              <Empty>아직 체크하지 않았어요.</Empty>
-            ) : item.medicationCheck.medications.length === 0 ? (
+              <Empty>아직 고르지 않았어요.</Empty>
+            ) : medRows.length === 0 ? (
               <Empty>
                 먹는 약이 없다고 했어요 (
                 {kstTime(item.medicationCheck.checkedAt)})
@@ -184,42 +178,41 @@ async function CodeDetail({ code }: { code: string }) {
             ) : (
               <>
                 <p className="mb-2 text-base text-zinc-500">
-                  체크한 시간 {kstTime(item.medicationCheck.checkedAt)}
+                  마지막으로 고친 시간 {kstTime(item.medicationCheck.checkedAt)}
                 </p>
                 <table className="w-full text-left text-lg">
                   <thead className="text-base text-zinc-600">
                     <tr className="border-b border-zinc-200">
-                      <th className="px-2 py-2">고른 약</th>
+                      <th className="px-2 py-2">약</th>
                       <th className="px-2 py-2">판정</th>
                       <th className="px-2 py-2">확인 질문</th>
+                      <th className="px-2 py-2">고른 시간</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {item.medicationCheck.medications.map((id) => {
-                      const quiz = medQuiz(id);
-                      const verdict = findMedication(id)?.verdict;
-                      return (
-                        <tr key={id} className="border-b border-zinc-200">
-                          <td className="px-2 py-3 font-bold">
-                            {medicationName(id)}
-                          </td>
-                          <td className="px-2 py-3">
-                            {verdict ? verdictLabels[verdict] : ''}
-                          </td>
-                          <td
-                            className={`px-2 py-3 font-bold ${
-                              quiz
-                                ? resultLabel[quiz.result].className
-                                : 'font-normal text-zinc-500'
-                            }`}
-                          >
-                            {quiz
-                              ? resultLabel[quiz.result].text
-                              : '아직 안 풀었어요'}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {medRows.map((r) => (
+                      <tr key={r.id} className="border-b border-zinc-200">
+                        <td className="px-2 py-3 font-bold">{r.name}</td>
+                        <td className="px-2 py-3">
+                          {r.verdict &&
+                            `${verdictMarks[r.verdict]} ${verdictLabels[r.verdict]}`}
+                        </td>
+                        <td
+                          className={`px-2 py-3 font-bold ${
+                            r.quiz
+                              ? resultLabel[r.quiz].className
+                              : 'font-normal text-zinc-500'
+                          }`}
+                        >
+                          {r.quiz
+                            ? resultLabel[r.quiz].text
+                            : '아직 안 풀었어요'}
+                        </td>
+                        <td className="px-2 py-3 text-base text-zinc-500">
+                          {kstTime(r.pickedAt)}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </>

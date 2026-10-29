@@ -1,6 +1,7 @@
 import { requireStaff } from '@/lib/demo-staff';
 import { listCodesForStaff } from '@/lib/education-store';
 import { guideNames } from '@/lib/guide-catalog';
+import { medicationCell, teachbackOnly } from '@/lib/medication-summary';
 import { settingLabel } from '@/lib/staff-options';
 
 import { Notice, Panel, StaffBack } from '../../ui';
@@ -24,8 +25,9 @@ async function MyCodes() {
     guides: guideNames(c.guides).join(', '),
     examDate: `${Number(c.examDate.slice(5, 7))}/${Number(c.examDate.slice(8, 10))}`,
     setting: settingLabel(c),
-    passed: c.teachbackResults.filter((r) => r.result !== 'wrong').length,
-    total: c.teachbackResults.length,
+    meds: medicationCell(c),
+    passed: teachbackOnly(c).filter((r) => r.result !== 'wrong').length,
+    total: teachbackOnly(c).length,
   }));
 
   return (
