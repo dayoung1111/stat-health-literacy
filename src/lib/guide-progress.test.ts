@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { guideKinds } from './guide-catalog';
-import { guideLessonHref, nextGuide, readyGuides } from './guide-progress';
+import {
+  guideFinish,
+  guideLessonHref,
+  nextGuide,
+  readyGuides,
+} from './guide-progress';
 import { getMessages, languages } from './messages';
 import { ko } from './messages/ko';
 
@@ -38,6 +43,27 @@ describe('안내 사이 이동', () => {
       guideLessonHref('771204', 'gastroscopy'),
       '/p/771204/gastroscopy',
     );
+  });
+
+  it('기본 검진 → 위내시경 → 드시는 약 → 모두 끝 (518031과 같은 묶음)', () => {
+    const issued = ['checkup', 'gastroscopy', 'medication'] as const;
+    const a = guideFinish(ko, '518031', 'checkup', issued, []);
+    assert.equal(a.next, 'gastroscopy');
+    assert.equal(a.nextHref, '/p/518031/gastroscopy');
+    assert.equal(
+      a.message,
+      '건강검진 기본 확인사항 수업 끝! 이제 위내시경을 볼게요.',
+    );
+    const b = guideFinish(ko, '518031', 'gastroscopy', issued, ['checkup']);
+    assert.equal(b.next, 'medication');
+    assert.equal(b.nextHref, '/p/518031/medication');
+    const c = guideFinish(ko, '518031', 'medication', issued, [
+      'checkup',
+      'gastroscopy',
+    ]);
+    assert.equal(c.next, null);
+    assert.equal(c.nextHref, null);
+    assert.equal(c.message, ko.allDone);
   });
 
   it('대장내시경은 또박이 수업, 드시는 약은 약 화면으로 연다', () => {

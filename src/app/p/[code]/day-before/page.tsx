@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { requireDemoPatient } from '@/lib/demo-patient';
+import { readyGuides } from '@/lib/guide-progress';
 
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -28,7 +29,12 @@ async function DayBefore({ code }: { code: string }) {
         <h1 className="mb-4 text-3xl leading-snug font-bold break-keep">
           검진 전날 준비
         </h1>
-        <DayBeforeFrame code={code} language={issued.language} />
+        <DayBeforeFrame
+          code={code}
+          language={issued.language}
+          guides={readyGuides(issued.guides)}
+          completed={issued.guideCompletions.map((c) => c.guide)}
+        />
       </div>
       <CheckWithStaff />
     </>

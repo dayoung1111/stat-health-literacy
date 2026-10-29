@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { requireDemoPatient } from '@/lib/demo-patient';
+import { readyGuides } from '@/lib/guide-progress';
 
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
@@ -31,7 +32,12 @@ async function Gastroscopy({ code }: { code: string }) {
         <h1 className="mb-4 text-3xl leading-snug font-bold break-keep">
           위내시경 준비
         </h1>
-        <GastroscopyFrame code={code} language={issued.language} />
+        <GastroscopyFrame
+          code={code}
+          language={issued.language}
+          guides={readyGuides(issued.guides)}
+          completed={issued.guideCompletions.map((c) => c.guide)}
+        />
       </div>
       <CheckWithStaff />
     </>
