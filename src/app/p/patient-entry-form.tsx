@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from 'react';
 
+import { useLanguage } from '../language-provider';
 import { enterPatient, type EntryState } from './actions';
 import { buttonClass } from './ui';
 
@@ -11,6 +12,14 @@ export function PatientEntryForm({ code }: { code?: string }) {
     enterPatient,
     {},
   );
+  const { t } = useLanguage();
+  const error = state.error;
+  const message =
+    error?.kind === 'locked'
+      ? t.entry.locked
+      : error?.kind === 'wrong'
+        ? t.entry.wrong(error.remaining)
+        : null;
 
   return (
     <form action={formAction} className="flex flex-col gap-8">
@@ -19,27 +28,27 @@ export function PatientEntryForm({ code }: { code?: string }) {
       ) : (
         <DigitBoxes
           name="code"
-          label="교육 번호 6자리"
-          hint="병원에서 받은 종이에 적혀 있어요"
-          error={state.fieldErrors?.code}
+          label={t.entry.codeLabel}
+          hint={t.entry.codeHint}
+          error={state.fieldErrors?.code ? t.entry.sixDigits : undefined}
         />
       )}
       <DigitBoxes
         name="birthDate"
-        label="생년월일 6자리"
-        hint="예: 1985년 7월 4일 → 850704"
-        error={state.fieldErrors?.birthDate}
+        label={t.entry.birthLabel}
+        hint={t.entry.birthHint}
+        error={state.fieldErrors?.birthDate ? t.entry.sixDigits : undefined}
       />
-      {state.message && (
+      {message && (
         <p
           role="alert"
           className="rounded-3xl bg-stat-alert-soft p-5 text-xl font-semibold text-stat-alert"
         >
-          {state.message}
+          {message}
         </p>
       )}
       <button type="submit" disabled={pending} className={buttonClass.primary}>
-        {pending ? '확인 중…' : '확인 ▶'}
+        {pending ? t.entry.checking : t.entry.submit}
       </button>
     </form>
   );
@@ -60,6 +69,7 @@ function DigitBoxes({
   error?: string;
 }) {
   const [digits, setDigits] = useState<string[]>(Array(length).fill(''));
+  const { t } = useLanguage();
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
   const labelId = `${name}-label`;
   const hintId = `${name}-hint`;
@@ -102,7 +112,7 @@ function DigitBoxes({
             value={digit}
             inputMode="numeric"
             autoComplete="off"
-            aria-label={`${label} ${i + 1}번째 숫자`}
+            aria-label={t.entry.digit(label, i + 1)}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             onChange={(e) =>

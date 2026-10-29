@@ -1,7 +1,47 @@
 import type { Messages } from './ko';
 
-// 안내 사이 이동 문구(Tiếng Việt). 모양은 ko.ts와 같다.
+// 화면 문구(Tiếng Việt). 모양은 ko.ts와 같다.
 export const vi: Messages = {
+  languageName: 'Tiếng Việt',
+  speechLang: 'vi-VN',
+  languagePicker: 'Chọn ngôn ngữ',
+
+  home: {
+    hello: 'Xin chào, tôi là Ttobagi.',
+    headline: 'Hướng dẫn bệnh viện khó hiểu,\nnay thật dễ hiểu',
+    enter: 'Vào dành cho bệnh nhân',
+    enterHint: 'Tôi có mã số từ bệnh viện',
+    call: 'Không có mã số? Gọi bệnh viện',
+    staff: 'Đăng nhập nhân viên y tế',
+  },
+
+  ttobagi: {
+    aria: (message) => `Ttobagi: ${message} (chạm để nghe)`,
+    soundOn: 'Âm thanh Ttobagi đang bật. Chạm để tắt',
+    soundOff: 'Âm thanh Ttobagi đang tắt. Chạm để bật',
+  },
+
+  entry: {
+    back: 'Về trang đầu',
+    title: 'Xin chào 🙂\nHãy nhập mã số\nbệnh viện đã đưa',
+    birthOnlyTitle: 'Xin chào 🙂\nChỉ cần nhập 6 số\nngày sinh',
+    codeLabel: 'Mã số giáo dục 6 chữ số',
+    codeHint: 'Có ghi trên tờ giấy bệnh viện đưa',
+    birthLabel: 'Ngày sinh 6 chữ số',
+    birthHint: 'Ví dụ: ngày 4 tháng 7 năm 1985 → 850704',
+    digit: (label, n) => `${label}, số thứ ${n}`,
+    submit: 'Xác nhận ▶',
+    checking: 'Đang kiểm tra…',
+    callHelp: '📞 Gặp khó khăn? Gọi bệnh viện',
+    typeCode: 'Tôi sẽ tự nhập mã số giáo dục',
+    sixDigits: 'Hãy nhập 6 chữ số',
+    locked: 'Đã bị khóa vì sai 5 lần. Hãy gọi bệnh viện để nhận mã số mới.',
+    wrong: (remaining) =>
+      remaining === undefined
+        ? 'Hãy kiểm tra lại mã số hoặc ngày sinh'
+        : `Hãy kiểm tra lại mã số hoặc ngày sinh (còn ${remaining} lần)`,
+  },
+
   guides: {
     checkup: 'Khám sức khỏe cơ bản',
     colonoscopy: 'Nội soi đại tràng',

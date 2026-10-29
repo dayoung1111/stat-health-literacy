@@ -27,7 +27,8 @@ import {
 } from './lesson-state';
 import type { GuideKind } from '@/lib/guide-catalog';
 import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
-import { getMessages } from '@/lib/messages';
+
+import { useLanguageOr } from '../../language-provider';
 
 import { completeGuide } from '../records';
 import { CardScene } from './card-scene';
@@ -50,13 +51,17 @@ type WebkitElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
-function getSpeech() {
+// speechLang: 읽을 문장의 언어(ko-KR, en-US, ja-JP, zh-CN, vi-VN)
+function getSpeech(speechLang: string) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     return null;
   }
+  const prefix = speechLang.slice(0, 2).toLowerCase();
   const voices = window.speechSynthesis.getVoices();
-  const voice = voices.find((item) => item.lang.toLowerCase().startsWith('ko'));
-  // 목소리 목록은 있는데 한국어가 없으면 자막만 시간에 맞춰 넘긴다.
+  const voice = voices.find((item) =>
+    item.lang.toLowerCase().startsWith(prefix),
+  );
+  // 목소리 목록은 있는데 그 언어 목소리가 없으면 자막만 시간에 맞춰 넘긴다.
   if (voices.length > 0 && !voice) return null;
   return { synth: window.speechSynthesis, voice };
 }
@@ -94,7 +99,8 @@ export function PhotoLesson({
   completed: GuideKind[];
 }) {
   const router = useRouter();
-  const t = getMessages(language);
+  // 환자가 고른 언어(없으면 의료진이 고른 언어). 안내 사이 이동 문구에 쓴다.
+  const { t } = useLanguageOr(language);
   const [completed, setCompleted] = useState(initialCompleted);
   // 아직 안 마친 다른 안내. 순서는 정하지 않고 남은 것으로 간다.
   const next = nextGuide(guides, completed, thisGuide);
@@ -119,6 +125,11 @@ export function PhotoLesson({
   const lesson = lessons[state.lesson];
   const step = currentStep(lessons, state);
   const subtitle = getSubtitle(lessons, state, finish);
+  // 수업 본문은 한국어, 마지막 교시 뒤 이동 문구만 번역된 말이다. 말의 언어에 맞는 목소리로 읽는다.
+  const translatedLine =
+    (state.mode === 'praise' || state.mode === 'done') &&
+    state.lesson === lessons.length - 1;
+  const speechLang = translatedLine ? t.speechLang : 'ko-KR';
   const minMs = getMinDuration(lessons, state);
   const autoNext = advancesByItself(state.mode);
   const here = flatIndex(lessons, state.lesson, state.step);
@@ -149,10 +160,10 @@ export function PhotoLesson({
       tryFinish();
     }, minMs);
 
-    const speech = getSpeech();
+    const speech = getSpeech(speechLang);
     if (speech) {
       const utterance = new SpeechSynthesisUtterance(subtitle.text);
-      utterance.lang = 'ko-KR';
+      utterance.lang = speechLang;
       utterance.pitch = 1.3;
       utterance.rate = 0.88;
       if (speech.voice) utterance.voice = speech.voice;
@@ -175,7 +186,7 @@ export function PhotoLesson({
       timers.forEach((timer) => window.clearTimeout(timer));
       speech?.synth.cancel();
     };
-  }, [state.playing, state.cue, subtitle.text, minMs, autoNext]);
+  }, [state.playing, state.cue, subtitle.text, minMs, autoNext, speechLang]);
 
   // 전체 화면 동안 뒤 화면이 움직이지 않게 하고, 닫기 버튼에 초점을 둔다.
   // 키보드 Esc로도 닫을 수 있다.

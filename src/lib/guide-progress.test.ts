@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { guideKinds } from './guide-catalog';
 import { guideLessonHref, nextGuide, readyGuides } from './guide-progress';
-import { getMessages } from './messages';
+import { getMessages, languages } from './messages';
 import { ko } from './messages/ko';
 
 describe('안내 사이 이동', () => {
@@ -66,14 +66,31 @@ describe('안내 이동 문구', () => {
     assert.equal(ko.allDone, '모든 수업 끝! 정말 잘하셨어요.');
   });
 
-  it('4개 언어 모두 모든 안내 제목과 문구가 있다', () => {
-    for (const language of ['ko', 'en', 'zh', 'vi']) {
+  it('5개 언어 모두 모든 안내 제목과 문구가 있다', () => {
+    for (const language of languages) {
       const t = getMessages(language);
       for (const kind of guideKinds)
         assert.ok(t.guides[kind], `${language} ${kind}`);
       assert.ok(t.guideDoneNext('A', 'B').includes('B'));
       assert.ok(t.nextButton('B').includes('B'));
       assert.ok(t.allDone && t.restart && t.statusDone && t.statusLeft);
+    }
+  });
+
+  it('언어마다 음성 읽기 언어 코드가 맞다', () => {
+    assert.deepEqual(
+      languages.map((language) => getMessages(language).speechLang),
+      ['ko-KR', 'en-US', 'ja-JP', 'zh-CN', 'vi-VN'],
+    );
+  });
+
+  it('번호 입력 화면 문구가 5개 언어 모두 있다', () => {
+    for (const language of languages) {
+      const { entry, home } = getMessages(language);
+      for (const text of Object.values(entry)) {
+        if (typeof text === 'string') assert.ok(text, language);
+      }
+      assert.ok(home.hello && entry.wrong(3).includes('3'), language);
     }
   });
 

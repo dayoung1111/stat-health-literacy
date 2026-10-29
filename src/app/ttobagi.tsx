@@ -2,6 +2,10 @@
 
 import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 
+import { getMessages } from '@/lib/messages';
+
+import { useLanguage } from './language-provider';
+
 // S.T.A.T 캐릭터 "또박이". 그림은 docs/reference/ttobagi.html의 포즈 5개를 그대로 옮겼다.
 // 말투: 짧은 존댓말, 한 번에 한 가지만.
 
@@ -350,7 +354,8 @@ function canSpeak() {
 
 // fromTap: 또박이를 직접 눌렀을 때는 같은 문장이라도 다시 읽는다.
 // 자동 읽기는 같은 문장이 1초 안에 또 오면 건너뛴다(개발 모드에서 화면 준비가 두 번 도는 경우 등).
-function speak(text: string, fromTap = false) {
+// speechLang: 문장의 언어 코드(ko-KR, en-US, ja-JP, zh-CN, vi-VN). 그 언어 목소리로 읽는다.
+export function speak(text: string, fromTap = false, speechLang = 'ko-KR') {
   if (!canSpeak()) return;
   const now = Date.now();
   if (!fromTap && lastSpoken.text === text && now - lastSpoken.at < 1000) {
@@ -360,11 +365,20 @@ function speak(text: string, fromTap = false) {
   const synth = window.speechSynthesis;
   synth.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ko-KR';
+  utterance.lang = speechLang;
   utterance.rate = 0.9;
-  const korean = synth.getVoices().find((v) => v.lang.startsWith('ko'));
-  if (korean) utterance.voice = korean;
+  const voice = findVoice(speechLang);
+  if (voice) utterance.voice = voice;
   synth.speak(utterance);
+}
+
+/** 그 언어의 목소리(ko-KR → ko로 시작하는 목소리). 없으면 브라우저가 lang을 보고 고른다. */
+export function findVoice(speechLang: string) {
+  if (!canSpeak()) return undefined;
+  const prefix = speechLang.slice(0, 2).toLowerCase();
+  return window.speechSynthesis
+    .getVoices()
+    .find((v) => v.lang.toLowerCase().startsWith(prefix));
 }
 
 // 첫 터치 때 한 번 소리를 "깨워" 둔다(아이폰 사파리는 터치 안에서 한 번 말해야 그 뒤 자동 읽기를 허락한다).
@@ -427,14 +441,13 @@ function setSoundOn(on: boolean) {
 // 오른쪽 위 작은 🔊/🔇 버튼. 끄면 다시 켤 때까지 자동으로 읽지 않는다.
 export function SoundToggle() {
   const on = useSoundOn();
+  const { t } = useLanguage();
   useFirstTouch();
   return (
     <button
       type="button"
       aria-pressed={on}
-      aria-label={
-        on ? '또박이 소리 켜짐. 누르면 꺼요' : '또박이 소리 꺼짐. 누르면 켜요'
-      }
+      aria-label={on ? t.ttobagi.soundOn : t.ttobagi.soundOff}
       onClick={() => setSoundOn(!on)}
       className="flex size-12 shrink-0 items-center justify-center rounded-2xl border-2 border-zinc-300 bg-white text-2xl hover:border-stat-green focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
     >
@@ -455,30 +468,34 @@ function Sentences({ message }: { message: string }) {
 // 또박이 + 옆 작은 말풍선(글자에 딱 맞게). 또박이나 말풍선을 누르면 말한다.
 // 화면에 처음 나오거나 말이 바뀌면, 사용자가 한 번이라도 누른 뒤이고 소리가 켜져 있을 때 자동으로 읽는다.
 // size="sm"은 얼굴만 작게 보여 주어 내용이 많은 화면(안내문)에서 공간을 아낀다.
+// language: 말(message)이 어느 언어인지. 번역된 말이면 그 언어 목소리로 읽는다. 기본은 한국어.
 export function Ttobagi({
   pose,
   message,
   size = 'md',
+  language = 'ko',
 }: {
   pose: Pose;
   message: string;
   size?: 'sm' | 'md';
+  language?: string;
 }) {
   const soundOn = useSoundOn();
+  const t = getMessages(language);
   useFirstTouch();
 
   useEffect(() => {
-    if (soundOn && hasInteracted) speak(message);
-  }, [message, soundOn]);
+    if (soundOn && hasInteracted) speak(message, false, t.speechLang);
+  }, [message, soundOn, t.speechLang]);
 
   return (
     <button
       type="button"
       onClick={() => {
         rememberFirstTouch();
-        speak(message, true);
+        speak(message, true, t.speechLang);
       }}
-      aria-label={`또박이: ${message} (누르면 소리로 들어요)`}
+      aria-label={t.ttobagi.aria(message)}
       className="flex w-full items-center gap-2 rounded-3xl text-left focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
     >
       <span

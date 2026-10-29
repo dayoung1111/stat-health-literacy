@@ -1,20 +1,22 @@
+import { EntryText } from './entry-text';
 import { PatientEntryForm } from './patient-entry-form';
 import { BackLink, CallButton } from './ui';
 
+// 번호 입력 화면. 글은 고른 언어(src/lib/messages/)로 보여 준다.
 export default function PatientEntryPage() {
   return (
     <>
-      <BackLink href="/">처음으로</BackLink>
+      <BackLink href="/">
+        <EntryText name="back" />
+      </BackLink>
       <h1 className="mt-4 mb-8 text-3xl leading-snug font-bold break-keep">
-        안녕하세요 🙂
-        <br />
-        병원에서 받은 번호를
-        <br />
-        넣어 주시면 돼요
+        <EntryText name="title" />
       </h1>
       <PatientEntryForm />
       <div className="mt-6">
-        <CallButton variant="outline">📞 잘 안 되면 병원에 전화</CallButton>
+        <CallButton variant="outline">
+          <EntryText name="callHelp" />
+        </CallButton>
       </div>
     </>
   );
