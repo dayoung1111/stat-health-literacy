@@ -1,4 +1,7 @@
 import type { Picture, Visual } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
+
+import { T } from '../translated';
 
 // 외부 이미지 없이 직접 그린 그림. 그림 뜻은 아래 글(label)로 함께 보여 주므로
 // 화면 읽기 프로그램에는 그림을 숨기고 글만 읽게 한다.
@@ -249,8 +252,12 @@ function Art({ picture }: { picture: Picture }) {
 function Label({ picture }: { picture: Picture }) {
   return (
     <>
-      {picture.no && <span className="sr-only">하면 안 돼요: </span>}
-      {picture.label}
+      {picture.no && (
+        <span className="sr-only">
+          <T>{screenTexts.common.mustNot}</T>
+        </span>
+      )}
+      <T>{picture.label}</T>
     </>
   );
 }
@@ -278,7 +285,7 @@ export function PictureRow({
 }) {
   if (compact) {
     return (
-      <div className="flex justify-center gap-3">
+      <div className="picture-row flex justify-center gap-3">
         {pictures.map((picture) => (
           <div
             key={picture.label}

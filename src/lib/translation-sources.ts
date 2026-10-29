@@ -3,6 +3,7 @@ import * as demoGuideModule from './demo-guide';
 import { guideCatalog } from './guide-catalog';
 import { homeSourceTexts } from './home-texts';
 import { medications, verdictLabels } from './medication-guide';
+import { screenFunctionTexts, screenTexts } from './screen-texts';
 import { ttobagiSays } from './ttobagi-says';
 
 // 미리 번역할 한국어 문장 목록. 안내문·약·환자 홈의 문구를 코드에서 그대로 모은다.
@@ -34,6 +35,8 @@ export function presetSourceTexts() {
       guideCatalog,
       ttobagiSays,
       home: homeSourceTexts,
+      screenTexts,
+      screenFunctionTexts,
     }),
   ];
 }

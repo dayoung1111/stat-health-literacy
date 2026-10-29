@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation';
 
 import { demoGuide, getTodo, hospital } from '@/lib/demo-guide';
 import { getDemoSchedule, requireDemoPatient } from '@/lib/demo-patient';
+import { homeTexts } from '@/lib/home-texts';
+import { screenTexts } from '@/lib/screen-texts';
 
-import { Ttobagi } from '../../../ttobagi';
+import { LocalDate, T, TranslatedTtobagi } from '../../../translated';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
@@ -21,10 +23,11 @@ export default function ColonoscopyPage({
 }
 
 function greeting(daysLeft: number) {
-  if (daysLeft > 1) return `검사까지 ${daysLeft}일 남았어요`;
-  if (daysLeft === 1) return '내일이 검사 날이에요';
-  if (daysLeft === 0) return '오늘이 검사 날이에요';
-  return '검사 잘 받으셨어요';
+  const texts = screenTexts.colonoscopy;
+  if (daysLeft > 1) return texts.daysLeft(daysLeft);
+  if (daysLeft === 1) return texts.tomorrow;
+  if (daysLeft === 0) return texts.today;
+  return texts.done;
 }
 
 const menuClass =
@@ -33,23 +36,24 @@ const menuClass =
 async function ColonoscopyHome({ code }: { code: string }) {
   const issued = await requireDemoPatient(code);
   if (!issued.guides.includes('colonoscopy')) notFound();
-  const { examLabel, daysLeft } = await getDemoSchedule();
+  const { examDate, daysLeft } = await getDemoSchedule();
   const todo = getTodo(daysLeft);
 
   return (
     <>
       <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
       <p className="text-xl text-zinc-700">
-        {hospital.name} · {demoGuide.examName} · {examLabel}
+        <T>{hospital.name}</T> · <T>{demoGuide.examName}</T> ·{' '}
+        <LocalDate date={examDate} />
       </p>
       <h1 className="mt-2 text-3xl leading-snug font-bold break-keep">
-        안녕하세요 🙂
+        <T>{homeTexts.greeting}</T>
         <br />
-        {greeting(daysLeft)}
+        <T>{greeting(daysLeft)}</T>
       </h1>
 
       <div className="mt-5">
-        <Ttobagi pose="time" message={todo.speech} />
+        <TranslatedTtobagi pose="time" message={todo.speech} />
       </div>
 
       <nav aria-label="환자 메뉴" className="mt-2 flex flex-col gap-4">
@@ -60,7 +64,7 @@ async function ColonoscopyHome({ code }: { code: string }) {
           <span aria-hidden="true" className="text-5xl">
             🎬
           </span>
-          또박이 선생님 수업 보기
+          <T>{screenTexts.colonoscopy.video}</T>
         </Link>
         <Link
           href={`/p/${code}/guide/1`}
@@ -69,7 +73,7 @@ async function ColonoscopyHome({ code }: { code: string }) {
           <span aria-hidden="true" className="text-4xl">
             📖
           </span>
-          안내문 같이 보기
+          <T>{screenTexts.colonoscopy.guide}</T>
         </Link>
         <Link
           href={`/p/${code}/check`}
@@ -78,7 +82,7 @@ async function ColonoscopyHome({ code }: { code: string }) {
           <span aria-hidden="true" className="text-4xl">
             ✅
           </span>
-          잘 이해했는지 확인해요
+          <T>{screenTexts.colonoscopy.check}</T>
         </Link>
         <Link
           href={`/p/${code}/danger`}
@@ -87,7 +91,7 @@ async function ColonoscopyHome({ code }: { code: string }) {
           <span aria-hidden="true" className="text-4xl">
             🚨
           </span>
-          이럴 땐 바로 병원에
+          <T>{screenTexts.colonoscopy.danger}</T>
         </Link>
       </nav>
       <CheckWithStaff />

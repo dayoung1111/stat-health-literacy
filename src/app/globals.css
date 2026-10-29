@@ -121,3 +121,20 @@ body {
     transform: translateX(5px);
   }
 }
+
+/* 일본어·중국어는 띄어쓰기가 없어서, 한국어용 "단어 단위 유지(break-keep)"를 두면 줄이 바뀌지 않고 글자가 겹친다. */
+:lang(ja) .break-keep,
+:lang(zh) .break-keep {
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 안내문의 그림 줄(PictureRow compact)은 한국어 설명에 맞춰 한 줄에 다 담는다.
+   다른 언어는 설명이 길어서 한 줄에 3개씩 보여 준다. */
+:not(:lang(ko)) .picture-row {
+  flex-wrap: wrap;
+  row-gap: 1.25rem;
+}
+:not(:lang(ko)) .picture-row > div {
+  flex: 0 0 calc(33.333% - 0.5rem);
+}

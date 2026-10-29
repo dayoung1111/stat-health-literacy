@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { guideSteps } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
-import { Ttobagi } from '../../../../ttobagi';
+import { T, TranslatedTtobagi } from '../../../../translated';
 import { PictureRow } from '../../../pictures';
 import { buttonClass, CheckWithStaff, PatientTopBar } from '../../../ui';
 import { PatientPage } from '../../patient-page';
@@ -42,10 +43,14 @@ async function GuideStep({
     <div className="pb-48">
       <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
       <div className="mb-3">
-        <Ttobagi pose="explain" message={ttobagiSays.explain} size="sm" />
+        <TranslatedTtobagi
+          pose="explain"
+          message={ttobagiSays.explain}
+          size="sm"
+        />
       </div>
       <p className="inline-block rounded-full bg-stat-mint px-4 py-1 text-xl font-bold text-stat-green">
-        {step.sectionNo}. {step.sectionTitle}
+        {step.sectionNo}. <T>{step.sectionTitle}</T>
       </p>
 
       <section className="mt-3 rounded-3xl bg-stat-mint p-5">
@@ -53,11 +58,13 @@ async function GuideStep({
         <div className="mt-4 border-t-2 border-dashed border-stat-green/30 pt-4">
           {step.lines.map((line) => (
             <p key={line} className="text-2xl leading-relaxed break-keep">
-              {line}
+              <T>{line}</T>
             </p>
           ))}
           {step.term && (
-            <p className="mt-2 text-xl text-zinc-600">({step.term})</p>
+            <p className="mt-2 text-xl text-zinc-600">
+              (<T>{step.term}</T>)
+            </p>
           )}
         </div>
       </section>
@@ -68,7 +75,7 @@ async function GuideStep({
         href={`/p/${code}/guide/${number}/${step.id}`}
         className="mt-5 flex min-h-16 items-center justify-center gap-2 rounded-full border-2 border-stat-blush bg-stat-sun px-6 text-2xl font-bold text-stat-ink hover:bg-stat-sun focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green"
       >
-        🤔 헷갈려요
+        🤔 <T>{screenTexts.guide.confused}</T>
       </ConfusedLink>
       <CheckWithStaff />
 
@@ -82,7 +89,9 @@ async function GuideStep({
               {guideSteps.map((_, i) => (i < number ? '●' : '○')).join(' ')}
             </span>
             <span>
-              <span className="sr-only">안내문 {total}개 중 </span>
+              <span className="sr-only">
+                <T>{screenTexts.guide.count(total)}</T>
+              </span>
               {number} / {total}
             </span>
           </p>
@@ -92,11 +101,11 @@ async function GuideStep({
                 href={`/p/${code}/guide/${number - 1}`}
                 className={buttonClass.outline}
               >
-                ◀ 이전
+                ◀ <T>{screenTexts.guide.previous}</T>
               </Link>
             ) : (
               <span aria-disabled="true" className={buttonClass.disabled}>
-                ◀ 이전
+                ◀ <T>{screenTexts.guide.previous}</T>
               </span>
             )}
             <Link
@@ -107,7 +116,12 @@ async function GuideStep({
               }
               className={buttonClass.primary}
             >
-              {number < total ? '다음 ▶' : '이해 확인 ▶'}
+              {number < total ? (
+                <T>{screenTexts.guide.next}</T>
+              ) : (
+                <T>{screenTexts.guide.toCheck}</T>
+              )}{' '}
+              ▶
             </Link>
           </div>
         </div>

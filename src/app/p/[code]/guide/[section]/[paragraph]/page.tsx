@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 
 import { guideSteps } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
-import { Ttobagi } from '../../../../../ttobagi';
+import { T, TranslatedTtobagi } from '../../../../../translated';
 import { PictureLines } from '../../../../pictures';
 import { ButtonLink, CallButton, PatientTopBar } from '../../../../ui';
 import { PatientPage } from '../../../patient-page';
@@ -36,14 +37,20 @@ async function Easier({
   return (
     <>
       <PatientTopBar code={code} back={{ fallback: backHref }} />
-      <h1 className="sr-only">더 쉽게 볼까요?</h1>
-      <Ttobagi pose="explain" message={ttobagiSays.explain} />
+      <h1 className="sr-only">
+        <T>{screenTexts.guide.easierTitle}</T>
+      </h1>
+      <TranslatedTtobagi pose="explain" message={ttobagiSays.explain} />
       <div className="mt-2 rounded-3xl bg-stat-sun p-4">
         <PictureLines pictures={step.easier} />
       </div>
       <div className="mt-8 flex flex-col gap-4">
-        <ButtonLink href={backHref}>이제 알겠어요 👍</ButtonLink>
-        <CallButton variant="outline">아직 어려워요 → 병원에 전화</CallButton>
+        <ButtonLink href={backHref}>
+          <T>{screenTexts.guide.gotIt}</T> 👍
+        </ButtonLink>
+        <CallButton variant="outline">
+          <T>{screenTexts.guide.stillHard}</T>
+        </CallButton>
       </div>
     </>
   );

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 
 // 환자·의료진 화면 왼쪽 위의 "← 뒤로" 버튼.
 // href가 있으면 항상 그 화면으로, 없으면 방금 본 화면으로 간다.
@@ -13,17 +14,20 @@ export function BackButton({
   href,
   fallback = '/',
   onClick,
+  label = '뒤로',
 }: {
   href?: string;
   fallback?: string;
   onClick?: () => void;
+  /** 글자. 환자 화면은 번역한 글자를 넣는다(의료진 화면은 한국어 그대로). */
+  label?: ReactNode;
 }) {
   const router = useRouter();
 
   if (href) {
     return (
       <Link href={href} className={backButtonClass}>
-        ← 뒤로
+        ← {label}
       </Link>
     );
   }
@@ -38,7 +42,7 @@ export function BackButton({
           window.history.length > 1 ? router.back() : router.push(fallback))
       }
     >
-      ← 뒤로
+      ← {label}
     </button>
   );
 }

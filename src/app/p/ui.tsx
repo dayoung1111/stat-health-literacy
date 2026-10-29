@@ -2,8 +2,10 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { hospital } from '@/lib/demo-guide';
+import { screenTexts } from '@/lib/screen-texts';
 
 import { BackButton, backButtonClass } from '../back-button';
+import { T } from '../translated';
 import { SoundToggle } from '../ttobagi';
 
 // 환자 화면에서 반복되는 버튼·링크 모양. 글씨는 20px 이상, 둥근 모양을 유지한다.
@@ -37,7 +39,11 @@ export function ButtonLink({
 
 export function CallButton({
   variant = 'call',
-  children = '📞 병원에 전화하기',
+  children = (
+    <>
+      📞 <T>{screenTexts.common.callHospital}</T>
+    </>
+  ),
 }: {
   variant?: keyof typeof buttonClass;
   children?: ReactNode;
@@ -81,12 +87,12 @@ export function PatientTopBar({
       aria-label="화면 이동"
       className="mb-4 flex items-center justify-between"
     >
-      <BackButton {...back} />
+      <BackButton {...back} label={<T>{screenTexts.common.back}</T>} />
       <div className="flex items-center gap-2">
         <SoundToggle />
         {showHome && (
           <Link href={`/p/${code}/home`} className={backButtonClass}>
-            🏠 처음으로
+            🏠 <T>{screenTexts.common.home}</T>
           </Link>
         )}
       </div>
@@ -95,13 +101,17 @@ export function PatientTopBar({
 }
 
 export function Loading() {
-  return <p className="text-xl text-zinc-600">불러오는 중…</p>;
+  return (
+    <p className="text-xl text-zinc-600">
+      <T>{screenTexts.common.loading}</T>
+    </p>
+  );
 }
 
 export function CheckWithStaff() {
   return (
     <p className="mt-10 border-t border-stat-mint pt-4 text-xl text-zinc-600">
-      정확한 내용은 의료진에게 확인하세요.
+      <T>{screenTexts.common.checkWithStaff}</T>
     </p>
   );
 }

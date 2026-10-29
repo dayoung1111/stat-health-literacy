@@ -83,5 +83,6 @@ export async function getDemoSchedule() {
     weekday: 'short',
   }).format(examDate);
 
-  return { examLabel, daysLeft };
+  // examDate: 날짜 그대로(YYYY-MM-DD). 화면이 고른 언어에 맞춰 날짜를 쓴다.
+  return { examLabel, examDate: examDate.toISOString().slice(0, 10), daysLeft };
 }

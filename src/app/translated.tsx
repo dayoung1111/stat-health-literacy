@@ -11,6 +11,8 @@ import {
 
 import { useLanguage } from './language-provider';
 import { translateForPatient } from './p/translate-actions';
+import { getMessages } from '@/lib/messages';
+
 import { Ttobagi } from './ttobagi';
 
 // 한국어 문구를 환자가 고른 언어로 보여 준다. 흐름은 이렇다.
@@ -88,8 +90,14 @@ export function IssuedLanguage({
   language: string;
   children: ReactNode;
 }) {
+  const { language: picked, chosen } = useLanguage();
   return (
-    <IssuedLanguageContext value={language}>{children}</IssuedLanguageContext>
+    <IssuedLanguageContext value={language}>
+      {/* 화면 글자의 언어 표시(lang). 일본어·중국어의 줄바꿈과 글꼴이 맞게 되고 화면 읽기 프로그램도 언어를 안다. */}
+      <div lang={chosen ? picked : language} className="contents">
+        {children}
+      </div>
+    </IssuedLanguageContext>
   );
 }
 
@@ -135,4 +143,19 @@ export function TranslatedTtobagi({
       language={texts[0] === message ? 'ko' : language}
     />
   );
+}
+
+/** 날짜(YYYY-MM-DD)를 고른 언어의 월·일·요일로. 예: 10월 30일 (금) / Fri, Oct 30 */
+export function LocalDate({ date }: { date: string }) {
+  const issued = useContext(IssuedLanguageContext);
+  const { language: picked, chosen } = useLanguage();
+  const locale = getMessages(chosen ? picked : issued).speechLang;
+  const text = new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  }).format(new Date(`${date}T00:00:00Z`));
+  // 서버와 브라우저의 날짜 모양이 조금 다를 수 있어 경고만 끈다.
+  return <span suppressHydrationWarning>{text}</span>;
 }

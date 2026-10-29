@@ -458,11 +458,15 @@ export function SoundToggle() {
 
 function Sentences({ message }: { message: string }) {
   // 문장마다 줄을 바꿔 한 번에 한 가지씩 읽히게 한다.
-  return message.split(/(?<=[.!?])\s+/).map((sentence) => (
-    <span key={sentence} className="block">
-      {sentence}
-    </span>
-  ));
+  // 일본어·중국어 문장 끝(。！？)은 뒤에 띄어쓰기가 없어도 나눈다.
+  return message
+    .split(/(?<=[.!?])\s+|(?<=[。！？])\s*/)
+    .filter(Boolean)
+    .map((sentence) => (
+      <span key={sentence} className="block">
+        {sentence}
+      </span>
+    ));
 }
 
 // 또박이 + 옆 작은 말풍선(글자에 딱 맞게). 또박이나 말풍선을 누르면 말한다.
