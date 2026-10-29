@@ -1,4 +1,4 @@
-/* 또박이 선생님 사진 수업 (시안: docs/reference/PhotoLesson.dc.html, 영상 너비 896px 기준).
+/* 또박이 선생님 대장내시경 수업 (사진 장면 시안: docs/reference/PhotoLesson.dc.html, 영상 너비 896px 기준).
    영상 안의 크기는 영상 너비 비율(cqw, 1cqw = 너비의 1%)로 정해
    PC·휴대폰·가로 전체 화면 어디서나 같은 모양으로 커지고 작아진다. */
 
@@ -249,6 +249,10 @@
   background: #ddf3e8;
   color: #1d6e47;
 }
+.pl-key.care {
+  background: #fdf0c4;
+  color: #7a5200;
+}
 .pl-choices {
   display: flex;
   flex: none;
@@ -317,6 +321,293 @@
 .pl-start-sub {
   font-size: max(15px, 1.8cqw);
   color: #dcedee;
+}
+
+/* 카드 장면(3·4·7·8교시): 위 안내 카드 + 아래 사진 카드. 또박이 자리(오른쪽)는 비운다. */
+.pc-wrap {
+  position: absolute;
+  z-index: 3;
+  left: 2.7cqw;
+  top: 2.5cqw;
+  width: 62cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4cqw;
+}
+.pc-guide {
+  display: flex;
+  align-items: center;
+  gap: 1.8cqw;
+  padding: 1.3cqw 2cqw;
+  border: 0.35cqw solid #15262b;
+  border-radius: 1.8cqw;
+  background: #ffffff;
+  animation: pl-pop 0.4s ease-out both;
+}
+.pc-sign {
+  display: flex;
+  flex: none;
+  width: 7.6cqw;
+  height: 7.6cqw;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #ffffff;
+}
+.pc-sign svg {
+  width: 62%;
+  height: 62%;
+}
+.pc-sign.no {
+  background: #d9363e;
+}
+.pc-sign.ok {
+  background: #2e9e6b;
+}
+.pc-sign.care {
+  background: #f5c33b;
+  color: #15262b;
+}
+.pc-guide-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3cqw;
+  word-break: keep-all;
+}
+.pc-title {
+  font-size: 4.4cqw;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.pc-sub {
+  font-size: 3cqw;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.pc-items {
+  display: flex;
+  gap: 1.3cqw;
+}
+.pc-item {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  max-width: 19.5cqw;
+  flex-direction: column;
+  gap: 0.6cqw;
+  padding: 0.6cqw;
+  border: 0.35cqw solid #ffffff;
+  border-radius: 1.6cqw;
+  background: #ffffff;
+  animation: pl-pop 0.4s ease-out both;
+}
+.pc-item.no {
+  border-color: #d9363e;
+}
+.pc-item.ok {
+  border-color: #2e9e6b;
+}
+.pc-item.care {
+  border-color: #f5c33b;
+}
+.pc-item.wide {
+  max-width: 34cqw;
+  flex-basis: 34cqw;
+  border-color: #2e9e6b;
+}
+.pc-photo {
+  position: relative;
+  display: flex;
+  aspect-ratio: 4 / 3;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 1.1cqw;
+  background: #f4efe6;
+}
+.pc-photo img {
+  object-fit: cover;
+  object-position: 33% 46%;
+}
+.pc-item.wide .pc-photo img {
+  object-position: center;
+}
+.pc-drawing svg {
+  width: 70%;
+  height: 70%;
+}
+.pc-mark {
+  position: absolute;
+  left: 50%;
+  top: 0.6cqw;
+  width: 13cqw;
+  height: 13cqw;
+  max-width: 90%;
+  transform: translateX(-50%);
+}
+.pc-care {
+  transform-origin: 60px 60px;
+  animation: pl-pop 0.4s ease-out both;
+}
+.pc-item-name {
+  font-size: 2.4cqw;
+  font-weight: 800;
+  text-align: center;
+  word-break: keep-all;
+}
+/* 보호자 사진 속 사람 몸 위 이름표 */
+.pc-tag {
+  position: absolute;
+  padding: 0.4cqw 1.4cqw;
+  border-radius: 999px;
+  background: rgba(21, 38, 43, 0.86);
+  color: #ffffff;
+  font-size: 2.6cqw;
+  font-weight: 800;
+  transform: translate(-50%, -50%);
+  animation: pl-fade 0.4s ease-out both;
+  animation-delay: 1.2s;
+}
+.pc-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1cqw;
+}
+.pc-note {
+  padding: 1.3cqw 1.6cqw;
+  border: 0.45cqw solid #d9363e;
+  border-radius: 1.4cqw;
+  background: #ffffff;
+  font-size: 2.5cqw;
+  font-weight: 800;
+  line-height: 1.3;
+  word-break: keep-all;
+  animation: pl-pop 0.4s ease-out both;
+}
+
+/* 약 만들기 장면(5·6교시): 왼쪽 위 단계 표시 + 그림 */
+.pp-badge {
+  position: absolute;
+  z-index: 4;
+  left: 2.7cqw;
+  top: 2.5cqw;
+  padding: 0.7cqw 1.8cqw;
+  border-radius: 999px;
+  background: #0f6670;
+  color: #ffffff;
+  font-size: 2.4cqw;
+  font-weight: 800;
+  animation: pl-pop 0.4s ease-out both;
+}
+.pp-stage-scene {
+  position: absolute;
+  z-index: 3;
+  left: 2.7cqw;
+  top: 8cqw;
+  width: 62cqw;
+  height: 36cqw;
+}
+.pp-scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* 움직이는 그림만 자기 크기 기준으로 돌리고 키운다(시계 바늘 등 고정 그림은 그대로). */
+.pp-pop,
+.pp-rise,
+.pp-fall,
+.pp-shake,
+.pp-slide {
+  transform-box: fill-box;
+}
+.pp-pop {
+  transform-origin: center;
+  animation: pl-pop 0.45s ease-out both;
+}
+.pp-rise {
+  transform-origin: bottom;
+  animation: pp-rise 2s ease-out both;
+}
+.pp-stream {
+  opacity: 0;
+  animation: pp-stream 2.4s ease-out both;
+}
+.pp-fall {
+  animation: pp-fall 0.9s ease-in both;
+}
+.pp-tilt-left,
+.pp-tilt-right {
+  animation: pl-fade 0.5s ease-out both;
+}
+.pp-shake {
+  transform-origin: center bottom;
+  animation: pp-shake 0.5s ease-in-out 4;
+}
+.pp-draw {
+  stroke-dasharray: 120;
+  stroke-dashoffset: 0;
+  animation: pp-draw 0.6s ease-out both;
+}
+.pp-slide {
+  animation: pp-slide 0.7s ease-out both;
+}
+@keyframes pp-rise {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes pp-stream {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pp-fall {
+  from {
+    transform: translateY(-40px);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(150px);
+    opacity: 0;
+  }
+}
+@keyframes pp-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+}
+@keyframes pp-draw {
+  from {
+    stroke-dashoffset: 120;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes pp-slide {
+  from {
+    transform: translateX(120px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* 휴대폰 전체 화면: 화면 전체에 고정하고, 세로로 들고 있으면 90도 돌려 16:9로 꽉 채운다. */
@@ -452,9 +743,14 @@
 /* 움직임 줄이기: 확대·그리기 없이 바로 표시 */
 @media (prefers-reduced-motion: reduce) {
   .pl-stage *,
-  .pl-stage *::before {
+  .pl-stage *::before,
+  .pp-scene * {
     animation: none !important;
     transition: none !important;
+  }
+  .pp-stream,
+  .pp-fall {
+    display: none;
   }
   .pl-draw-line,
   .pl-draw-circle {

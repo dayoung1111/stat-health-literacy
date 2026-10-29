@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   useEffect,
   useReducer,
@@ -17,22 +18,19 @@ import {
   getMinDuration,
   getSubtitle,
   initialLessonState,
-  keyTone,
   reduceLesson,
+  splitKeys,
   totalSteps,
   type LessonAction,
   type LessonState,
 } from './lesson-state';
-import {
-  foodPhotos,
-  getPhoto,
-  photoLessons,
-  type FoodPhoto,
-} from './photo-lesson';
+import { CardScene } from './card-scene';
+import { getPhoto, photoLessons, type FoodPhoto } from './photo-lesson';
+import { PrepScene } from './prep-scene';
 import { Ttobak, type LessonPose } from './ttobak';
 import './photo-lesson.css';
 
-// 또박이 선생님 사진 수업: 음식 사진·또박이(SVG)·브라우저 음성으로 만든 영상.
+// 또박이 선생님 대장내시경 수업(1~8교시): 사진·카드·약 만들기 그림·또박이(SVG)·브라우저 음성으로 만든 영상.
 // 외부 영상·유료 서비스를 쓰지 않는다. 음성이 안 되는 기기에서는 자막이 시간에 맞춰 넘어간다.
 
 const lessons = photoLessons;
@@ -72,7 +70,7 @@ const isPhoneScreen = () =>
 const controlClass =
   'flex h-13 items-center justify-center rounded-2xl border-[1.5px] border-[#CAD6D6] bg-white px-5 text-lg font-semibold text-[#15262B] hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670] disabled:cursor-not-allowed disabled:opacity-40';
 
-export function PhotoLesson() {
+export function PhotoLesson({ code }: { code: string }) {
   const [state, dispatch] = useReducer(
     (current: LessonState, action: LessonAction) =>
       reduceLesson(lessons, current, action),
@@ -227,10 +225,19 @@ export function PhotoLesson() {
     dispatch({ type: 'answer', index });
   }
 
+  function goLesson(index: number) {
+    unlockSpeech();
+    if (isPhone && !immersive) enterImmersive();
+    dispatch({ type: 'goLesson', lesson: index });
+  }
+
+  // 퀴즈·칭찬 중에는 그 교시의 마지막(또는 다시 볼) 장면을 그대로 둔다.
+  const isPhotoLesson = lesson.format === 'photo';
   const showPhoto =
     state.started && state.mode === 'step' && step.kind === 'photo';
-  const showGrid = state.started && !showPhoto;
+  const showGrid = state.started && isPhotoLesson && !showPhoto;
   const marked = state.mode !== 'step' || step.kind === 'summary';
+  const card = step.kind === 'card' ? lesson.cards[step.card] : null;
   const lessonPhotos = lesson.steps.flatMap((item) =>
     item.kind === 'photo' ? [getPhoto(item.photo)] : [],
   );
@@ -249,7 +256,7 @@ export function PhotoLesson() {
         ? 'wave'
         : 'point';
 
-  const keyAt = subtitle.key ? subtitle.text.indexOf(subtitle.key) : -1;
+  const parts = splitKeys(subtitle.text, subtitle.keys);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -334,6 +341,22 @@ export function PhotoLesson() {
               </div>
             )}
 
+            {state.started && card && (
+              <CardScene
+                key={`card-${state.lesson}-${step.kind === 'card' ? step.card : 0}-${state.reviewing}`}
+                card={card}
+              />
+            )}
+
+            {state.started && step.kind === 'prep' && (
+              <div key={sceneKey}>
+                <p className="pp-badge">{step.badge}</p>
+                <div className="pp-stage-scene">
+                  <PrepScene scene={step.scene} hour={lesson.hour} />
+                </div>
+              </div>
+            )}
+
             <div className="pl-ttobak-box">
               <Ttobak
                 pose={pose}
@@ -344,19 +367,17 @@ export function PhotoLesson() {
 
             <div className="pl-bubble">
               <p aria-live="polite" className="pl-sub">
-                {keyAt >= 0 ? (
-                  <>
-                    {subtitle.text.slice(0, keyAt)}
-                    <span className={`pl-key ${keyTone(subtitle.key)}`}>
-                      {subtitle.key}
+                {parts.map((part, index) =>
+                  part.tone ? (
+                    <span key={index} className={`pl-key ${part.tone}`}>
+                      {part.text}
                     </span>
-                    {subtitle.text.slice(keyAt + subtitle.key.length)}
-                  </>
-                ) : (
-                  subtitle.text
+                  ) : (
+                    part.text
+                  ),
                 )}
               </p>
-              {state.mode === 'quiz' && (
+              {state.mode === 'quiz' && lesson.quiz && (
                 <div className="pl-choices" role="group" aria-label="답 고르기">
                   {lesson.quiz.options.map((option, index) => (
                     <button
@@ -444,87 +465,52 @@ export function PhotoLesson() {
 
       <aside className="flex flex-col gap-4 text-[#15262B]">
         <section className="flex flex-col gap-2.5 rounded-2xl border border-[#CAD6D6] bg-white p-4">
-          <h2 className="text-lg font-bold">오늘의 수업</h2>
+          <h2 className="text-lg font-bold">대장내시경 수업</h2>
           <ol className="flex flex-col gap-1.5">
             {lessons.map((item, index) => {
               const done = index < state.lesson || state.mode === 'done';
               const now = state.started && index === state.lesson && !done;
               return (
-                <li
-                  key={item.id}
-                  aria-current={now ? 'step' : undefined}
-                  className={`flex items-center justify-between rounded-xl border-[1.5px] px-3 py-2.5 ${now ? 'border-[#0F6670] bg-[#DCEDEE] text-[#0B4E56]' : 'border-[#CAD6D6] text-[#4A5D63]'}`}
-                >
-                  <span className="text-base font-bold">{item.title}</span>
-                  <span className="text-sm font-semibold">
-                    {now ? '지금' : done ? '완료' : ''}
-                  </span>
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => goLesson(index)}
+                    aria-current={now ? 'step' : undefined}
+                    className={`flex w-full items-center justify-between gap-2 rounded-xl border-[1.5px] px-3 py-2.5 text-left hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670] ${now ? 'border-[#0F6670] bg-[#DCEDEE] text-[#0B4E56]' : 'border-[#CAD6D6] text-[#4A5D63]'}`}
+                  >
+                    <span className="text-base font-bold break-keep">
+                      {item.title}
+                    </span>
+                    <span className="flex-none text-sm font-semibold">
+                      {now ? (
+                        '지금'
+                      ) : done ? (
+                        <span className="flex size-6 items-center justify-center rounded-full bg-[#2E9E6B] text-white">
+                          <span aria-hidden="true">✓</span>
+                          <span className="sr-only">끝난 교시</span>
+                        </span>
+                      ) : (
+                        ''
+                      )}
+                    </span>
+                  </button>
                 </li>
               );
             })}
           </ol>
         </section>
 
-        <section className="flex flex-col gap-2 rounded-2xl border border-[#CAD6D6] bg-white p-4">
-          <h2 className="text-lg font-bold">이번 시간에 배운 것</h2>
-          <ul className="flex flex-col gap-2">
-            {foodPhotos.map((item) => {
-              const at = learnedIndex(item.id);
-              const now =
-                showPhoto && photo?.id === item.id && state.mode === 'step';
-              const heard = state.started && state.reached >= at && !now;
-              const shown = now || heard;
-              return (
-                <li key={item.id} className="flex items-center gap-3">
-                  <span
-                    className={`relative h-10 w-15 flex-none overflow-hidden rounded-lg border-2 bg-[#E9D6BC] ${shown ? (item.tone === 'no' ? 'border-[#D9363E]' : 'border-[#2E9E6B]') : 'border-[#CAD6D6] opacity-40'}`}
-                  >
-                    {/* 사진은 수업을 시작한 뒤에 불러온다. */}
-                    {state.started && (
-                      <Image
-                        src={item.src}
-                        alt=""
-                        fill
-                        sizes="60px"
-                        className="object-cover object-[33%_46%]"
-                      />
-                    )}
-                  </span>
-                  <span
-                    className={`flex-1 text-base font-semibold ${shown ? '' : 'text-[#8FA0A3]'}`}
-                  >
-                    {item.name}
-                  </span>
-                  <span
-                    className={`text-sm font-bold ${now ? 'text-[#0F6670]' : item.tone === 'no' ? 'text-[#A3262C]' : 'text-[#1D6E47]'}`}
-                  >
-                    {now
-                      ? '지금'
-                      : heard
-                        ? item.tone === 'no'
-                          ? '✕ 안 돼요'
-                          : '○ 괜찮아요'
-                        : ''}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        {lesson.format === 'prep' && (
+          <Link
+            href={`/p/${code}/prep`}
+            className="flex min-h-14 items-center justify-center rounded-2xl bg-[#0F6670] px-4 text-center text-lg font-bold text-white hover:bg-[#0B4E56] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]"
+          >
+            따라하기로 직접 해보기
+          </Link>
+        )}
       </aside>
     </div>
   );
-}
-
-// 사진이 수업에 처음 나오는 전체 장면 번호
-function learnedIndex(photoId: string) {
-  for (let l = 0; l < lessons.length; l++) {
-    const s = lessons[l].steps.findIndex(
-      (step) => step.kind === 'photo' && step.photo === photoId,
-    );
-    if (s >= 0) return flatIndex(lessons, l, s);
-  }
-  return Infinity;
 }
 
 // 사진마다 확대 방향을 번갈아 바꾼다.

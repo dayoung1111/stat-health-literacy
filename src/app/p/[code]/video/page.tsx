@@ -4,7 +4,7 @@ import { PhotoLesson } from '../../ttobak/photo-lesson-player';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
-// 또박이 선생님 사진 수업. 내용은 안내문·티치백과 같은 demo-guide.ts를 쓴다.
+// 또박이 선생님 대장내시경 수업(1~8교시). 내용은 안내문·티치백과 같은 demo-guide.ts를 쓴다.
 export default function VideoPage({ params }: PageProps<'/p/[code]/video'>) {
   return (
     <PatientPage
@@ -20,7 +20,7 @@ export default function VideoPage({ params }: PageProps<'/p/[code]/video'>) {
                 {demoGuide.examName} 준비
               </span>
             </h1>
-            <PhotoLesson />
+            <PhotoLesson code={code} />
           </div>
           <CheckWithStaff />
         </>

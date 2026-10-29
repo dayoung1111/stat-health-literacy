@@ -114,6 +114,32 @@ function Bottle() {
   );
 }
 
+// 대변 검사 통: 뚜껑 달린 작은 통
+function StoolCup() {
+  return (
+    <svg viewBox="0 0 100 100" className="size-24">
+      <rect x="28" y="14" width="44" height="14" rx="4" fill="#0F6670" />
+      <path
+        d="M32 28 L68 28 L66 88 Q66 92 62 92 L38 92 Q34 92 34 88 Z"
+        fill="#fff"
+        stroke="#0F6670"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="38"
+        y="46"
+        width="24"
+        height="26"
+        rx="3"
+        fill="#FFF6D6"
+        stroke="#0F6670"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 function Cup() {
   return (
     <svg viewBox="0 0 40 50" className="h-14 w-11">
@@ -170,6 +196,8 @@ export function Drawing({ visual }: { visual: Visual }) {
       return <Pouch />;
     case 'bottle':
       return <Bottle />;
+    case 'stoolCup':
+      return <StoolCup />;
     case 'calendar':
       return <Calendar text={visual.text} />;
     case 'cups':

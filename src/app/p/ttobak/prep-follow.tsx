@@ -1,0 +1,137 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { prepSteps } from '@/lib/demo-guide';
+
+import { PrepScene } from './prep-scene';
+import './photo-lesson.css';
+
+// 약 만들기 따라하기: 5교시와 같은 7단계를 한 화면에 하나씩 보며 직접 따라 한다.
+// "15분마다 한 컵씩" 단계에서는 컵 4개와 15분 타이머로 다음 컵 시간을 알려 준다.
+
+const CUPS = 4;
+const INTERVAL_MS = 15 * 60 * 1000;
+
+const buttonClass =
+  'flex min-h-14 items-center justify-center rounded-2xl px-6 text-xl font-bold focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670] disabled:cursor-not-allowed disabled:opacity-40';
+const outline = `${buttonClass} border-[1.5px] border-[#CAD6D6] bg-white text-[#15262B] hover:border-[#0F6670]`;
+const filled = `${buttonClass} bg-[#0F6670] text-white hover:bg-[#0B4E56]`;
+
+export function PrepFollow() {
+  const [index, setIndex] = useState(0);
+  const step = prepSteps[index];
+
+  return (
+    <div className="flex flex-col gap-5 text-[#15262B]">
+      <p className="text-lg font-bold text-[#0F6670]">
+        {index + 1}단계 / {prepSteps.length} · {step.name}
+      </p>
+      <div
+        key={step.id}
+        className="aspect-[5/3] w-full rounded-3xl border border-[#CAD6D6] bg-[#F4EFE6] p-4"
+      >
+        <PrepScene scene={step.scene} hour={9} />
+      </div>
+      <p
+        aria-live="polite"
+        className="text-2xl leading-snug font-bold break-keep"
+      >
+        {step.line.say}
+      </p>
+
+      {step.scene === 'cups' && <CupTimer />}
+
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => setIndex(index - 1)}
+          disabled={index === 0}
+          className={outline}
+        >
+          이전
+        </button>
+        <button
+          type="button"
+          onClick={() => setIndex(index + 1)}
+          disabled={index === prepSteps.length - 1}
+          className={filled}
+        >
+          다음
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function format(ms: number) {
+  const total = Math.ceil(ms / 1000);
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}
+
+// 한 컵을 마실 때마다 누르면 다음 컵까지 15분을 잰다.
+function CupTimer() {
+  const [drunk, setDrunk] = useState(0);
+  const [lastAt, setLastAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (lastAt === null || drunk >= CUPS) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [lastAt, drunk]);
+
+  const left = lastAt === null ? 0 : Math.max(0, lastAt + INTERVAL_MS - now);
+  const allDone = drunk >= CUPS;
+  const waiting = !allDone && lastAt !== null && left > 0;
+
+  function drink() {
+    const at = Date.now();
+    setDrunk(drunk + 1);
+    setLastAt(at);
+    setNow(at);
+  }
+
+  return (
+    <section
+      aria-label="15분 타이머"
+      className="flex flex-col gap-4 rounded-3xl bg-[#FFF6D6] p-5"
+    >
+      <ol className="flex justify-center gap-3" aria-label="마신 컵">
+        {Array.from({ length: CUPS }, (_, i) => (
+          <li
+            key={i}
+            className={`flex size-16 items-center justify-center rounded-2xl border-[3px] text-xl font-bold ${i < drunk ? 'border-[#2E9E6B] bg-[#DDF3E8] text-[#1D6E47]' : 'border-[#CAD6D6] bg-white text-[#8FA0A3]'}`}
+          >
+            <span aria-hidden="true">{i < drunk ? '✓' : i + 1}</span>
+            <span className="sr-only">
+              {i + 1}번째 컵 {i < drunk ? '마심' : '아직'}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p
+        aria-live="polite"
+        className="text-center text-2xl font-bold break-keep"
+      >
+        {allDone
+          ? '네 컵을 다 드셨어요.'
+          : waiting
+            ? `다음 컵까지 ${format(left)}`
+            : `${drunk + 1}번째 컵을 드세요.`}
+      </p>
+      {!allDone && (
+        <button
+          type="button"
+          onClick={drink}
+          disabled={waiting}
+          className={filled}
+        >
+          {drunk + 1}번째 컵 마셨어요
+        </button>
+      )}
+    </section>
+  );
+}
