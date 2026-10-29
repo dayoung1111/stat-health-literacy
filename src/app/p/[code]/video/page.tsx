@@ -1,6 +1,6 @@
-import { PhotoLesson } from '@/components/ttobak/PhotoLesson';
 import { demoGuide } from '@/lib/demo-guide';
 
+import { PhotoLesson } from '../../ttobak/photo-lesson-player';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 

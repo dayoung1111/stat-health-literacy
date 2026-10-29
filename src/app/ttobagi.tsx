@@ -42,7 +42,7 @@ export function Hand({
 export const leftArm = 'M44 120 Q24 132 24 150';
 
 // 모든 포즈에 공통인 몸(그림자·다리·종이 몸·접힌 귀퉁이·초록 십자·줄글·볼터치).
-// 사진 수업 플레이어(src/components/ttobak)도 같은 몸을 쓴다.
+// 사진 수업 플레이어(src/app/p/ttobak)도 같은 몸을 쓴다.
 export function Body() {
   return (
     <>

@@ -29,7 +29,7 @@ import {
   photoLessons,
   type FoodPhoto,
 } from './photo-lesson';
-import { Ttobak, type LessonPose } from './Ttobak';
+import { Ttobak, type LessonPose } from './ttobak';
 import './photo-lesson.css';
 
 // 또박이 선생님 사진 수업: 음식 사진·또박이(SVG)·브라우저 음성으로 만든 영상.

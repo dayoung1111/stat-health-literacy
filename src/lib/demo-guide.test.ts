@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { photoLessons } from '../components/ttobak/photo-lesson';
+import { photoLessons } from '../app/p/ttobak/photo-lesson';
 import { demoGuide, foodGroups, guideSteps, tellUs } from './demo-guide';
 
 // 안내문·영상·티치백이 같은 내용을 쓰는지 확인한다.
