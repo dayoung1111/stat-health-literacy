@@ -4,15 +4,12 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 
-// 시연용 임시 코드. DB·로그인 단계(계획 3~5단계)에서 DB 조회와 실제 세션으로 바꾼다.
-// 이 쿠키는 서명이 없어 위조할 수 있으므로 실제 환자 정보에 쓰지 않는다.
-const demoPatient = { code: '482917', birthDate: '590312' };
+import { findActiveCode } from './education-store';
+
+// 환자 입장 확인용 쿠키. 코드·생년월일 확인은 education-store.ts가 한다(5번 틀리면 잠김).
+// 로그인 단계에서 실제 세션으로 바꾼다. 이 쿠키는 서명이 없어 위조할 수 있으므로 실제 환자 정보에 쓰지 않는다.
 const cookieName = 'stat_demo_patient';
 const sevenDays = 60 * 60 * 24 * 7;
-
-export function isDemoPatient(code: string, birthDate: string) {
-  return code === demoPatient.code && birthDate === demoPatient.birthDate;
-}
 
 export async function startDemoSession(code: string) {
   (await cookies()).set(cookieName, code, {
@@ -24,16 +21,23 @@ export async function startDemoSession(code: string) {
   });
 }
 
-export async function hasDemoSession(code: string) {
+// 생년월일을 확인한 같은 코드이고, 코드가 만료·잠김이 아니어야 한다.
+export async function getPatientCode(code: string) {
   const saved = (await cookies()).get(cookieName)?.value;
-  return code === demoPatient.code && saved === code;
+  if (saved !== code) return null;
+  const row = await findActiveCode(code);
+  return row && !row.lockedAt ? row : null;
 }
 
-// 확인되지 않은 환자는 생년월일 화면으로 돌려보낸다.
+export async function hasDemoSession(code: string) {
+  return (await getPatientCode(code)) !== null;
+}
+
+// 확인되지 않은 환자는 생년월일 화면으로 돌려보낸다. 확인되면 그 코드 기록을 돌려준다.
 export async function requireDemoPatient(code: string) {
-  if (!(await hasDemoSession(code))) {
-    redirect(`/p/${encodeURIComponent(code)}`);
-  }
+  const row = await getPatientCode(code);
+  if (!row) redirect(`/p/${encodeURIComponent(code)}`);
+  return row;
 }
 
 // 시연에서 항상 "검사 전날" 화면이 보이도록 검사일을 한국 날짜 기준 내일로 둔다.

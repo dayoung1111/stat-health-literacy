@@ -1,4 +1,7 @@
-import { getMyCodes, passedCount } from '@/lib/demo-staff';
+import { requireStaff } from '@/lib/demo-staff';
+import { listCodesForStaff } from '@/lib/education-store';
+import { guideNames } from '@/lib/guide-catalog';
+import { settingLabel } from '@/lib/staff-options';
 
 import { Notice, Panel, StaffBack } from '../../ui';
 import { StaffPage } from '../../staff-page';
@@ -14,14 +17,15 @@ export default function CodesPage() {
 }
 
 async function MyCodes() {
-  const codes = await getMyCodes();
+  const staff = await requireStaff();
+  const codes = await listCodesForStaff(staff.id);
   const rows = codes.map((c) => ({
     code: c.code,
-    exam: c.exam,
-    examDate: c.examDate,
-    setting: c.setting,
-    passed: passedCount(c.results),
-    total: c.results.length,
+    guides: guideNames(c.guides).join(', '),
+    examDate: `${Number(c.examDate.slice(5, 7))}/${Number(c.examDate.slice(8, 10))}`,
+    setting: settingLabel(c),
+    passed: c.teachbackResults.filter((r) => r.result !== 'wrong').length,
+    total: c.teachbackResults.length,
   }));
 
   return (

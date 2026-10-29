@@ -5,14 +5,12 @@ import { useState } from 'react';
 
 import { staffButton } from '../../../ui';
 
-export function IssuedActions({ code }: { code: string }) {
+export function IssuedActions({ code, link }: { code: string; link: string }) {
   const [copied, setCopied] = useState<'done' | 'failed' | null>(null);
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/p/${code}`,
-      );
+      await navigator.clipboard.writeText(link);
       setCopied('done');
     } catch {
       setCopied('failed');

@@ -8,6 +8,7 @@ import { Ttobagi } from '../../../../ttobagi';
 import { PictureRow } from '../../../pictures';
 import { buttonClass, CheckWithStaff, PatientTopBar } from '../../../ui';
 import { PatientPage } from '../../patient-page';
+import { ConfusedLink } from '../confused-link';
 
 // 안내문을 한 화면에 내용 하나씩 보여 준다. 주소의 [section]은 몇 번째 화면인지(1부터).
 export default function GuidePage({
@@ -61,12 +62,14 @@ async function GuideStep({
         </div>
       </section>
 
-      <Link
+      <ConfusedLink
+        code={code}
+        paragraphId={step.id}
         href={`/p/${code}/guide/${number}/${step.id}`}
         className="mt-5 flex min-h-16 items-center justify-center gap-2 rounded-full border-2 border-stat-blush bg-stat-sun px-6 text-2xl font-bold text-stat-ink hover:bg-stat-sun focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green"
       >
         🤔 헷갈려요
-      </Link>
+      </ConfusedLink>
       <CheckWithStaff />
 
       <nav

@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 type Row = {
   code: string;
-  exam: string;
+  guides: string;
   examDate: string;
   setting: string;
   passed: number;
@@ -33,7 +33,7 @@ export function CodeTable({ rows }: { rows: Row[] }) {
         <thead className="bg-zinc-100">
           <tr>
             <th className="px-3 py-3">코드</th>
-            <th className="px-3 py-3">검사</th>
+            <th className="px-3 py-3">묶은 안내</th>
             <th className="px-3 py-3">검사일</th>
             <th className="px-3 py-3">설정</th>
             <th className="px-3 py-3">이해 확인</th>
@@ -52,13 +52,21 @@ export function CodeTable({ rows }: { rows: Row[] }) {
                     {row.code}
                   </Link>
                 </td>
-                <td className="px-3 py-3">{row.exam}</td>
+                <td className="px-3 py-3">{row.guides}</td>
                 <td className="px-3 py-3">{row.examDate}</td>
                 <td className="px-3 py-3">{row.setting}</td>
                 <td
-                  className={`px-3 py-3 font-bold ${ok ? 'text-green-700' : 'text-red-700'}`}
+                  className={`px-3 py-3 font-bold ${
+                    row.total === 0
+                      ? 'font-normal text-zinc-500'
+                      : ok
+                        ? 'text-green-700'
+                        : 'text-red-700'
+                  }`}
                 >
-                  {row.passed}/{row.total} {ok ? '✓' : '⚠ 재교육'}
+                  {row.total === 0
+                    ? '아직 없음'
+                    : `${row.passed}/${row.total} ${ok ? '✓' : '⚠ 재교육'}`}
                 </td>
               </tr>
             );

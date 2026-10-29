@@ -1,13 +1,15 @@
 import Link from 'next/link';
 
-import { demoGuide, getTodo, hospital } from '@/lib/demo-guide';
-import { getDemoSchedule } from '@/lib/demo-patient';
+import { hospital } from '@/lib/demo-guide';
+import { requireDemoPatient } from '@/lib/demo-patient';
+import { guideCatalog, guideKinds } from '@/lib/guide-catalog';
 
+import { GuideIconSvg } from '../../../guide-icon';
 import { Ttobagi } from '../../../ttobagi';
-import { PictureRow } from '../../pictures';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
+// 환자 홈: 의료진이 코드 하나에 묶어 보낸 안내를 큰 카드로 보여 준다.
 export default function PatientHomePage({
   params,
 }: PageProps<'/p/[code]/home'>) {
@@ -19,86 +21,63 @@ export default function PatientHomePage({
   );
 }
 
-function greeting(daysLeft: number) {
-  if (daysLeft > 1) return `검사까지 ${daysLeft}일 남았어요`;
-  if (daysLeft === 1) return '내일이 검사 날이에요';
-  if (daysLeft === 0) return '오늘이 검사 날이에요';
-  return '검사 잘 받으셨어요';
-}
+// 안내마다 들어갈 화면. 내용이 아직 없으면 "준비 중" 화면으로 간다.
+const guideHref = (code: string, kind: (typeof guideKinds)[number]) => {
+  if (kind === 'colonoscopy') return `/p/${code}/colonoscopy`;
+  if (kind === 'medication') return `/p/${code}/medication`;
+  return `/p/${code}/preparing/${kind}`;
+};
 
-const menuClass =
-  'flex min-h-20 items-center gap-4 rounded-3xl px-6 text-2xl font-bold shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green';
+const cardColor: Record<(typeof guideKinds)[number], string> = {
+  checkup: 'bg-stat-sun text-stat-ink',
+  colonoscopy: 'bg-stat-mint text-stat-green',
+  gastroscopy: 'bg-stat-mint text-stat-green',
+  medication: 'bg-white text-stat-ink border-2 border-stat-green',
+};
 
 async function PatientHome({ code }: { code: string }) {
-  const { examLabel, daysLeft } = await getDemoSchedule();
-  const todo = getTodo(daysLeft);
+  const issued = await requireDemoPatient(code);
+  // 화면 순서는 안내 목록 순서를 따른다.
+  const guides = guideKinds.filter((kind) => issued.guides.includes(kind));
 
   return (
     <>
       <PatientTopBar code={code} back={{ href: '/' }} showHome={false} />
-      <p className="text-xl text-zinc-700">
-        {hospital.name} · {demoGuide.examName} · {examLabel}
-      </p>
-      <h1 className="mt-2 text-3xl leading-snug font-bold break-keep">
+      <p className="text-xl text-zinc-700">{hospital.name}</p>
+      <h1 className="mt-2 mb-4 text-3xl leading-snug font-bold break-keep">
         안녕하세요 🙂
-        <br />
-        {greeting(daysLeft)}
       </h1>
+      <Ttobagi pose="hello" message={`${guides.length}개 안내가 왔어요.`} />
 
-      <div className="mt-5">
-        <Ttobagi pose="time" message={todo.speech} />
-      </div>
-      <section
-        aria-labelledby="todo-title"
-        className="mt-2 rounded-3xl bg-stat-sun p-6"
-      >
-        <h2 id="todo-title" className="text-xl font-bold text-stat-ink">
-          <span aria-hidden="true">⏰ </span>지금 할 일
-        </h2>
-        <p className="mt-1 text-3xl font-bold">{todo.title}</p>
-        <div className="mt-5">
-          <PictureRow pictures={todo.pictures} />
-        </div>
-        <p className="mt-5 text-center text-xl">{todo.line}</p>
-      </section>
-
-      <nav aria-label="환자 메뉴" className="mt-8 flex flex-col gap-4">
-        <Link
-          href={`/p/${code}/video`}
-          className={`${menuClass} min-h-28 bg-stat-green text-3xl text-white`}
-        >
-          <span aria-hidden="true" className="text-5xl">
-            🎬
-          </span>
-          또박이 선생님 수업 보기
-        </Link>
-        <Link
-          href={`/p/${code}/guide/1`}
-          className={`${menuClass} bg-stat-mint text-stat-green`}
-        >
-          <span aria-hidden="true" className="text-4xl">
-            📖
-          </span>
-          안내문 같이 보기
-        </Link>
-        <Link
-          href={`/p/${code}/check`}
-          className={`${menuClass} bg-stat-sun text-stat-ink`}
-        >
-          <span aria-hidden="true" className="text-4xl">
-            ✅
-          </span>
-          잘 이해했는지 확인해요
-        </Link>
-        <Link
-          href={`/p/${code}/danger`}
-          className={`${menuClass} bg-stat-alert-soft text-stat-alert`}
-        >
-          <span aria-hidden="true" className="text-4xl">
-            🚨
-          </span>
-          이럴 땐 바로 병원에
-        </Link>
+      <nav aria-label="받은 안내" className="mt-6 flex flex-col gap-4">
+        {guides.map((kind) => {
+          const guide = guideCatalog[kind];
+          return (
+            <Link
+              key={kind}
+              href={guideHref(code, kind)}
+              className={`flex min-h-28 items-center gap-5 rounded-3xl px-6 py-5 shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green ${cardColor[kind]}`}
+            >
+              <GuideIconSvg name={guide.icon} className="size-14 shrink-0" />
+              <span className="flex flex-col gap-1">
+                <span className="text-2xl font-bold break-keep">
+                  {guide.name}
+                </span>
+                {guide.hint && (
+                  <span className="text-xl break-keep text-zinc-700">
+                    {guide.hint}
+                  </span>
+                )}
+                {!guide.ready && (
+                  <span className="text-xl text-zinc-600">준비 중이에요</span>
+                )}
+              </span>
+              <span aria-hidden="true" className="ml-auto text-3xl">
+                ›
+              </span>
+            </Link>
+          );
+        })}
       </nav>
       <CheckWithStaff />
     </>

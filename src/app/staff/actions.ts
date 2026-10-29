@@ -4,13 +4,14 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import {
-  demoIssuedCode,
   endStaffSession,
   isDemoStaff,
   requireStaff,
   startStaffSession,
 } from '@/lib/demo-staff';
-import { ages, exams, extras, languages, levels } from '@/lib/staff-options';
+import { createEducationCode } from '@/lib/education-store';
+import { guideKinds } from '@/lib/guide-catalog';
+import { ages, extras, languages, levels } from '@/lib/staff-options';
 
 export type LoginState = { message?: string };
 
@@ -49,7 +50,10 @@ function isRealDate(value: string) {
 }
 
 const issueSchema = z.object({
-  exam: z.enum(ids(exams)),
+  guides: z
+    .array(z.enum(guideKinds))
+    .min(1, '보낼 안내를 하나 이상 골라 주세요')
+    .transform((list) => [...new Set(list)]),
   age: z.enum(ids(ages)),
   level: z.enum(ids(levels)),
   language: z.enum(ids(languages)),
@@ -69,6 +73,8 @@ const issueSchema = z.object({
 
 export type IssueState = {
   fieldErrors?: { examDate?: string; birthDate?: string };
+  /** 화면에서 그 단계로 돌아가 고칠 수 있게 알려 준다. */
+  step?: 'guides' | 'patient';
   message?: string;
 };
 
@@ -76,10 +82,10 @@ export async function issueCode(
   _prev: IssueState,
   formData: FormData,
 ): Promise<IssueState> {
-  await requireStaff();
+  const staff = await requireStaff();
 
   const parsed = issueSchema.safeParse({
-    exam: formData.get('exam'),
+    guides: formData.getAll('guides'),
     age: formData.get('age'),
     level: formData.get('level'),
     language: formData.get('language'),
@@ -94,14 +100,23 @@ export async function issueCode(
         examDate: errors.examDate?.[0],
         birthDate: errors.birthDate?.[0],
       },
-      message:
-        errors.exam || errors.age || errors.level || errors.language
-          ? '나이대와 설명 단계를 다시 골라 주세요'
-          : undefined,
+      ...(errors.guides
+        ? { step: 'guides' as const, message: errors.guides[0] }
+        : errors.age || errors.level || errors.language || errors.extras
+          ? {
+              step: 'patient' as const,
+              message: '나이대와 설명 단계를 다시 골라 주세요',
+            }
+          : {}),
     };
   }
 
-  // 시연 단계: 저장하지 않고 시연용 코드를 발급한 것으로 보여 준다.
-  // DB 단계에서 새 코드 생성·생년월일 해시 저장·7일 만료를 기록한다.
-  redirect(`/staff/issued/${demoIssuedCode}`);
+  // 고른 안내를 코드 1개(QR·링크 1개)로 묶어 발급한다. 지금은 시연용 임시 저장소에 둔다.
+  const { age, ...rest } = parsed.data;
+  const issued = await createEducationCode({
+    ...rest,
+    ageGroup: age,
+    staffId: staff.id,
+  });
+  redirect(`/staff/issued/${issued.code}`);
 }

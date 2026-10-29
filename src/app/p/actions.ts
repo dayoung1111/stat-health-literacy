@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { isDemoPatient, startDemoSession } from '@/lib/demo-patient';
+import { startDemoSession } from '@/lib/demo-patient';
+import { checkPatientEntry } from '@/lib/education-store';
 
 const sixDigits = z
   .string({ error: '숫자 6자리를 넣어 주세요' })
@@ -32,8 +33,19 @@ export async function enterPatient(
   }
 
   const { code, birthDate } = parsed.data;
-  if (!isDemoPatient(code, birthDate)) {
-    return { message: '번호나 생년월일을 다시 확인해 주세요' };
+  const entry = await checkPatientEntry(code, birthDate);
+  if (!entry.ok) {
+    if (entry.reason === 'locked') {
+      return {
+        message: '5번 틀려서 잠겼어요. 병원에 전화해서 새 번호를 받아 주세요.',
+      };
+    }
+    return {
+      message:
+        entry.reason === 'wrong'
+          ? `번호나 생년월일을 다시 확인해 주세요 (남은 횟수 ${entry.remaining}번)`
+          : '번호나 생년월일을 다시 확인해 주세요',
+    };
   }
 
   await startDemoSession(code);
