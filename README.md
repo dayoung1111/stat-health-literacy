@@ -77,8 +77,8 @@
 
 ## 3. 기술 스택
 
-- **프론트엔드**: <!-- 예: React + Vite / Next.js 등 실제 사용한 것으로 기재 -->
-- **백엔드**: Supabase (PostgreSQL, 서울 지역) <!-- 별도 서버·Edge Function 사용 시 추가 -->
+- **프론트엔드**: Next.js 16(App Router), React 19, TypeScript, Tailwind CSS 4
+- **백엔드**: Next.js 서버 기능(Server Actions), Prisma 7(DB 연결), Claude API(Claude Haiku, 안내문 다국어 번역)
 - **데이터(어디에, 무엇을)**: Supabase PostgreSQL(서울 지역) 시연용 DB 하나에 교육 코드·고른 안내·암호화한 생년월일, 환자가 체크한 복용약, 티치백 결과를 저장한다(환자 이름·등록번호·전화번호는 저장하지 않음). 실제 환자에게 쓸 때는 테스트용과 운영용 DB를 분리한다.
 
 ---
@@ -118,7 +118,7 @@ npm run dev
 
 ## 5. AI 활용 내역
 
-- **사용한 도구**: <!-- 예: Claude, ChatGPT, Cursor 등 -->
+- **사용한 도구**: Claude Code (화면·기능 코드 작성), Claude API (앱 안에서 안내문 다국어 번역)
 - **주요 프롬프트(그대로 붙여 넣기)**:
 
 ```text
