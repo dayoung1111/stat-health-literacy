@@ -344,7 +344,7 @@ export const demoGuide = {
       ],
     },
     {
-      title: '새벽 5시부터 완전 금식',
+      title: '새벽 5시부터 금식',
       paragraphs: [
         {
           id: 'day-fasting',
