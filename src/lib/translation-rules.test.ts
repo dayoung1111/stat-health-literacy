@@ -6,6 +6,7 @@ import {
   isTranslatable,
   isUsableTranslation,
   numbersKept,
+  placeholdersKept,
 } from './translation-rules';
 
 describe('AI 번역 규칙', () => {
@@ -41,6 +42,15 @@ describe('AI 번역 규칙', () => {
   it('비었거나 터무니없이 긴 번역은 쓰지 않는다', () => {
     assert.equal(isUsableTranslation('물을 드세요', '  '), false);
     assert.equal(isUsableTranslation('물', 'x'.repeat(200)), false);
+  });
+
+  it('{date} 같은 자리 표시가 빠지면 쓰지 않는다', () => {
+    assert.equal(placeholdersKept('{date}부터 중단', 'Stop from {date}'), true);
+    assert.equal(placeholdersKept('{date}부터 중단', 'Stop from March'), false);
+    assert.equal(
+      isUsableTranslation('{date}부터 중단', 'Stop from March'),
+      false,
+    );
   });
 
   it('저장 키는 언어와 원문이 같아야 같고, 원문이 바뀌면 달라진다', () => {

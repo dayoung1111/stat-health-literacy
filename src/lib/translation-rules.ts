@@ -35,10 +35,17 @@ export function numbersKept(source: string, translated: string) {
   return true;
 }
 
+// {date}처럼 중괄호로 묶은 자리 표시는 번역문에도 그대로 있어야 한다(화면이 나중에 값을 끼워 넣는다).
+export function placeholdersKept(source: string, translated: string) {
+  return (source.match(/\{[a-zA-Z]+\}/g) ?? []).every((token) =>
+    translated.includes(token),
+  );
+}
+
 // 번역문으로 쓸 수 있는지: 비어 있지 않고, 터무니없이 길지 않고(원문에 없는 내용을 덧붙이지 않았는지 보는 최소 확인), 숫자가 그대로다.
 export function isUsableTranslation(source: string, translated: string) {
   const text = translated.trim();
   if (text === '') return false;
   if (text.length > source.length * 6 + 40) return false;
-  return numbersKept(source, text);
+  return placeholdersKept(source, text) && numbersKept(source, text);
 }

@@ -1,4 +1,5 @@
 import { guideSteps } from './demo-guide';
+import { medications } from './medication-guide';
 
 // 환자 화면 파일에 직접 쓰는 한국어 문구. 화면에서는 <T>(src/app/translated.tsx)로 보여 주고,
 // 여기 모은 문구는 미리 번역 목록(translation-sources.ts)에 자동으로 들어간다.
@@ -32,6 +33,33 @@ export const screenTexts = {
     gotIt: '이제 알겠어요',
     stillHard: '아직 어려워요 → 병원에 전화',
   },
+  medication: {
+    pickAll: '드시는 약을 모두 눌러 주세요',
+    saving: '저장하는 중…',
+    pickOne: '약을 하나 이상 눌러 주세요',
+    pickedCount: (count: number) => `${count}개 골랐어요 · 하나씩 볼게요`,
+    newCount: (count: number) => `새 약 ${count}개 · 하나씩 볼게요`,
+    saveAsIs: '이대로 저장할게요',
+    none: '드시는 약이 없어요',
+    cancelEdit: '고치지 않고 돌아가기',
+    well: '잘하셨어요.',
+    summaryTitle: '내 약 정리',
+    noneToldYou: '드시는 약이 없다고 알려 주셨어요.',
+    edit: '약 다시 선택하기·수정하기',
+    med: '약',
+    seeDetails: '자세히 보기',
+    askAgain: '다시 풀어 볼까요?',
+    quiz: '확인 질문',
+    nextMed: '다음 약',
+    allChecked: '모두 확인했어요',
+    steps: ['판정', '자세히', '확인 질문'],
+    answerIs: (answer: string) =>
+      `정답은 「${answer}」예요. 간호사에게 꼭 물어보세요.`,
+    // 피를 묽게 하는 약 중단 시작일(의료진이 고른 날짜). 정하지 않았으면 stopUnknownLine.
+    // {date}는 화면이 고른 언어의 날짜(예: 11월 3일 / November 3)로 바꿔 넣는다.
+    stopUnknownLine: '의사 선생님과 정한 날짜부터 중단',
+    stopTemplate: '{date}부터 중단',
+  },
 };
 
 // 숫자가 들어가는 문구는 나올 수 있는 값을 모두 적어 미리 번역한다.
@@ -40,4 +68,13 @@ export const screenFunctionTexts = [
     screenTexts.colonoscopy.daysLeft(i + 2),
   ),
   screenTexts.guide.count(guideSteps.length),
+  ...Array.from({ length: medications.length }, (_, i) => [
+    screenTexts.medication.pickedCount(i + 1),
+    screenTexts.medication.newCount(i + 1),
+  ]).flat(),
+  ...medications.flatMap((med) =>
+    med.quiz.options
+      .filter((option) => option.correct)
+      .map((option) => screenTexts.medication.answerIs(option.text)),
+  ),
 ];

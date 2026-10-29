@@ -12,9 +12,11 @@ import {
   type MedicationId,
   type Verdict,
 } from '@/lib/medication-guide';
+import { screenTexts } from '@/lib/screen-texts';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
 import { useLanguageOr } from '../../../language-provider';
+import { DateTemplate, T, TranslatedTtobagi } from '../../../translated';
 import { Ttobagi } from '../../../ttobagi';
 import { Drawing } from '../../pictures';
 import {
@@ -38,7 +40,7 @@ type Phase =
   | { kind: 'result'; i: number; correct: boolean }
   | { kind: 'summary'; cheer: boolean; finished?: boolean };
 
-type StopDate = { text: string; short: string };
+type StopDate = { date: string | null; short: string };
 
 // 목록 순서대로 정리한다.
 const inOrder = (ids: MedicationId[]) =>
@@ -69,7 +71,7 @@ export function MedicationFlow({
   guides: GuideKind[];
   /** 이미 마친 안내 */
   completed: GuideKind[];
-  /** 피를 묽게 하는 약 중단 시작일. text 예: "11월 3일부터" / "의사 선생님과 정한 날짜부터", short 예: "11/3" / "?" */
+  /** 피를 묽게 하는 약 중단 시작일. date 예: "2026-11-03"(없으면 null), short 예: "11/3" / "?" */
   stopDate: StopDate;
 }) {
   const [stored, setStored] = useState(saved);
@@ -142,7 +144,7 @@ export function MedicationFlow({
           id="select-title"
           className="mb-4 text-3xl leading-snug font-bold break-keep"
         >
-          드시는 약을 모두 눌러 주세요
+          <T>{screenTexts.medication.pickAll}</T>
         </h1>
         <div className="grid grid-cols-2 gap-3">
           {medications.map((m) => {
@@ -165,7 +167,7 @@ export function MedicationFlow({
                   </span>
                 )}
                 <MedIcon name={m.icon} className="size-16" />
-                {m.name}
+                <T>{m.name}</T>
               </button>
             );
           })}
@@ -181,15 +183,18 @@ export function MedicationFlow({
           }
           className={`mt-6 ${buttonClass.primary}`}
         >
-          {saving
-            ? '저장하는 중…'
-            : chosen.length === 0
-              ? '약을 하나 이상 눌러 주세요'
-              : !phase.editing
-                ? `${chosen.length}개 골랐어요 · 하나씩 볼게요 ▶`
-                : added.length > 0
-                  ? `새 약 ${added.length}개 · 하나씩 볼게요 ▶`
-                  : '이대로 저장할게요 ▶'}
+          <T>
+            {saving
+              ? screenTexts.medication.saving
+              : chosen.length === 0
+                ? screenTexts.medication.pickOne
+                : !phase.editing
+                  ? screenTexts.medication.pickedCount(chosen.length)
+                  : added.length > 0
+                    ? screenTexts.medication.newCount(added.length)
+                    : screenTexts.medication.saveAsIs}
+          </T>
+          {!saving && chosen.length > 0 && ' ▶'}
         </button>
         <button
           type="button"
@@ -197,7 +202,7 @@ export function MedicationFlow({
           onClick={() => save([], [])}
           className={`mt-3 ${buttonClass.outline}`}
         >
-          드시는 약이 없어요
+          <T>{screenTexts.medication.none}</T>
         </button>
         {phase.editing && (
           <button
@@ -209,7 +214,7 @@ export function MedicationFlow({
             }}
             className={`mt-3 ${buttonClass.outline}`}
           >
-            ← 고치지 않고 돌아가기
+            ← <T>{screenTexts.medication.cancelEdit}</T>
           </button>
         )}
       </section>
@@ -230,13 +235,18 @@ export function MedicationFlow({
             }
           />
         ) : (
-          phase.cheer && <Ttobagi pose="cheer" message="잘하셨어요." />
+          phase.cheer && (
+            <TranslatedTtobagi
+              pose="cheer"
+              message={screenTexts.medication.well}
+            />
+          )
         )}
         <h1
           id="summary-title"
           className="mb-4 text-3xl leading-snug font-bold break-keep"
         >
-          📋 내 약 정리
+          📋 <T>{screenTexts.medication.summaryTitle}</T>
         </h1>
         {chosen.length > 0 ? (
           <ul className="flex flex-col gap-3">
@@ -245,7 +255,9 @@ export function MedicationFlow({
             ))}
           </ul>
         ) : (
-          <p className="text-2xl">드시는 약이 없다고 알려 주셨어요.</p>
+          <p className="text-2xl">
+            <T>{screenTexts.medication.noneToldYou}</T>
+          </p>
         )}
         {phase.finished && (
           <div className="mt-8">
@@ -271,7 +283,7 @@ export function MedicationFlow({
             phase.finished ? buttonClass.outline : buttonClass.primary
           }`}
         >
-          약 다시 선택하기·수정하기
+          <T>{screenTexts.medication.edit}</T>
         </button>
       </section>
     );
@@ -282,14 +294,14 @@ export function MedicationFlow({
   return (
     <section aria-labelledby="med-title">
       <p className="text-xl text-zinc-700">
-        약 {phase.i + 1} / {steps.length}
+        <T>{screenTexts.medication.med}</T> {phase.i + 1} / {steps.length}
       </p>
       <h1
         id="med-title"
         className="mt-1 flex items-center gap-3 text-3xl font-bold break-keep"
       >
         <MedIcon name={med.icon} className="size-12 shrink-0" />
-        {med.name}
+        <T>{med.name}</T>
       </h1>
       <ScreenDots
         current={phase.kind === 'verdict' ? 0 : phase.kind === 'detail' ? 1 : 2}
@@ -305,7 +317,7 @@ export function MedicationFlow({
             }
             className={`mt-6 ${buttonClass.primary}`}
           >
-            자세히 보기 ▶
+            <T>{screenTexts.medication.seeDetails}</T> ▶
           </button>
         </>
       )}
@@ -314,7 +326,7 @@ export function MedicationFlow({
         <>
           {phase.retry && (
             <div role="status" className="mt-4">
-              <Ttobagi pose="explain" message={ttobagiSays.retry} />
+              <TranslatedTtobagi pose="explain" message={ttobagiSays.retry} />
             </div>
           )}
           <Details med={med} stopDate={stopDate} />
@@ -329,7 +341,12 @@ export function MedicationFlow({
             }
             className={`mt-6 ${buttonClass.primary}`}
           >
-            {phase.retry ? '다시 풀어 볼까요? ▶' : '확인 질문 ▶'}
+            <T>
+              {phase.retry
+                ? screenTexts.medication.askAgain
+                : screenTexts.medication.quiz}
+            </T>{' '}
+            ▶
           </button>
         </>
       )}
@@ -361,11 +378,13 @@ export function MedicationFlow({
         <>
           <div role="status" className="mt-4">
             {phase.correct ? (
-              <Ttobagi pose="cheer" message={ttobagiSays.cheer} />
+              <TranslatedTtobagi pose="cheer" message={ttobagiSays.cheer} />
             ) : (
-              <Ttobagi
+              <TranslatedTtobagi
                 pose="explain"
-                message={`정답은 「${med.quiz.options.find((o) => o.correct)?.text}」예요. 간호사에게 꼭 물어보세요.`}
+                message={screenTexts.medication.answerIs(
+                  med.quiz.options.find((o) => o.correct)?.text ?? '',
+                )}
               />
             )}
           </div>
@@ -375,7 +394,12 @@ export function MedicationFlow({
             onClick={() => next(phase.i)}
             className={`mt-4 ${buttonClass.primary}`}
           >
-            {phase.i + 1 < steps.length ? '다음 약 ▶' : '모두 확인했어요 ▶'}
+            <T>
+              {phase.i + 1 < steps.length
+                ? screenTexts.medication.nextMed
+                : screenTexts.medication.allChecked}
+            </T>{' '}
+            ▶
           </button>
         </>
       )}
@@ -385,7 +409,7 @@ export function MedicationFlow({
 
 // 3화면 중 지금 어디인지: 판정 · 자세히 · 확인
 function ScreenDots({ current }: { current: number }) {
-  const names = ['판정', '자세히', '확인 질문'];
+  const names = screenTexts.medication.steps;
   return (
     <ol aria-label="이 약의 순서" className="mt-3 flex gap-2 text-lg">
       {names.map((name, i) => (
@@ -400,7 +424,7 @@ function ScreenDots({ current }: { current: number }) {
                 : 'bg-zinc-100 text-zinc-500'
           }`}
         >
-          {i + 1}. {name}
+          {i + 1}. <T>{name}</T>
         </li>
       ))}
     </ol>
@@ -420,7 +444,7 @@ function VerdictCard({ verdict }: { verdict: Verdict }) {
     >
       <VerdictMark verdict={verdict} className="size-36" />
       <p className="text-4xl leading-snug font-bold break-keep">
-        {verdictLabels[verdict]}
+        <T>{verdictLabels[verdict]}</T>
       </p>
     </div>
   );
@@ -444,8 +468,6 @@ function DetailRow({
   detail: MedDetail;
   stopDate: StopDate;
 }) {
-  const text =
-    detail.kind === 'stop-date' ? `${stopDate.text} 중단` : detail.text;
   // 중단 시작일은 날짜가 가려지지 않게 달력은 그대로 두고, 구석에 작은 "약 ✕"만 붙인다.
   const no = detail.kind === 'stop-date' ? false : Boolean(detail.no);
   return (
@@ -497,8 +519,16 @@ function DetailRow({
         )}
       </span>
       <span className="text-2xl leading-snug font-bold break-keep">
-        {no && <span className="sr-only">하면 안 돼요: </span>}
-        {text}
+        {no && (
+          <span className="sr-only">
+            <T>{screenTexts.common.mustNot}</T>
+          </span>
+        )}
+        {detail.kind === 'stop-date' ? (
+          <StopLine stopDate={stopDate} />
+        ) : (
+          <T>{detail.text}</T>
+        )}
       </span>
     </li>
   );
@@ -515,7 +545,7 @@ function Quiz({
   return (
     <>
       <h2 className="mt-5 text-3xl leading-snug font-bold whitespace-pre-line break-keep">
-        {med.quiz.question}
+        <T>{med.quiz.question}</T>
       </h2>
       <div className="mt-5 grid grid-cols-2 gap-3">
         {med.quiz.options.map((option) => (
@@ -526,7 +556,7 @@ function Quiz({
             className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-3xl border-4 border-zinc-200 bg-white px-3 py-4 text-2xl font-bold break-keep hover:border-stat-green focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-stat-green"
           >
             <MedIcon name={option.icon} className="size-20" />
-            {option.text}
+            <T>{option.text}</T>
           </button>
         ))}
       </div>
@@ -546,11 +576,13 @@ function SummaryRow({
     <li className="rounded-3xl bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
         <MedIcon name={med.icon} className="size-12 shrink-0" />
-        <span className="text-2xl font-bold break-keep">{med.name}</span>
+        <span className="text-2xl font-bold break-keep">
+          <T>{med.name}</T>
+        </span>
       </div>
       <p className="mt-2 flex items-center gap-2 text-2xl font-bold break-keep">
         <VerdictMark verdict={med.verdict} className="size-9 shrink-0" />
-        {verdictLabels[med.verdict]}
+        <T>{verdictLabels[med.verdict]}</T>
       </p>
       <ul className="mt-3 flex flex-col gap-1 border-t border-zinc-200 pt-3 text-xl leading-snug break-keep">
         {med.details.map((detail, index) => {
@@ -558,14 +590,32 @@ function SummaryRow({
           return (
             <li key={index} className={no ? 'font-bold text-stat-alert' : ''}>
               {no ? '✕ ' : '· '}
-              {no && <span className="sr-only">하면 안 돼요: </span>}
-              {detail.kind === 'stop-date'
-                ? `${stopDate.text} 중단`
-                : detail.text}
+              {no && (
+                <span className="sr-only">
+                  <T>{screenTexts.common.mustNot}</T>
+                </span>
+              )}
+              {detail.kind === 'stop-date' ? (
+                <StopLine stopDate={stopDate} />
+              ) : (
+                <T>{detail.text}</T>
+              )}
             </li>
           );
         })}
       </ul>
     </li>
+  );
+}
+
+// "○월 ○일부터 중단"(날짜를 정하지 않았으면 "의사 선생님과 정한 날짜부터 중단")
+function StopLine({ stopDate }: { stopDate: StopDate }) {
+  return stopDate.date ? (
+    <DateTemplate
+      template={screenTexts.medication.stopTemplate}
+      date={stopDate.date}
+    />
+  ) : (
+    <T>{screenTexts.medication.stopUnknownLine}</T>
   );
 }

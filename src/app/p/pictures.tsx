@@ -1,7 +1,7 @@
 import type { Picture, Visual } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 
-import { T } from '../translated';
+import { FittedSvgText, T } from '../translated';
 
 // 외부 이미지 없이 직접 그린 그림. 그림 뜻은 아래 글(label)로 함께 보여 주므로
 // 화면 읽기 프로그램에는 그림을 숨기고 글만 읽게 한다.
@@ -177,16 +177,17 @@ function Calendar({ text }: { text: string }) {
       />
       <rect x="28" y="8" width="8" height="18" rx="4" fill="#15262B" />
       <rect x="64" y="8" width="8" height="18" rx="4" fill="#15262B" />
-      <text
+      <FittedSvgText
         x="50"
         y="74"
         textAnchor="middle"
-        fontSize="24"
+        fontSize={24}
+        width={68}
         fontWeight="800"
         fill="#15262B"
       >
         {text}
-      </text>
+      </FittedSvgText>
     </svg>
   );
 }

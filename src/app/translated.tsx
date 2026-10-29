@@ -21,6 +21,7 @@ import { Ttobagi } from './ttobagi';
 //  3) 번역이 오면 그 자리의 글자만 바꾼다. 실패하거나 느리면 한국어가 그대로 남는다.
 // 한 번 받은 번역은 이 브라우저 탭 안에서 다시 쓰므로, 같은 문구는 다시 요청하지 않는다.
 
+const hangul = /[가-힣]/;
 const RETRY_AFTER_MS = 60_000;
 const CHUNK = 40;
 
@@ -70,6 +71,7 @@ async function flush() {
 function request(language: string, texts: string[]) {
   const now = Date.now();
   for (const text of texts) {
+    if (!hangul.test(text)) continue; // 한글이 없는 글자(숫자·기호)는 번역하지 않는다.
     const key = keyOf(language, text);
     if (done.has(key) || waiting.get(language)?.has(text)) continue;
     const failed = failedAt.get(key);
@@ -158,4 +160,51 @@ export function LocalDate({ date }: { date: string }) {
   }).format(new Date(`${date}T00:00:00Z`));
   // 서버와 브라우저의 날짜 모양이 조금 다를 수 있어 경고만 끈다.
   return <span suppressHydrationWarning>{text}</span>;
+}
+
+/** 그림(SVG) 안의 짧은 글자. 번역해서 길어지면 칸 안에 들어가게 글자 크기를 줄인다. */
+export function FittedSvgText({
+  children,
+  fontSize,
+  width,
+  ...props
+}: Omit<ComponentProps<'text'>, 'children' | 'fontSize' | 'width'> & {
+  children: string;
+  fontSize: number;
+  width: number;
+}) {
+  const {
+    texts: [text],
+  } = useTranslatedTexts([children]);
+  // 글자 폭 어림: 한자·한글은 글자 크기만큼, 영문·숫자는 절반쯤.
+  const em = [...text].reduce(
+    (sum, char) =>
+      sum + (/[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7af]/.test(char) ? 1 : 0.55),
+    0,
+  );
+  const size = Math.min(fontSize, width / Math.max(em, 1));
+  return (
+    <text {...props} fontSize={size}>
+      {text}
+    </text>
+  );
+}
+
+/** "{date}부터 중단"처럼 자리 표시가 있는 문장. 문장은 번역하고 {date}에는 고른 언어의 날짜(월·일)를 넣는다. */
+export function DateTemplate({
+  template,
+  date,
+}: {
+  template: string;
+  date: string;
+}) {
+  const { language, texts } = useTranslatedTexts([template]);
+  const day = new Intl.DateTimeFormat(getMessages(language).speechLang, {
+    timeZone: 'UTC',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(`${date}T00:00:00Z`));
+  return (
+    <span suppressHydrationWarning>{texts[0].replace('{date}', day)}</span>
+  );
 }

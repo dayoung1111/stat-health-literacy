@@ -4,6 +4,7 @@ import { requireDemoPatient } from '@/lib/demo-patient';
 import { readyGuides } from '@/lib/guide-progress';
 import { verdictLabels, type Verdict } from '@/lib/medication-guide';
 
+import { T } from '../../../translated';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 import { VerdictMark } from './med-icons';
@@ -22,12 +23,14 @@ export default function MedicationPage({
   );
 }
 
-// 의료진이 입력한 날짜(날짜만, 한국 날짜)를 "11월 3일부터"로. 없으면 정해 둔 문장.
+// 의료진이 입력한 날짜(날짜만, 한국 날짜). 없으면 date는 null이고 정해 둔 문장을 쓴다.
+// short는 그림 달력 칸에 쓰는 짧은 글자(예: 11/3, 날짜가 없으면 ?).
 function stopDate(date: string | null) {
-  if (!date) return { text: '의사 선생님과 정한 날짜부터', short: '?' };
-  const month = Number(date.slice(5, 7));
-  const day = Number(date.slice(8, 10));
-  return { text: `${month}월 ${day}일부터`, short: `${month}/${day}` };
+  if (!date) return { date: null, short: '?' };
+  return {
+    date,
+    short: `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`,
+  };
 }
 
 async function Medication({ code }: { code: string }) {
@@ -46,7 +49,7 @@ async function Medication({ code }: { code: string }) {
         {(['ok', 'stop', 'ask'] as Verdict[]).map((v) => (
           <span key={v} className="flex items-center gap-1">
             <VerdictMark verdict={v} className="size-7" />
-            {verdictLabels[v]}
+            <T>{verdictLabels[v]}</T>
           </span>
         ))}
       </div>
