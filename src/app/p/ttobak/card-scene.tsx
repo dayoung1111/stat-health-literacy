@@ -51,6 +51,48 @@ function SignMark({ tone }: { tone: KeyTone }) {
   );
 }
 
+// 8교시 "이럴 땐 꼭 말씀하세요": 글 대신 그림 + 색 띠로 보여 준다.
+// 할 일은 demo-guide.ts의 tellUs와 같고 말만 짧게 줄였다(빨강: 하지 않기, 초록: 알리기).
+type PictureNote = {
+  emoji: string;
+  situation: string;
+  action: string;
+  actionIcon: string;
+  tone: 'stop' | 'tell';
+};
+const pictureNotesByCard: Record<string, PictureNote[]> = {
+  'tell-us': [
+    {
+      emoji: '🩸',
+      situation: '생리 중',
+      actionIcon: '✋',
+      action: '약 먹지 않기',
+      tone: 'stop',
+    },
+    {
+      emoji: '🤰',
+      situation: '임신·수유 중',
+      actionIcon: '📞',
+      action: '먼저 확인',
+      tone: 'tell',
+    },
+    {
+      emoji: '🤮',
+      situation: '심한 구토',
+      actionIcon: '✋',
+      action: '멈추고 전화',
+      tone: 'stop',
+    },
+    {
+      emoji: '💩',
+      situation: '변이 맑지 않음',
+      actionIcon: '🗣️',
+      action: '접수 때 말하기',
+      tone: 'tell',
+    },
+  ],
+};
+
 const drawingAlt: Record<string, string> = {
   stoolCup: '뚜껑 달린 대변 검사 통 그림',
   bottle: '약을 만든 1리터 통 그림',
@@ -59,6 +101,7 @@ const drawingAlt: Record<string, string> = {
 export function CardScene({ card }: { card: LessonCard }) {
   const sign = signs[card.sign];
   const wide = card.items.length === 1 && Boolean(card.items[0].tags);
+  const pictureNotes = pictureNotesByCard[card.id];
   return (
     <div className="pc-wrap">
       <div className={`pc-guide ${card.sign}`}>
@@ -68,22 +111,43 @@ export function CardScene({ card }: { card: LessonCard }) {
         </span>
         <span className="pc-guide-text">
           <span className="pc-title">{card.title}</span>
-          <span className="pc-sub">{card.sub}</span>
+          {!pictureNotes && <span className="pc-sub">{card.sub}</span>}
         </span>
       </div>
 
-      {card.notes && (
-        <ul className="pc-notes">
-          {card.notes.map((note, index) => (
+      {pictureNotes ? (
+        <ul className="pc-picnotes">
+          {pictureNotes.map((note, index) => (
             <li
-              key={note}
-              className="pc-note"
+              key={note.situation}
+              className={`pc-picnote ${note.tone}`}
               style={{ animationDelay: `${0.5 + index * 0.4}s` }}
             >
-              {note}
+              <span aria-hidden="true" className="pc-picnote-emoji">
+                {note.emoji}
+              </span>
+              <span className="pc-picnote-situation">{note.situation}</span>
+              <span className="pc-picnote-band">
+                <span aria-hidden="true">{note.actionIcon} </span>
+                {note.action}
+              </span>
             </li>
           ))}
         </ul>
+      ) : (
+        card.notes && (
+          <ul className="pc-notes">
+            {card.notes.map((note, index) => (
+              <li
+                key={note}
+                className="pc-note"
+                style={{ animationDelay: `${0.5 + index * 0.4}s` }}
+              >
+                {note}
+              </li>
+            ))}
+          </ul>
+        )
       )}
 
       {card.items.length > 0 && (
