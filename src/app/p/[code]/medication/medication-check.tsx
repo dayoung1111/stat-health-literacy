@@ -19,11 +19,8 @@ import { useLanguageOr } from '../../../language-provider';
 import { DateTemplate, T, TranslatedTtobagi } from '../../../translated';
 import { Ttobagi } from '../../../ttobagi';
 import { Drawing } from '../../pictures';
-import {
-  completeGuide,
-  recordMedicationQuiz,
-  saveMyMedications,
-} from '../../records';
+import { markGuideDone, useCompletedGuides } from '../../guide-done';
+import { recordMedicationQuiz, saveMyMedications } from '../../records';
 import { buttonClass, ButtonLink, CallButton } from '../../ui';
 import { MedIcon, VerdictMark } from './med-icons';
 
@@ -60,7 +57,7 @@ export function MedicationFlow({
   stopDate,
   language,
   guides,
-  completed,
+  completed: fromServer,
 }: {
   code: string;
   /** 저장된 내 약. 한 번도 저장하지 않았으면 null */
@@ -82,6 +79,8 @@ export function MedicationFlow({
   const [saving, startSaving] = useTransition();
   // 환자가 고른 언어(없으면 의료진이 고른 언어). 안내 사이 이동 문구에 쓴다.
   const { language: shown, t } = useLanguageOr(language);
+  // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
+  const completed = useCompletedGuides(code, fromServer);
   // 이 안내를 마치면 아직 안 마친 다른 안내가 다음에 볼 곳이다(모든 안내가 같은 guideFinish로 정한다).
   const {
     next: nextKind,
@@ -111,7 +110,7 @@ export function MedicationFlow({
   // 약 확인을 마치고 정리 화면으로. 이 안내를 마친 것으로 저장한다.
   const finish = (cheer: boolean) => {
     setPhase({ kind: 'summary', cheer, finished: true });
-    void completeGuide(code, thisGuide);
+    markGuideDone(code, thisGuide);
   };
   // 저장하고, 새로 고른 약만 3화면으로 본다. 없으면 바로 정리 화면.
   const save = (ids: MedicationId[], toCheck: MedicationId[]) =>

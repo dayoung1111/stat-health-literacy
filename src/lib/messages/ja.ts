@@ -34,6 +34,9 @@ export const ja: Messages = {
     checking: '確認中…',
     callHelp: '📞 うまくいかないときは病院に電話',
     typeCode: '教育番号を自分で入れます',
+    badCode: 'コードをもう一度確認してください',
+    badCodeHint:
+      '受け取ったリンクかQRコードをもう一度開いてください。\nそれでもだめなら病院に電話してください。',
     sixDigits: '数字6けたを入れてください',
     locked:
       '5回まちがえたのでロックされました。病院に電話して新しい番号をもらってください。',
@@ -57,4 +60,6 @@ export const ja: Messages = {
   progressTitle: '受け取った案内',
   statusDone: '✅ 完了',
   statusLeft: '▶ 残りの案内',
+  statusNow: '👀 見ている',
+  progressCount: (done, total) => `${total}個中${done}個完了`,
 };

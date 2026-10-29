@@ -5,13 +5,15 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 
+import { isCodeShape } from './code-shape';
 import { findActiveCode } from './education-store';
 import { getSessionSecret } from './env';
 import { isHttpsRequest } from './request-origin';
 import { signToken, verifyToken } from './session-token';
 
 // 환자 입장 확인용 쿠키. 코드·생년월일 확인은 education-store.ts가 한다(5번 틀리면 잠김).
-// 생년월일을 확인한 코드 번호를 서버 비밀값(SESSION_SECRET)으로 서명해 담는다. 위조하거나 다른 코드로 바꾸면 거절된다.
+// 생년월일을 확인한 코드(6자리 번호 또는 DEMO)를 서버 비밀값(SESSION_SECRET)으로 서명해 담는다.
+// 위조하거나 다른 코드로 바꾸면 거절된다.
 const cookieName = 'stat_demo_patient';
 const sevenDays = 60 * 60 * 24 * 7;
 
@@ -31,7 +33,7 @@ export async function startDemoSession(code: string) {
 
 // 생년월일을 확인한 같은 코드이고, 코드가 만료·잠김이 아니어야 한다.
 export async function getPatientCode(code: string) {
-  if (!/^\d{6}$/.test(code)) return null;
+  if (!isCodeShape(code)) return null;
   const saved = verifyToken(
     getSessionSecret(),
     (await cookies()).get(cookieName)?.value,
@@ -50,6 +52,11 @@ export async function getSessionPatientCode() {
     'patient',
   );
   return saved ? ((await getPatientCode(saved)) ? saved : null) : null;
+}
+
+// 링크로 온 코드를 열 수 있는지(없는 번호·만료면 false).
+export async function isOpenableCode(code: string) {
+  return isCodeShape(code) && (await findActiveCode(code)) !== null;
 }
 
 export async function hasDemoSession(code: string) {

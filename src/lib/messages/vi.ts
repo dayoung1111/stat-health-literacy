@@ -34,6 +34,9 @@ export const vi: Messages = {
     checking: 'Đang kiểm tra…',
     callHelp: '📞 Gặp khó khăn? Gọi bệnh viện',
     typeCode: 'Tôi sẽ tự nhập mã số giáo dục',
+    badCode: 'Vui lòng kiểm tra lại mã',
+    badCodeHint:
+      'Vui lòng mở lại đường link hoặc mã QR đã nhận.\nNếu vẫn không được, vui lòng gọi cho bệnh viện.',
     sixDigits: 'Hãy nhập 6 chữ số',
     locked: 'Đã bị khóa vì sai 5 lần. Hãy gọi bệnh viện để nhận mã số mới.',
     wrong: (remaining) =>
@@ -56,4 +59,6 @@ export const vi: Messages = {
   progressTitle: 'Hướng dẫn đã nhận',
   statusDone: '✅ Đã xong',
   statusLeft: '▶ Còn lại',
+  statusNow: '👀 Đang xem',
+  progressCount: (done, total) => `Đã xong ${done}/${total}`,
 };

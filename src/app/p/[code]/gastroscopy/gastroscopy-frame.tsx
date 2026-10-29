@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { GuideKind } from '@/lib/guide-catalog';
 
+import { GuideBoard } from '../../guide-board';
+import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
-import { completeGuide } from '../../records';
 
 // 위내시경 수업 액자. 검진 전날 수업 액자(day-before-frame.tsx)와 같은 방식이다.
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/gastroscopy.html)은 ?embed=1로 열면
@@ -37,7 +38,7 @@ export function GastroscopyFrame({
   code,
   language,
   guides,
-  completed,
+  completed: fromServer,
 }: {
   code: string;
   /** 의료진이 발급 때 고른 언어. 환자가 고른 언어가 있으면 그것을 쓴다. */
@@ -50,6 +51,8 @@ export function GastroscopyFrame({
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(firstHeight);
   const [finished, setFinished] = useState(false);
+  // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
+  const completed = useCompletedGuides(code, fromServer);
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export function GastroscopyFrame({
       if (recorded.current) return;
       recorded.current = true;
       setFinished(true);
-      void completeGuide(code, 'gastroscopy');
+      markGuideDone(code, 'gastroscopy');
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -93,6 +96,16 @@ export function GastroscopyFrame({
           language={language}
         />
       )}
+      {/* 휴대폰에서는 수업 아래, 다 보면 다음 안내 버튼 아래에 보인다. */}
+      <div className="mt-6 max-w-xl">
+        <GuideBoard
+          code={code}
+          current="gastroscopy"
+          guides={guides}
+          completed={completed}
+          language={language}
+        />
+      </div>
     </>
   );
 }

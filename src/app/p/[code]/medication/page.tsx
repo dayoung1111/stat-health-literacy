@@ -5,6 +5,7 @@ import { readyGuides } from '@/lib/guide-progress';
 import { verdictLabels, type Verdict } from '@/lib/medication-guide';
 
 import { T } from '../../../translated';
+import { GuideBoard } from '../../guide-board';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 import { VerdictMark } from './med-icons';
@@ -61,6 +62,16 @@ async function Medication({ code }: { code: string }) {
         guides={readyGuides(issued.guides)}
         completed={issued.guideCompletions.map((c) => c.guide)}
       />
+      {/* 약 고르기·정리 화면 모두 아래에 받은 안내 현황판을 둔다. */}
+      <div className="mt-8">
+        <GuideBoard
+          code={code}
+          current="medication"
+          guides={readyGuides(issued.guides)}
+          completed={issued.guideCompletions.map((c) => c.guide)}
+          language={issued.language}
+        />
+      </div>
       <CheckWithStaff />
     </>
   );

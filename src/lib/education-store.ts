@@ -7,6 +7,7 @@ import { connection } from 'next/server';
 import { Prisma } from '@/generated_prisma/client';
 
 import { isOwnedBy } from './code-access';
+import { DEMO_CODE } from './code-shape';
 import { demoGuide } from './demo-guide';
 import { getDb } from './db';
 import type { GuideKind } from './guide-catalog';
@@ -63,6 +64,7 @@ export const MAX_ATTEMPTS = 5;
 // 시연용으로 늘 남겨 두는 코드. 랜덤 발급에서는 이 번호가 나오지 않는다.
 // 000000(생년월일 111111)은 시연이 꼬였을 때 쓰는 예비 코드, 777777(생년월일 111111)은 안내를 모두 묶은 코드다.
 const RESERVED_CODES = new Set(['000000', '482917', '777777']);
+// DEMO(생년월일 800101)는 글자 코드라 6자리 랜덤 발급과 겹치지 않는다(src/lib/code-shape.ts).
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 // 시연 코드는 7일이 지나도 사라지지 않게 아주 멀리 만료시킨다(발급한 코드만 7일 만료).
 const DEMO_LIFETIME = 10 * 365 * 24 * 60 * 60 * 1000;
@@ -76,6 +78,7 @@ const demoBirthHash = {
   colon:
     'e1081659c0ee20b75ed6867ca0949767:57a09b145a6d3a04dd78bcd7c0d497580e97432ac5e978953233f73b44fc1a54',
   vi: 'e7dcd26e697aedcbfd9340576e02a800:b86ea6aa037d5fa609a7819af946cb02377aa06be635167dfd744d8e6d986dd6',
+  demo: '1571259c2eb2456d0d24a25f5c10e4bd:ea6abab331f7b7c6cd03994e1fa895be87c99bb832dddf178e333623e432473b',
   checkup:
     '9654a4eff1dbf5f2bd9574845300ddc6:a00beee9378349a23b70d13d7cc34cbd678cdb24e773462c46307a9ac7ecda51',
 };
@@ -442,6 +445,17 @@ async function seedDemoCodes() {
     },
     {
       ...base,
+      code: DEMO_CODE,
+      staffId: 'nurse01',
+      guides: ['checkup', 'gastroscopy', 'colonoscopy', 'medication'],
+      ageGroup: '60',
+      level: 'easy',
+      language: 'ko',
+      birthDateHash: demoBirthHash.demo,
+      createdAt: minutesAgo(1),
+    },
+    {
+      ...base,
       code: '305566',
       staffId: 'nurse01',
       guides: ['colonoscopy'],
@@ -523,4 +537,11 @@ async function seedDemoCodes() {
       if (!isUniqueViolation(error)) throw error;
     }
   }
+  // /p/DEMO의 검사일은 늘 "들어온 날 + 2일"이 되도록 서버가 켜질 때 맞춘다(결과 기록은 그대로).
+  const demoExam = new Date(`${examDate}T00:00:00Z`);
+  demoExam.setUTCDate(demoExam.getUTCDate() + 1);
+  await db.educationCode.updateMany({
+    where: { code: DEMO_CODE },
+    data: { examDate: demoExam },
+  });
 }
