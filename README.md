@@ -111,7 +111,7 @@ cp .env.example .env
 npm run dev
 ```
 
-**배포 주소**: <!-- 있으면 기재 -->
+**배포 주소**:https://stat-health-literacy.vercel.app
 
 ### 시연용 계정 (가짜 데이터, 실제 환자 정보는 넣지 않음)
 
