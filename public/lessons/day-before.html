@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>또박이 검진 전날 수업</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+/* 기본 설정: hidden 속성이 항상 숨기도록 (덮개·퀴즈·뒤로 버튼) */
+[hidden]{display:none!important}
+img{max-width:100%}
+*{box-sizing:border-box}
+body{font-size:14px}
+
+/* 레이아웃: 가운데 16:9 수업 화면 + 오른쪽 교시 목록/배운 것 (휴대폰은 아래로) */
+:root{
+  --bg:#F2F6F6; --surface:#FFFFFF; --fg:#15262B; --muted:#5B6E72; --line:#D5E2E3;
+  --teal:#0F6670; --mint:#DCEDEE; --red:#D9363E; --green:#2E9E6B; --cheek:#F6B8A0;
+  --display:"Jua","Noto Sans KR",system-ui,sans-serif;
+  --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1A1D; --surface:#16262A; --fg:#E7F0F1; --muted:#9DB2B5; --line:#2A3E43; --mint:#1F3A3E; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1A1D; --surface:#16262A; --fg:#E7F0F1; --muted:#9DB2B5; --line:#2A3E43; --mint:#1F3A3E; color-scheme:dark}
+
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+header h1{font-family:var(--display);font-weight:400;font-size:1.6rem;margin:0;color:var(--fg)}
+.crumb{font-size:.82rem;color:var(--muted);letter-spacing:.02em}
+.sample{font-size:.75rem;background:var(--mint);color:var(--teal);padding:3px 9px;border-radius:99px;font-weight:700}
+:root[data-theme="dark"] .sample{color:#7FD0D8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sample{color:#7FD0D8}}
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+
+/* ===== 수업 화면 (영상처럼 항상 밝은 화면) ===== */
+.player{display:flex;flex-direction:column;gap:10px;min-width:0}
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;
+  container-type:inline-size;background:#EBD9BE;box-shadow:0 1px 0 rgba(0,0,0,.04),0 8px 30px rgba(21,38,43,.12);user-select:none}
+.stage:fullscreen{border-radius:0}
+.table{position:absolute;inset:0;
+  background:
+   repeating-linear-gradient(90deg,rgba(150,105,60,.07) 0 2px,transparent 2px 9cqw),
+   repeating-linear-gradient(0deg,rgba(255,255,255,.18) 0 1px,transparent 1px 3.1cqw),
+   linear-gradient(170deg,#F3E4CB 0%,#E8D2B0 55%,#DEC39D 100%)}
+.zoom{position:absolute;inset:0;transform-origin:35% 45%}
+.zoom.go{animation:kb 14s ease-out forwards}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.07)}}
+
+/* 왼쪽 2/3: 물건 카드 */
+.items{position:absolute;left:4cqw;top:7cqw;width:58cqw;height:34cqw;display:flex;flex-wrap:wrap;
+  align-content:center;justify-content:center;gap:2.2cqw}
+.item{position:relative;width:16cqw;display:flex;flex-direction:column;align-items:center;gap:.8cqw;
+  opacity:0;transform:translateY(1.5cqw) scale(.92);transition:opacity .5s,transform .5s}
+.item.in{opacity:1;transform:none}
+.plate{width:16cqw;height:16cqw;border-radius:50%;background:radial-gradient(circle at 50% 45%,#FFFFFF 0 55%,#F2F2EE 56% 64%,#E4E2DA 65%);
+  box-shadow:0 1.2cqw 2cqw rgba(110,70,30,.18);display:grid;place-items:center;font-size:8cqw;line-height:1}
+.item .lbl{font:700 1.9cqw/1.2 var(--body);color:#15262B;background:rgba(255,255,255,.85);padding:.35cqw 1.2cqw;border-radius:99px;white-space:nowrap}
+.mark{position:absolute;left:-1cqw;top:-1cqw;width:18cqw;height:18cqw;pointer-events:none;overflow:visible}
+.mark path,.mark circle{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:400;stroke-dashoffset:400}
+.mark.x path{stroke:#D9363E}
+.mark.o circle{stroke:#2E9E6B}
+.mark.show path,.mark.show circle{animation:draw .55s ease-out forwards}
+.mark.x.show path:nth-child(2){animation-delay:.28s}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* 시계 카드 */
+.clockface{width:16cqw;height:16cqw}
+
+/* 오른쪽 1/3: 또박이 */
+.ttobak{position:absolute;right:3cqw;top:4cqw;width:27cqw;height:35cqw}
+.ttobak svg{width:100%;height:100%;overflow:visible}
+.bob{animation:bob 2.4s ease-in-out infinite;transform-origin:110px 230px}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.pose{display:none}
+.ttobak[data-pose="wave"] .p-wave,.ttobak[data-pose="point"] .p-point,.ttobak[data-pose="clock"] .p-clock,
+.ttobak[data-pose="star"] .p-star,.ttobak[data-pose="palm"] .p-palm{display:inline}
+.ttobak[data-pose="palm"] .m-smile,.ttobak[data-pose="clock"] .m-smile{display:none}
+.m-flat{display:none}
+.ttobak[data-pose="palm"] .m-flat,.ttobak[data-pose="clock"] .m-flat{display:inline}
+.waving{animation:wave .9s ease-in-out infinite;transform-origin:160px 135px}
+@keyframes wave{50%{transform:rotate(-14deg)}}
+.twinkle{animation:tw 1s ease-in-out infinite}
+@keyframes tw{50%{opacity:.35;transform:scale(.85)}}
+.speaking .mouth-grp{animation:talk .28s ease-in-out infinite;transform-origin:105px 136px}
+@keyframes talk{50%{transform:scaleY(1.6)}}
+
+/* 장면 제목 */
+.chip{position:absolute;left:3cqw;top:2.4cqw;font:400 2.3cqw/1 var(--display);color:#FFFFFF;background:#0F6670;
+  padding:1cqw 2cqw;border-radius:99px;box-shadow:0 .5cqw 1.2cqw rgba(15,102,112,.3)}
+
+/* 자막 말풍선 */
+.sub{position:absolute;left:4cqw;right:4cqw;bottom:2.8cqw;min-height:9.5cqw;background:#FFFFFF;border:.35cqw solid #15262B;
+  border-radius:2.4cqw;padding:1.6cqw 3cqw;display:flex;align-items:center;justify-content:center;text-align:center;
+  font:700 3cqw/1.42 var(--body);color:#15262B;box-shadow:0 .6cqw 0 rgba(21,38,43,.15);text-wrap:balance}
+.sub::after{content:"";position:absolute;right:15cqw;top:-1.9cqw;width:3cqw;height:3cqw;background:#FFFFFF;
+  border-left:.35cqw solid #15262B;border-top:.35cqw solid #15262B;transform:rotate(45deg) skew(8deg,8deg)}
+.sub b{font-weight:900;padding:0 .3cqw;border-radius:.6cqw}
+.sub b.r{color:#C42530;background:#FDE6E7}
+.sub b.g{color:#1F7D53;background:#E1F4EA}
+.sub b.k{color:#0F6670;background:#DCEDEE}
+.sub small{display:block;font-weight:500;font-size:2.1cqw;color:#5B6E72;margin-top:.4cqw}
+
+/* 시작 / 퀴즈 덮개 */
+.cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqw;
+  background:rgba(21,38,43,.55);backdrop-filter:blur(2px);text-align:center;padding:4cqw}
+.cover h2{font:400 4.4cqw/1.25 var(--display);color:#FFFFFF;margin:0;text-wrap:balance}
+.cover p{font:500 2.2cqw/1.4 var(--body);color:#E7F0F1;margin:0}
+.bigplay{width:12cqw;height:12cqw;border-radius:50%;border:none;background:#FFFFFF;cursor:pointer;display:grid;place-items:center;
+  box-shadow:0 1cqw 3cqw rgba(0,0,0,.3)}
+.bigplay svg{width:5cqw;height:5cqw;margin-left:.8cqw}
+.quiz{background:rgba(255,253,248,.96)}
+.quiz h2{color:#15262B}
+.quiz .qtag{font:400 2.2cqw/1 var(--display);color:#FFFFFF;background:#D9363E;padding:.9cqw 2cqw;border-radius:99px}
+.opts{display:flex;gap:2.4cqw;flex-wrap:wrap;justify-content:center}
+.opt{font:700 3cqw/1.2 var(--body);padding:2cqw 4cqw;border-radius:2cqw;border:.4cqw solid #15262B;background:#FFFFFF;color:#15262B;
+  cursor:pointer;min-width:24cqw;box-shadow:0 .6cqw 0 #15262B;transition:transform .1s}
+.opt:active{transform:translateY(.4cqw);box-shadow:0 .2cqw 0 #15262B}
+.opt:focus-visible,.bigplay:focus-visible{outline:.6cqw solid #F6B8A0;outline-offset:.4cqw}
+.feedback{font:700 2.8cqw/1.3 var(--body);min-height:3.6cqw}
+.feedback.ok{color:#1F7D53}.feedback.no{color:#C42530}
+
+/* 진행 막대 */
+.prog{position:absolute;left:0;right:0;bottom:0;height:.7cqw;background:rgba(21,38,43,.12);display:flex;gap:2px}
+.prog i{flex:1;background:transparent;position:relative;overflow:hidden}
+.prog i.done{background:#0F6670}
+.prog i.now::after{content:"";position:absolute;inset:0;background:#0F6670;transform-origin:left;animation:fill var(--d,6s) linear forwards}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* 조작 버튼 */
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:700 .92rem/1 var(--body);display:inline-flex;align-items:center;gap:7px;padding:11px 15px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.btn:hover{border-color:var(--teal)}
+.btn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#FFFFFF}
+.btn svg{width:16px;height:16px}
+.spacer{flex:1}
+.hint{font-size:.8rem;color:var(--muted)}
+
+/* 오른쪽 패널 */
+aside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel h3{font-family:var(--display);font-weight:400;font-size:1.1rem;margin:0 0 10px}
+.chapters{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.chapters button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:9px;border:none;
+  background:transparent;color:var(--fg);font:500 .92rem/1.35 var(--body);cursor:pointer}
+.chapters button:hover{background:var(--mint)}
+.chapters button:focus-visible{outline:2px solid var(--teal)}
+.chapters .n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .78rem/1 var(--body);
+  border:1.5px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.chapters .now button{background:var(--mint);font-weight:700}
+.chapters .now .n{border-color:var(--teal);color:var(--teal)}
+.chapters .done .n{background:var(--teal);border-color:var(--teal);color:#FFFFFF}
+.learned{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.learned li{display:flex;gap:9px;font-size:.9rem;line-height:1.45}
+.learned li::before{content:"";flex:none;width:8px;height:8px;margin-top:.5em;border-radius:50%;background:var(--green)}
+.learned .empty{color:var(--muted)}
+.learned .empty::before{background:var(--line)}
+.note{font-size:.8rem;color:var(--muted);line-height:1.55}
+
+@media (prefers-reduced-motion:reduce){.zoom.go,.bob,.waving,.twinkle,.speaking .mouth-grp{animation:none}
+  .mark.show path,.mark.show circle{animation-duration:.01s}}
+
+/* 자막: 한 문장으로 이어지게 */
+.sub{display:flex;flex-direction:column;align-items:stretch;justify-content:center;text-wrap:wrap}
+.sub .txt{display:block;width:100%;text-align:center;line-height:1.5;word-break:keep-all}
+.sub .txt b{display:inline}
+.waving{transform-origin:72px 138px}
+.speaking .mouth-grp{transform-origin:122px 145px}
+
+/* 그림 크게: 개수에 따라 접시 크기 (복용약 수업과 같게) */
+.items{left:3cqw;top:5.5cqw;width:65cqw;height:37cqw;gap:1.6cqw;--p:15cqw}
+.items[data-n="1"]{--p:31cqw}
+.items[data-n="2"]{--p:26cqw;gap:5cqw}
+.items[data-n="3"]{--p:19cqw}
+.item{width:var(--p)}
+.plate{width:var(--p);height:var(--p);font-size:calc(var(--p) * .64)}
+.plate svg,.plate .clockface{width:80%;height:80%;overflow:visible}
+.mark{left:-1cqw;top:-1cqw;width:calc(var(--p) + 2cqw);height:calc(var(--p) + 2cqw)}
+.item .lbl{font-size:2.1cqw}
+
+.plate.photo{background:#FFFFFF;padding:.7cqw;box-sizing:border-box}
+.plate.photo img{width:100%;height:100%;max-width:100%;object-fit:cover;border-radius:50%;display:block}
+
+/* 말풍선 작게 (글씨 크기는 그대로) */
+.sub{left:5cqw;right:5cqw;bottom:1.8cqw;min-height:7cqw;padding:.9cqw 2.6cqw;border-radius:2cqw}
+.sub .txt{line-height:1.35}
+.sub small{margin-top:.2cqw}
+.sub::after{top:-1.7cqw;width:2.6cqw;height:2.6cqw}
+.items{top:4.5cqw;height:36cqw}
+.items[data-n="1"]{--p:27cqw}
+
+/* 앱 안에 끼워 넣었을 때: 바깥 여백은 앱이 맡는다 */
+.embed body{padding-block:4px 8px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="btn" id="backBtn" type="button">← 뒤로</button>
+    <h1>검진 전날 준비</h1>
+    <span class="crumb">기본 검진 · 수업 1</span>
+  </header>
+
+  <div class="main">
+    <div class="player">
+      <div class="stage" id="stage">
+        <div class="table"></div>
+        <div class="zoom" id="zoom"><div class="items" id="items"></div></div>
+
+        <div class="ttobak" id="ttobak" data-pose="wave">
+          <svg viewBox="0 0 230 250" aria-label="또박이">
+            <g class="bob">
+              <!-- 다리: 짧은 막대 -->
+              <rect x="102" y="196" width="10" height="20" rx="5" fill="#15262B"/>
+              <rect x="132" y="196" width="10" height="20" rx="5" fill="#15262B"/>
+              <!-- 오른팔(쉬는 팔) -->
+              <path d="M172 156 Q180 164 182 174" stroke="#15262B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+              <circle cx="182" cy="177" r="5.5" fill="#FFFFFF" stroke="#15262B" stroke-width="3"/>
+              <!-- 몸통: 왼쪽 위 접힌 종이 -->
+              <path d="M98 72 H160 Q172 72 172 84 V188 Q172 200 160 200 H84 Q72 200 72 188 V98 Z" fill="#FFFFFF" stroke="#15262B" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M98 72 V90 Q98 98 90 98 H72 Z" fill="#DCEDEE" stroke="#15262B" stroke-width="3.5" stroke-linejoin="round"/>
+              <!-- 오른쪽 위 초록 원 + 흰 십자 -->
+              <circle cx="154" cy="92" r="9" fill="#0F6670"/>
+              <rect x="152.2" y="86" width="3.6" height="12" rx="1.6" fill="#FFFFFF"/><rect x="148" y="90.2" width="12" height="3.6" rx="1.6" fill="#FFFFFF"/>
+              <!-- 아래 회색 줄 -->
+              <g stroke="#CDD6D8" stroke-width="4" stroke-linecap="round"><line x1="94" y1="172" x2="150" y2="172"/><line x1="104" y1="184" x2="140" y2="184"/></g>
+              <!-- 얼굴 -->
+              <ellipse cx="109" cy="130" rx="4.6" ry="6.2" fill="#15262B"/><ellipse cx="135" cy="130" rx="4.6" ry="6.2" fill="#15262B"/>
+              <circle cx="110.6" cy="127.6" r="1.6" fill="#FFFFFF"/><circle cx="136.6" cy="127.6" r="1.6" fill="#FFFFFF"/>
+              <ellipse cx="97" cy="145" rx="7.5" ry="4.6" fill="#F6B8A0"/><ellipse cx="147" cy="145" rx="7.5" ry="4.6" fill="#F6B8A0"/>
+              <g class="mouth-grp">
+                <path class="m-smile" d="M114 142 Q122 149 130 142" stroke="#15262B" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <ellipse class="m-flat" cx="122" cy="145" rx="3" ry="3" fill="#15262B"/>
+              </g>
+              <!-- 손 흔들기 -->
+              <g transform="translate(0 16)" class="pose p-wave"><g class="waving">
+                <path d="M72 138 Q58 126 52 106" stroke="#15262B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <circle cx="51" cy="101" r="6" fill="#FFFFFF" stroke="#15262B" stroke-width="3"/></g></g>
+              <!-- 지시봉 -->
+              <g transform="translate(0 16)" class="pose p-point">
+                <line x1="50" y1="118" x2="24" y2="64" stroke="#C8956A" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="22" cy="60" r="4.5" fill="#FFFFFF" stroke="#15262B" stroke-width="2.5"/>
+                <path d="M72 140 Q58 136 53 125" stroke="#15262B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <circle cx="51" cy="121" r="6" fill="#FFFFFF" stroke="#15262B" stroke-width="3"/></g>
+              <!-- 알람 시계 -->
+              <g transform="translate(0 16)" class="pose p-clock">
+                <circle cx="26" cy="98" r="5.5" fill="#D9363E" stroke="#15262B" stroke-width="2.5"/><circle cx="54" cy="98" r="5.5" fill="#D9363E" stroke="#15262B" stroke-width="2.5"/>
+                <circle cx="40" cy="116" r="18" fill="#FFFFFF" stroke="#15262B" stroke-width="3.5"/>
+                <line x1="40" y1="116" x2="40" y2="105" stroke="#15262B" stroke-width="3" stroke-linecap="round"/>
+                <line x1="40" y1="116" x2="48" y2="121" stroke="#15262B" stroke-width="3" stroke-linecap="round"/>
+                <path d="M72 144 Q62 144 56 138" stroke="#15262B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <circle cx="53" cy="135" r="6" fill="#FFFFFF" stroke="#15262B" stroke-width="3"/></g>
+              <!-- 칭찬: 팔 들고 별 -->
+              <g transform="translate(0 16)" class="pose p-star">
+                <path d="M72 138 Q58 120 55 102" stroke="#15262B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <circle cx="54" cy="97" r="6" fill="#FFFFFF" stroke="#15262B" stroke-width="3"/>
+                <path class="twinkle" d="M30 52 l4.5 9.5 10.5 1 -8 7 2.5 10.5 -9.5 -5.5 -9.5 5.5 2.5 -10.5 -8 -7 10.5 -1z" fill="#F4C34A" stroke="#15262B" stroke-width="2.2" stroke-linejoin="round"/>
+                <path class="twinkle" style="animation-delay:.4s" d="M196 64 l3.2 6.8 7.3 .6 -5.5 5 1.8 7.3 -6.8 -3.8 -6.8 3.8 1.8 -7.3 -5.5 -5 7.3 -.6z" fill="#F4C34A" stroke="#15262B" stroke-width="2.2" stroke-linejoin="round"/></g>
+              <!-- 주의: 손바닥 내밀기 -->
+              <g transform="translate(0 16)" class="pose p-palm">
+                <path d="M72 144 Q58 140 48 134" stroke="#15262B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <ellipse cx="40" cy="130" rx="8" ry="10" fill="#FFFFFF" stroke="#15262B" stroke-width="3"/>
+                <g stroke="#D9363E" stroke-width="3.5" stroke-linecap="round"><line x1="24" y1="113" x2="17" y2="107"/><line x1="22" y1="130" x2="13" y2="130"/><line x1="24" y1="147" x2="17" y2="153"/></g></g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="chip" id="chip">인사</div>
+        <div class="sub" id="sub"><span class="txt">안녕하세요, 저는 또박이예요.</span></div>
+        <div class="prog" id="prog"></div>
+
+        <div class="cover" id="start">
+          <h2>검진 전날,<br>이것만 지키면 돼요</h2>
+          <button class="bigplay" id="bigplay" aria-label="수업 시작">
+            <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="#0F6670"/></svg>
+          </button>
+          <p>소리를 켜면 또박이가 읽어 드려요 · 약 2분</p>
+        </div>
+
+        <div class="cover quiz" id="quiz" hidden>
+          <span class="qtag">깜짝 퀴즈</span>
+          <h2 id="qtext"></h2>
+          <div class="opts" id="opts"></div>
+          <div class="feedback" id="fb" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="playBtn"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg><span>재생</span></button>
+        <button class="btn" id="prevBtn" aria-label="이전 장면"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>이전</button>
+        <button class="btn" id="nextBtn" aria-label="다음 장면">다음<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></button>
+        <button class="btn" id="soundBtn" aria-pressed="true">🔊 소리 켬</button>
+        <span class="spacer"></span>
+        <button class="btn" id="fsBtn">전체 화면</button>
+      </div>
+      <div class="hint">휴대폰 실제 서비스에서는 재생을 누르면 가로 전체 화면으로 바뀌어요.</div>
+    </div>
+
+    <aside>
+      <div class="panel">
+        <h3>교시 목록</h3>
+        <ol class="chapters" id="chapters"></ol>
+      </div>
+      <div class="panel">
+        <h3>이번 시간에 배운 것</h3>
+        <ul class="learned" id="learned"><li class="empty">수업을 보면 여기에 하나씩 쌓여요.</li></ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const X_SVG='<svg class="mark x" viewBox="0 0 120 120"><path d="M22 22 L98 98"/><path d="M98 22 L22 98"/></svg>';
+const O_SVG='<svg class="mark o" viewBox="0 0 120 120"><circle cx="60" cy="60" r="48" transform="rotate(-90 60 60)"/></svg>';
+const CLOCK9='<svg class="clockface" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#FFFFFF" stroke="#15262B" stroke-width="5"/>'+
+ [0,1,2,3,4,5,6,7,8,9,10,11].map(i=>{const a=i*30*Math.PI/180;return `<line x1="${50+38*Math.sin(a)}" y1="${50-38*Math.cos(a)}" x2="${50+42*Math.sin(a)}" y2="${50-42*Math.cos(a)}" stroke="#15262B" stroke-width="${i%3?2:4}" stroke-linecap="round"/>`}).join('')+
+ '<line x1="50" y1="50" x2="26" y2="50" stroke="#D9363E" stroke-width="6" stroke-linecap="round"/><line x1="50" y1="50" x2="50" y2="16" stroke="#15262B" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="50" r="4" fill="#15262B"/>'+
+ '<text x="50" y="74" text-anchor="middle" font-family="Noto Sans KR,sans-serif" font-weight="900" font-size="12" fill="#0F6670">밤</text></svg>';
+
+// 장면: lines의 show = 그 줄이 나올 때 나타날 물건 번호, mark = 그때 그려질 표시
+const scenes=[
+ {title:'인사',pose:'wave',items:[],
+  lines:[{t:'안녕하세요, 저는 <b class="k">또박이</b>예요.'},
+         {t:'검진 <b class="k">전날</b> 지킬 일 <b class="k">다섯 가지</b>를 알려 드릴게요.'}]},
+ {title:'가벼운 저녁',pose:'point',learned:'저녁은 가볍고 소화가 잘 되는 음식',
+  items:[{img:'porridge',l:'부드러운 죽'},{img:'soup',l:'맑은 국'},{img:'oily',l:'기름진 음식'}],
+  lines:[{t:'전날 저녁은 <b class="g">가볍고 소화가 잘 되는</b> 음식으로 드세요.',show:[0,1],mark:{0:'o',1:'o'}},
+         {t:'<b class="r">기름진 음식</b>은 피하세요.',show:[2],mark:{2:'x'}},
+         {t:'피 검사와 배 초음파 결과가<br>달라질 수 있어요.<small>피 속 기름(중성지방) 수치가 높게 나올 수 있어요</small>',pose:'palm'}]},
+ {title:'밤 9시 금식',pose:'clock',learned:'밤 9시부터 금식 (물·껌·사탕·담배도 안 돼요)',
+  items:[{clock:1,l:'밤 9시'},{img:'water',l:'물'},{img:'gum',l:'껌'},{img:'cig',l:'담배'}],
+  lines:[{t:'<b class="r">밤 9시</b>부터는 아무것도 드시면 안 돼요.',show:[0]},
+         {t:'<b class="r">물</b>도 마시지 않아요.',show:[1],mark:{1:'x'},pose:'palm'},
+         {t:'<b class="r">껌, 사탕, 담배</b>도 안 돼요.',show:[2,3],mark:{2:'x',3:'x'}},
+         {t:'적어도 <b class="k">8시간</b>은 속을 비워야 해요.',pose:'point'}]},
+ {title:'술 피하기',pose:'palm',learned:'검진 2~3일 전부터 술 피하기',
+  items:[{img:'beer',l:'맥주'},{img:'soju',l:'소주'},{img:'wine',l:'와인'}],
+  lines:[{t:'술은 검진 <b class="r">2~3일 전</b>부터 피하는 것이 좋아요.',show:[0,1,2],mark:{0:'x',1:'x',2:'x'}},
+         {t:'간 검사 수치와 피 속 기름 수치가<br>올라갈 수 있어요.',pose:'point'}]},
+ {title:'운동 쉬기',pose:'palm',learned:'전날 격한 운동은 쉬기',
+  items:[{img:'squat',l:'무거운 운동'},{img:'run',l:'오래 달리기'}],
+  lines:[{t:'전날에는 <b class="r">힘든 운동</b>을 하지 마세요.',show:[0,1],mark:{0:'x',1:'x'}},
+         {t:'근육 검사 수치나 소변 검사 결과가<br>달라질 수 있어요.',pose:'point'}]},
+ {title:'푹 자기',pose:'star',learned:'일찍 누워 충분히 자기 (혈압에 영향)',
+  items:[{img:'sleep',l:'일찍, 푹 자기'}],
+  lines:[{t:'전날 밤에는 <b class="g">일찍 누워 잠을 충분히</b> 자 두세요.',show:[0],mark:{0:'o'}},
+         {t:'잠이 부족하면 <b class="k">혈압</b>이 높게 나올 수 있어요.',pose:'point'},
+         {t:'다섯 가지 모두 배웠어요! 이제 <b class="k">퀴즈</b>를 풀어 볼까요?',pose:'star'}]}
+];
+const quizzes=[
+ {q:'밤 9시가 넘었어요.<br>목이 마르면 물을 마셔도 될까요?',opts:['마셔도 돼요','안 돼요'],a:1,
+  ok:'맞아요! 밤 9시부터는 물도 안 돼요.',back:2},
+ {q:'술은 언제부터 피하면 좋을까요?',opts:['검진 당일 아침','검진 2~3일 전'],a:1,
+  ok:'맞아요! 2~3일 전부터 피해요.',back:3}
+];
+
+
+const K='#15262B';
+const W=x=>`<svg viewBox="0 0 100 100" aria-hidden="true">${x}</svg>`;
+const BOWL=(top)=>`<path d="M12 50 H88 Q86 86 50 88 Q14 86 12 50 Z" fill="#FFFFFF" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M22 70 Q50 78 78 70" stroke="#8CBDF2" stroke-width="3" fill="none" stroke-linecap="round"/>${top}`;
+const STEAM=`<g stroke="#9DB2B5" stroke-width="3" fill="none" stroke-linecap="round"><path d="M36 36 Q30 28 36 20 Q42 12 36 6"/><path d="M52 36 Q46 28 52 20 Q58 12 52 6"/><path d="M68 36 Q62 28 68 20"/></g>`;
+
+const L=(d,c,w)=>`<path d="${d}" stroke="${K}" stroke-width="${w+5}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+const SKIN='#F6D2B8';
+const SWEAT=(x,y)=>`<path d="M${x} ${y} C${x-3} ${y+6} ${x-5} ${y+9} ${x-5} ${y+11} A5 5 0 0 0 ${x+5} ${y+11} C${x+5} ${y+9} ${x+3} ${y+6} ${x} ${y} Z" fill="#8CC8EC" stroke="${K}" stroke-width="2"/>`;
+const HEAD=(x,y)=>`<circle cx="${x}" cy="${y}" r="10" fill="${SKIN}" stroke="${K}" stroke-width="3"/><path d="M${x-10} ${y-1} Q${x-9} ${y-12} ${x} ${y-11} Q${x+9} ${y-12} ${x+10} ${y-2} Q${x+2} ${y-6} ${x-10} ${y-1} Z" fill="#3A2E2A"/><circle cx="${x-3.5}" cy="${y+2}" r="1.6" fill="${K}"/><circle cx="${x+3.5}" cy="${y+2}" r="1.6" fill="${K}"/>`;
+const LIFT=
+  `<rect x="6" y="9" width="88" height="6" rx="3" fill="#B8C4C7" stroke="${K}" stroke-width="2.5"/>`+
+  `<rect x="6" y="2" width="9" height="20" rx="3" fill="#4F6670" stroke="${K}" stroke-width="2.5"/><rect x="85" y="2" width="9" height="20" rx="3" fill="#4F6670" stroke="${K}" stroke-width="2.5"/>`+
+  `<rect x="15" y="5" width="6" height="14" rx="2" fill="#4F6670" stroke="${K}" stroke-width="2.5"/><rect x="79" y="5" width="6" height="14" rx="2" fill="#4F6670" stroke="${K}" stroke-width="2.5"/>`+
+  L('M44 70 L36 82 L32 94','#4F6670',8)+L('M56 70 L64 82 L68 94','#4F6670',8)+
+  L('M44 48 L32 30 L30 14','#F6D2B8',6)+L('M56 48 L68 30 L70 14','#F6D2B8',6)+
+  L('M50 46 L50 68','#D9363E',16)+
+  HEAD(50,34)+`<path d="M46 39 H54" stroke="${K}" stroke-width="2.5" stroke-linecap="round"/>`+
+  SWEAT(66,36)+SWEAT(30,40);
+const RUN=
+  `<g stroke="#9DB2B5" stroke-width="4" stroke-linecap="round"><line x1="2" y1="40" x2="16" y2="40"/><line x1="6" y1="52" x2="18" y2="52"/><line x1="2" y1="64" x2="14" y2="64"/></g>`+
+  L('M48 60 L34 72 L18 70','#4F6670',8)+
+  L('M54 38 L40 44 L32 56','#F6D2B8',6)+
+  L('M48 60 L64 70 L64 90','#4F6670',8)+
+  `<path d="M58 92 H74 Q76 86 70 86 H62 Z" fill="#FFFFFF" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/>`+
+  `<path d="M12 74 L16 62 Q22 64 22 70 L20 76 Z" fill="#FFFFFF" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/>`+
+  L('M57 34 L48 60','#2E9E6B',15)+
+  L('M56 38 L70 46 L80 36','#F6D2B8',6)+
+  HEAD(62,20)+`<ellipse cx="62" cy="26" rx="2.5" ry="2" fill="${K}"/>`+
+  SWEAT(80,12)+SWEAT(44,14);
+const PHOTO={"porridge": "/images/foods/basic-01-porridge.jpg", "soup": "/images/foods/basic-02-clear-soup.jpg", "oily": "/images/foods/basic-03-oily-food.jpg", "water": "/images/foods/basic-04-water.jpg", "gum": "/images/foods/basic-05-gum.jpg", "cig": "/images/foods/basic-06-cigarette.jpg", "beer": "/images/foods/basic-07-beer.jpg", "soju": "/images/foods/basic-08-soju.jpg", "wine": "/images/foods/basic-09-wine.jpg", "squat": "/images/foods/basic-10-heavy-exercise.jpg", "run": "/images/foods/basic-11-running.jpg", "sleep": "/images/foods/basic-12-sleep.jpg"};
+const ICON={
+ porridge:W(STEAM+BOWL(`<ellipse cx="50" cy="50" rx="38" ry="9" fill="#FBF3DE" stroke="${K}" stroke-width="3"/><g fill="#F1E2BC"><circle cx="40" cy="49" r="2.5"/><circle cx="56" cy="51" r="2.5"/><circle cx="64" cy="48" r="2"/></g>`)),
+ soup:W(`<g transform="rotate(25 74 30)"><rect x="70" y="2" width="9" height="40" rx="4.5" fill="#D5DEE0" stroke="${K}" stroke-width="3"/><ellipse cx="74.5" cy="44" rx="9" ry="11" fill="#D5DEE0" stroke="${K}" stroke-width="3"/></g>`+BOWL(`<ellipse cx="50" cy="50" rx="38" ry="9" fill="#F3D9A0" stroke="${K}" stroke-width="3"/><g fill="#FFFFFF" stroke="${K}" stroke-width="2"><rect x="34" y="45" width="9" height="7" rx="1.5"/><rect x="52" y="47" width="9" height="7" rx="1.5"/></g>`)),
+ fried:W(`<g transform="rotate(-35 50 50)"><rect x="58" y="44" width="30" height="11" rx="5" fill="#FFFFFF" stroke="${K}" stroke-width="3"/><circle cx="88" cy="44" r="6" fill="#FFFFFF" stroke="${K}" stroke-width="3"/><circle cx="88" cy="56" r="6" fill="#FFFFFF" stroke="${K}" stroke-width="3"/><path d="M60 50 C60 30 44 22 28 26 C10 30 8 52 18 64 C28 76 50 72 60 58 Z" fill="#D98C3A" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><g fill="#B5651E"><circle cx="26" cy="40" r="2.5"/><circle cx="38" cy="34" r="2"/><circle cx="34" cy="54" r="2.5"/><circle cx="48" cy="46" r="2"/><circle cx="22" cy="56" r="2"/></g></g><path d="M78 74 C74 81 72 84 72 87 A6 6 0 0 0 84 87 C84 84 82 81 78 74 Z" fill="#F4C34A" stroke="${K}" stroke-width="2.5"/>`),
+ fatty:W(`<g transform="rotate(-12 50 50)">${[0,1].map(i=>`<g transform="translate(0 ${i*26})"><rect x="10" y="18" width="78" height="22" rx="7" fill="#F3A6B5" stroke="${K}" stroke-width="3"/><path d="M14 29 H84" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/><path d="M16 23 H40 M52 35 H80" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/></g>`).join('')}</g><path d="M30 80 C27 86 25 89 25 92 A5 5 0 0 0 35 92 C35 89 33 86 30 80 Z" fill="#F4C34A" stroke="${K}" stroke-width="2.5"/><path d="M62 82 C59 88 57 90 57 93 A5 5 0 0 0 67 93 C67 90 65 88 62 82 Z" fill="#F4C34A" stroke="${K}" stroke-width="2.5"/>`),
+ water:W(`<path d="M24 10 H76 L69 90 H31 Z" fill="#F2FAFD"/><path d="M25.6 22 H74.4 L69 90 H31 Z" fill="#7CC6E8"/><line x1="25.6" y1="22" x2="74.4" y2="22" stroke="#3E9CC6" stroke-width="2.5"/><path d="M24 10 H76 L69 90 H31 Z" fill="none" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M36 34 V76" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="4" stroke-linecap="round"/>`),
+ candy:W(`<g transform="rotate(-20 40 40)"><path d="M14 40 L2 30 V50 Z M66 40 L78 30 V50 Z" fill="#F3A6B5" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><circle cx="40" cy="40" r="22" fill="#F3A6B5" stroke="${K}" stroke-width="3"/><path d="M28 32 Q40 24 52 32" stroke="#FFFFFF" stroke-width="3.5" fill="none" stroke-linecap="round"/></g><g transform="rotate(15 66 70)"><rect x="40" y="60" width="54" height="20" rx="4" fill="#8FD3A8" stroke="${K}" stroke-width="3"/><rect x="52" y="60" width="10" height="20" fill="#FFFFFF" stroke="${K}" stroke-width="2.5"/></g>`),
+ smoke:W(`<g transform="rotate(-20 50 60)"><rect x="8" y="56" width="62" height="13" rx="2" fill="#FFFFFF" stroke="${K}" stroke-width="3"/><rect x="70" y="56" width="20" height="13" rx="2" fill="#E8A35A" stroke="${K}" stroke-width="3"/><rect x="5" y="56" width="7" height="13" rx="2" fill="#D9363E" stroke="${K}" stroke-width="3"/></g><path d="M14 48 Q6 38 16 30 Q26 22 18 12" stroke="#9DB2B5" stroke-width="4" fill="none" stroke-linecap="round"/>`),
+ beer:W(`<path d="M68 34 H78 Q90 34 90 50 Q90 66 78 66 H68" fill="none" stroke="${K}" stroke-width="5" stroke-linecap="round"/><rect x="16" y="26" width="54" height="64" rx="6" fill="#F4C34A" stroke="${K}" stroke-width="3"/><path d="M14 30 Q14 14 28 16 Q34 6 46 12 Q58 6 64 16 Q76 16 72 30 Z" fill="#FFFFFF" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><g fill="#FFFFFF" fill-opacity=".7"><circle cx="30" cy="52" r="3"/><circle cx="48" cy="66" r="2.5"/><circle cx="56" cy="46" r="2"/></g>`),
+ soju:W(`<path d="M42 6 H58 V26 Q72 34 72 48 V86 Q72 94 64 94 H36 Q28 94 28 86 V48 Q28 34 42 26 Z" fill="#7FC79A" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><rect x="40" y="2" width="20" height="9" rx="2" fill="#2E9E6B" stroke="${K}" stroke-width="3"/><path d="M38 50 V82" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="5" stroke-linecap="round"/>`),
+ wine:W(`<path d="M28 8 H72 Q74 46 50 54 Q26 46 28 8 Z" fill="#FFFFFF" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M29 26 H71 Q70 46 50 52 Q30 46 29 26 Z" fill="#9B2335"/><line x1="50" y1="54" x2="50" y2="84" stroke="${K}" stroke-width="4"/><ellipse cx="50" cy="88" rx="18" ry="5" fill="#FFFFFF" stroke="${K}" stroke-width="3"/>`),
+ dumbbell:W(LIFT),
+ run:W(RUN),
+ walk:W(`${[[30,62,-10],[66,34,10]].map(([x,y,r])=>`<g transform="rotate(${r} ${x} ${y})"><ellipse cx="${x}" cy="${y}" rx="11" ry="17" fill="#B8C4C7" stroke="${K}" stroke-width="3"/><ellipse cx="${x}" cy="${y+24}" rx="9" ry="8" fill="#B8C4C7" stroke="${K}" stroke-width="3"/></g>`).join('')}`),
+ bed:W(`<path d="M74 10 A12 12 0 1 0 88 26 A9 9 0 0 1 74 10 Z" fill="#F4C34A" stroke="${K}" stroke-width="2.5"/><rect x="6" y="40" width="8" height="48" rx="3" fill="#C8956A" stroke="${K}" stroke-width="3"/><rect x="10" y="62" width="84" height="16" rx="4" fill="#C8956A" stroke="${K}" stroke-width="3"/><rect x="16" y="50" width="22" height="13" rx="6" fill="#FFFFFF" stroke="${K}" stroke-width="3"/><path d="M36 64 V54 Q36 48 44 48 H88 Q94 48 94 56 V64 Z" fill="#8CBDF2" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><line x1="88" y1="78" x2="88" y2="88" stroke="${K}" stroke-width="5" stroke-linecap="round"/>`),
+ sleep:W(`<path d="M50 14 A34 34 0 1 0 84 62 A26 26 0 0 1 50 14 Z" fill="#F4C34A" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M36 54 Q41 59 46 54 M24 50 Q29 55 34 50" stroke="${K}" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="30" cy="64" rx="5" ry="3" fill="#F6B8A0"/><text x="72" y="30" font-family="Noto Sans KR,sans-serif" font-weight="900" font-size="18" fill="#5B8FD9">Z</text><text x="86" y="16" font-family="Noto Sans KR,sans-serif" font-weight="900" font-size="13" fill="#5B8FD9">z</text>`)
+};
+const $=id=>document.getElementById(id);
+const stage=$('stage'),itemsEl=$('items'),sub=$('sub'),chip=$('chip'),tt=$('ttobak'),zoom=$('zoom');
+let cur=0,playing=false,token=0,sound=true,done=new Set(),returnToQuiz=null;
+
+// 목차
+scenes.forEach((s,i)=>{const li=document.createElement('li');li.innerHTML=`<button><span class="n">${i+1}</span>${s.title}</button>`;
+  li.querySelector('button').onclick=()=>{returnToQuiz=null;hideQuiz();go(i,true)};$('chapters').appendChild(li)});
+const prog=$('prog');scenes.forEach(()=>prog.appendChild(document.createElement('i')));
+
+function renderSide(){
+  [...$('chapters').children].forEach((li,i)=>{li.className=i===cur?'now':done.has(i)?'done':''});
+  [...prog.children].forEach((b,i)=>{b.className=i<cur||done.has(i)&&i!==cur?'done':''});
+  const L=scenes.filter((s,i)=>s.learned&&done.has(i));
+  $('learned').innerHTML=L.length?L.map(s=>`<li>${s.learned}</li>`).join(''):'<li class="empty">수업을 보면 여기에 하나씩 쌓여요.</li>';
+}
+function buildScene(i){
+  const s=scenes[i];chip.textContent=s.title;tt.dataset.pose=s.pose;
+  itemsEl.dataset.n=s.items.length;itemsEl.innerHTML=s.items.map(it=>`<div class="item"><div class="plate${it.img?' photo':''}">${it.img?`<img src="${PHOTO[it.img]}" alt="${it.l}" decoding="async">`:it.clock?CLOCK9:it.svg?ICON[it.svg]:it.e}</div><span class="lbl">${it.l}</span></div>`).join('');
+  zoom.classList.remove('go');void zoom.offsetWidth;zoom.classList.add('go');
+}
+function applyLine(i,ln){
+  const s=scenes[i];sub.innerHTML='<span class="txt">'+ln.t.replace(/<br>\s*/g,' ')+'</span>';tt.dataset.pose=ln.pose||s.pose;
+  const els=itemsEl.children;
+  (ln.show||[]).forEach(k=>els[k]&&els[k].classList.add('in'));
+  Object.entries(ln.mark||{}).forEach(([k,m])=>{const el=els[k];if(!el)return;
+    setTimeout(()=>{el.insertAdjacentHTML('beforeend',m==='x'?X_SVG:O_SVG);requestAnimationFrame(()=>el.lastChild.classList.add('show'))},500)});
+}
+function plain(h){return h.replace(/<small>.*?<\/small>/g,'').replace(/<br>/g,' ').replace(/<[^>]+>/g,'')}
+let voice=null;
+function pickVoice(){const v=speechSynthesis.getVoices();voice=v.find(x=>x.lang==='ko-KR')||v.find(x=>x.lang&&x.lang.startsWith('ko'))||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text){
+  const est=1400+plain(text).length*150;
+  return new Promise(res=>{
+    let fin=false,started=false;const end=()=>{if(!fin){fin=true;tt.classList.remove('speaking');res()}};
+    tt.classList.add('speaking');
+    // 소리가 안 나는 기기에서도 화면은 반드시 넘어가도록 시간 안전장치를 둔다
+    setTimeout(()=>{if(!started)setTimeout(end,Math.max(0,est-1500))},1500);
+    setTimeout(end,est*2);
+    if(sound&&'speechSynthesis' in window){
+      try{
+        if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+        const u=new SpeechSynthesisUtterance(plain(text));u.lang='ko-KR';if(voice)u.voice=voice;u.pitch=1.3;u.rate=.88;
+        u.onstart=()=>{started=true};u.onend=()=>setTimeout(end,400);u.onerror=()=>{started=false};
+        setTimeout(()=>{try{speechSynthesis.speak(u)}catch(e){}},60);
+      }catch(e){}
+    }
+  });
+}
+async function playFrom(i){
+  const my=++token;playing=true;setPlayUI();
+  for(let s=i;s<scenes.length;s++){
+    cur=s;buildScene(s);renderSide();
+    const bar=prog.children[s];const tot=scenes[s].lines.reduce((a,l)=>a+1200+plain(l.t).length*150,0);
+    bar.className='now';bar.style.setProperty('--d',tot+'ms');
+    for(const ln of scenes[s].lines){if(my!==token)return;applyLine(s,ln);await say(ln.t,my);if(my!==token)return}
+    done.add(s);renderSide();
+    if(returnToQuiz!==null){const q=returnToQuiz;returnToQuiz=null;playing=false;setPlayUI();showQuiz(q);return}
+  }
+  playing=false;setPlayUI();showQuiz(0);
+}
+function stop(){token++;playing=false;try{speechSynthesis.cancel()}catch(e){}tt.classList.remove('speaking');setPlayUI();
+  [...prog.children].forEach(b=>{if(b.className==='now')b.className=''});}
+function go(i,autoplay){stop();cur=Math.max(0,Math.min(scenes.length-1,i));$('start').hidden=true;
+  if(autoplay)playFrom(cur);else{buildScene(cur);applyAll(cur);renderSide()}}
+function applyAll(i){scenes[i].lines.forEach(ln=>applyLine(i,ln))}
+function setPlayUI(){$('playBtn').querySelector('span').textContent=playing?'일시정지':'재생';
+  $('playBtn').querySelector('svg').innerHTML=playing?'<rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/>':'<path d="M6 4l14 8-14 8z" fill="currentColor"/>'}
+
+// 퀴즈
+function showQuiz(n){
+  const q=quizzes[n];$('quiz').hidden=false;$('qtext').innerHTML=q.q.replace(/<br>\s*/g,' ');$('fb').textContent='';$('fb').className='feedback';
+  $('opts').innerHTML=q.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('');
+  say(q.q);
+  $('opts').querySelectorAll('.opt').forEach(b=>b.onclick=async()=>{
+    const k=+b.dataset.k;$('opts').querySelectorAll('.opt').forEach(x=>x.disabled=true);
+    if(k===q.a){$('fb').textContent=q.ok;$('fb').className='feedback ok';tt.dataset.pose='star';await say(q.ok);
+      if(n+1<quizzes.length)showQuiz(n+1);else finish()}
+    else{const m='괜찮아요. 그 장면을 한 번 더 볼게요.';$('fb').textContent=m;$('fb').className='feedback no';await say(m);
+      hideQuiz();returnToQuiz=n;go(q.back,true)}
+  });
+  setTimeout(()=>$('opts').querySelector('.opt')?.focus(),50);
+}
+function hideQuiz(){$('quiz').hidden=true}
+async function finish(){hideQuiz();tellApp({type:'stat-lesson-finished',lesson:'day-before'});buildScene(0);chip.textContent='수업 완료';tt.dataset.pose='star';
+  const m='참 잘했어요! 검진 전날 준비를 모두 배웠어요.';sub.innerHTML='<span class="txt">참 잘했어요! 검진 전날 준비를 <b class="g">모두 배웠어요</b>.</span>';await say(m)}
+
+// 버튼
+$('backBtn').onclick=()=>{if(history.length>1)history.back();else location.href='/';};
+$('bigplay').onclick=()=>{$('start').hidden=true;playFrom(0)};
+$('playBtn').onclick=()=>{if(!$('quiz').hidden)return;$('start').hidden=true;if(playing)stop();else playFrom(cur)};
+$('prevBtn').onclick=()=>{returnToQuiz=null;hideQuiz();go(cur-1,playing)};
+$('nextBtn').onclick=()=>{returnToQuiz=null;hideQuiz();go(cur+1,playing)};
+$('soundBtn').onclick=e=>{sound=!sound;try{localStorage.setItem('stat-sound',sound?'on':'off')}catch(_){}e.currentTarget.setAttribute('aria-pressed',sound);e.currentTarget.textContent=sound?'🔊 소리 켬':'🔈 소리 끔';if(!sound)try{speechSynthesis.cancel()}catch(_){}};
+$('fsBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else{await stage.requestFullscreen();
+  try{await screen.orientation.lock('landscape')}catch(_){}}}catch(_){}};
+
+// 첫 화면: 장면 2를 멈춘 상태로 보여 주기(미리보기)
+buildScene(1);applyAll(1);cur=0;renderSide();
+// ===== 앱 연결: 앱 화면(/p/[교육번호]/day-before) 안에 끼워 넣었을 때 =====
+// ?embed=1 로 열리면 앱 안이다. 앱의 소리 설정(stat-sound)을 따르고, 다 보면 앱에 알리고, 높이를 알려 준다.
+const EMBED=new URLSearchParams(location.search).has('embed');
+function tellApp(msg){try{if(EMBED&&window.parent!==window)window.parent.postMessage(msg,location.origin)}catch(_){}}
+if(EMBED){$('backBtn').hidden=true;document.documentElement.classList.add('embed');}
+try{if(localStorage.getItem('stat-sound')==='off'){sound=false;const b=$('soundBtn');b.setAttribute('aria-pressed','false');b.textContent='🔈 소리 끔';}}catch(_){}
+function sendHeight(){tellApp({type:'stat-lesson-height',lesson:'day-before',height:Math.ceil(document.documentElement.scrollHeight)})}
+window.addEventListener('load',sendHeight);window.addEventListener('resize',sendHeight);
+try{new ResizeObserver(sendHeight).observe(document.body)}catch(_){}
+setTimeout(sendHeight,300);
+</script>
+
+</body>
+</html>

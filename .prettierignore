@@ -10,3 +10,4 @@ next-env.d.ts
 
 # 사용자가 넣은 참고 자료(디자인 시안 등). 서식 검사에서 제외한다.
 docs/reference/
+public/lessons/

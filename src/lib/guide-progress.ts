@@ -6,6 +6,7 @@ import { guideCatalog, guideKinds, type GuideKind } from './guide-catalog';
 /** 환자 화면에서 그 안내를 여는 주소. 대장내시경은 또박이 수업으로 바로 간다. */
 export function guideLessonHref(code: string, kind: GuideKind) {
   if (kind === 'colonoscopy') return `/p/${code}/video`;
+  if (kind === 'checkup') return `/p/${code}/day-before`;
   if (kind === 'medication') return `/p/${code}/medication`;
   return `/p/${code}/preparing/${kind}`;
 }

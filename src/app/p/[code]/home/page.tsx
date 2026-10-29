@@ -24,6 +24,7 @@ export default function PatientHomePage({
 // 안내마다 들어갈 화면. 내용이 아직 없으면 "준비 중" 화면으로 간다.
 const guideHref = (code: string, kind: (typeof guideKinds)[number]) => {
   if (kind === 'colonoscopy') return `/p/${code}/colonoscopy`;
+  if (kind === 'checkup') return `/p/${code}/day-before`;
   if (kind === 'medication') return `/p/${code}/medication`;
   return `/p/${code}/preparing/${kind}`;
 };
