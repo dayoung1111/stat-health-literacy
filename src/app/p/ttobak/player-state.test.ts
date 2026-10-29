@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { colonoscopyScenes } from './colonoscopy-scenes';
+
+import { demoGuide, guideSteps, videoScenes } from '../../../lib/demo-guide';
 import {
   getLineDuration,
   initialPlayerState,
@@ -95,23 +96,49 @@ describe('재생 상태', () => {
   });
 });
 
-describe('대장내시경 장면 데이터', () => {
+describe('안내문·영상·티치백 데이터', () => {
+  it('영상 장면은 인사 + 안내문 화면과 같은 내용이다', () => {
+    assert.equal(videoScenes[0].id, 'greeting');
+    assert.equal(videoScenes.length, guideSteps.length + 1);
+    guideSteps.forEach((step, i) => {
+      assert.deepEqual(
+        videoScenes[i + 1].lines.map((line) => line.text),
+        step.lines,
+      );
+    });
+  });
+
   it('장면 id가 겹치지 않는다', () => {
-    const ids = colonoscopyScenes.map((scene) => scene.id);
+    const ids = videoScenes.map((scene) => scene.id);
     assert.equal(new Set(ids).size, ids.length);
   });
 
-  for (const scene of colonoscopyScenes) {
-    it(`"${scene.title}" 장면의 자막과 카드가 올바르다`, () => {
-      assert.ok(scene.lines.length > 0, '자막이 한 줄 이상 있어야 한다');
-      const cardIds = scene.cards.map((card) => card.id);
-      assert.equal(new Set(cardIds).size, cardIds.length, '카드 id가 겹친다');
-      for (const line of scene.lines) {
-        assert.ok(line.text.trim().length > 0, '빈 자막이 있다');
-        for (const id of line.highlight ?? []) {
-          assert.ok(cardIds.includes(id), `없는 카드 "${id}"를 강조한다`);
+  for (const step of guideSteps) {
+    it(`"${step.id}" 화면의 그림과 문장 번호가 맞다`, () => {
+      assert.ok(step.lines.length > 0, '문장이 한 줄 이상 있어야 한다');
+      const labels = step.pictures.map((picture) => picture.label);
+      assert.equal(new Set(labels).size, labels.length, '그림 이름이 겹친다');
+      for (const picture of step.pictures) {
+        for (const n of picture.lines ?? []) {
+          assert.ok(
+            n >= 1 && n <= step.lines.length,
+            `"${picture.label}"이 없는 문장 ${n}번을 가리킨다`,
+          );
         }
       }
     });
   }
+
+  for (const question of demoGuide.questions) {
+    it(`티치백 "${question.topic}"은 정답이 하나씩 있다`, () => {
+      const count = (choices: { correct?: boolean }[]) =>
+        choices.filter((choice) => choice.correct).length;
+      assert.equal(count(question.choices), 1);
+      assert.equal(count(question.retry.choices), 1);
+    });
+  }
+
+  it('원본 안내문에 없는 당뇨약 내용이 들어 있지 않다', () => {
+    assert.ok(!JSON.stringify(demoGuide).includes('당뇨'));
+  });
 });

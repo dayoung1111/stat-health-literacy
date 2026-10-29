@@ -1,5 +1,8 @@
-import type { TtobakAction } from './types';
+import type { TtobakAction } from '@/lib/demo-guide';
+
 import './ttobak.css';
+
+// 또박이: 접힌 종이 안내문 모양 캐릭터. 동작(action)에 따라 팔과 소품이 바뀐다.
 
 const LINE = '#334155';
 const PAPER = '#ffffff';

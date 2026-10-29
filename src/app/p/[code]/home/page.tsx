@@ -73,6 +73,15 @@ async function PatientHome({ code }: { code: string }) {
           안내문 같이 보기
         </Link>
         <Link
+          href={`/p/${code}/video`}
+          className={`${menuClass} bg-teal-100 text-teal-900`}
+        >
+          <span aria-hidden="true" className="text-4xl">
+            🎬
+          </span>
+          또박이와 영상으로 보기
+        </Link>
+        <Link
           href={`/p/${code}/check`}
           className={`${menuClass} bg-stat-sun text-stat-ink`}
         >

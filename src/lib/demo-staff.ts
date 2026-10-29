@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 
+import { demoGuide } from './demo-guide';
+
 // 시연용 임시 의료진 계정과 가짜 발급 기록. DB·로그인 단계(계획 3~5단계)에서
 // 비밀번호 해시 저장·실제 세션·DB 조회로 바꾼다. 이 쿠키는 서명이 없어 위조할 수 있다.
 const demoStaff = { id: 'nurse01', password: '1234', name: '김간호사' };
@@ -61,6 +63,11 @@ type IssuedCode = {
   confused?: string;
 };
 
+// 대장내시경 질문 이름은 환자 티치백과 같은 데이터에서 가져온다.
+const [firstDose, foods, morningFasting] = demoGuide.questions.map(
+  (q) => q.topic,
+);
+
 const issuedCodes: IssuedCode[] = [
   {
     code: '482917',
@@ -69,12 +76,12 @@ const issuedCodes: IssuedCode[] = [
     examDate: '11/5',
     setting: '60대·쉬움',
     results: [
-      { question: '약은 언제부터?', result: 'correct' },
-      { question: '피할 음식은?', result: 'retry-correct' },
-      { question: '당일 아침 당뇨약은?', result: 'wrong' },
+      { question: firstDose, result: 'correct' },
+      { question: foods, result: 'retry-correct' },
+      { question: morningFasting, result: 'wrong' },
     ],
-    relearn: '검사 당일 아침 당뇨약 중단 (2번 틀림)',
-    confused: '장정결제 복용법 (2회)',
+    relearn: `${morningFasting} (2번 틀림)`,
+    confused: '장 비우는 약 만드는 법 (2회)',
   },
   {
     code: '305566',
@@ -83,12 +90,12 @@ const issuedCodes: IssuedCode[] = [
     examDate: '11/5',
     setting: '베트남어',
     results: [
-      { question: '약은 언제부터?', result: 'wrong' },
-      { question: '피할 음식은?', result: 'correct' },
-      { question: '당일 아침 당뇨약은?', result: 'wrong' },
+      { question: firstDose, result: 'wrong' },
+      { question: foods, result: 'correct' },
+      { question: morningFasting, result: 'wrong' },
     ],
-    relearn: '장 비우는 약 시작 시간, 당일 아침 당뇨약 중단',
-    confused: '먹는 약 (1회)',
+    relearn: `${firstDose}, ${morningFasting}`,
+    confused: '대변 검사 (1회)',
   },
   {
     code: '771204',
