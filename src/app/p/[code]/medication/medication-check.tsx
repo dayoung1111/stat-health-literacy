@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, useState, useTransition } from 'react';
 
 import type { GuideKind } from '@/lib/guide-catalog';
-import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
+import { guideFinish } from '@/lib/guide-progress';
 import {
   medications,
   verdictLabels,
@@ -82,9 +82,12 @@ export function MedicationFlow({
   const [saving, startSaving] = useTransition();
   // 환자가 고른 언어(없으면 의료진이 고른 언어). 안내 사이 이동 문구에 쓴다.
   const { language: shown, t } = useLanguageOr(language);
-  // 이 안내를 마치면 아직 안 마친 다른 안내가 다음에 볼 곳이다.
-  const nextKind = nextGuide(guides, [...completed, thisGuide], thisGuide);
-  const nextHref = nextKind ? guideLessonHref(code, nextKind) : null;
+  // 이 안내를 마치면 아직 안 마친 다른 안내가 다음에 볼 곳이다(모든 안내가 같은 guideFinish로 정한다).
+  const {
+    next: nextKind,
+    nextHref,
+    message: finishMessage,
+  } = guideFinish(t, code, thisGuide, guides, completed);
 
   // Next.js는 다녀간 화면을 숨겨 두고 상태를 되살린다. 숨겨질 때 처음 상태로 돌려 두어
   // 💊를 다시 누르면 언제나 정리 화면(아직 안 골랐으면 고르기)부터 새로 시작한다.
@@ -225,15 +228,7 @@ export function MedicationFlow({
     return (
       <section aria-labelledby="summary-title">
         {phase.finished ? (
-          <Ttobagi
-            pose="cheer"
-            language={shown}
-            message={
-              nextKind
-                ? t.guideDoneNext(t.guides[thisGuide], t.guides[nextKind])
-                : t.allDone
-            }
-          />
+          <Ttobagi pose="cheer" language={shown} message={finishMessage} />
         ) : (
           phase.cheer && (
             <TranslatedTtobagi

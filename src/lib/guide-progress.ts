@@ -1,4 +1,5 @@
 import { guideCatalog, guideKinds, type GuideKind } from './guide-catalog';
+import type { Messages } from './messages';
 
 // 의료진이 묶어 보낸 안내 사이의 이동. 순서는 정해 두지 않고,
 // 하나를 마치면 아직 안 마친 안내(내용이 준비된 것만)로 간다.
@@ -30,4 +31,26 @@ export function nextGuide(
       (kind) => kind !== current && !completed.includes(kind),
     ) ?? null
   );
+}
+
+/**
+ * 안내 하나를 마쳤을 때 보여 줄 것: 다음 안내·그 주소·또박이 말.
+ * 대장내시경 수업·검진 전날 수업·위내시경 수업이 모두 이 함수로 정한다.
+ * 서버 저장 결과를 기다리지 않고 화면이 받은 목록(guides·completed)으로 바로 정한다.
+ */
+export function guideFinish(
+  t: Messages,
+  code: string,
+  current: GuideKind,
+  guides: readonly GuideKind[],
+  completed: readonly GuideKind[],
+) {
+  const next = nextGuide(guides, completed, current);
+  return {
+    next,
+    nextHref: next ? guideLessonHref(code, next) : null,
+    message: next
+      ? t.guideDoneNext(t.guides[current], t.guides[next])
+      : t.allDone,
+  };
 }

@@ -25,7 +25,7 @@ import {
   type LessonState,
 } from './lesson-state';
 import type { GuideKind } from '@/lib/guide-catalog';
-import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
+import { guideFinish, guideLessonHref } from '@/lib/guide-progress';
 
 import { screenTexts } from '@/lib/screen-texts';
 
@@ -104,12 +104,12 @@ export function PhotoLesson({
   // 환자가 고른 언어(없으면 의료진이 고른 언어). 안내 사이 이동 문구에 쓴다.
   const { t } = useLanguageOr(language);
   const [completed, setCompleted] = useState(initialCompleted);
-  // 아직 안 마친 다른 안내. 순서는 정하지 않고 남은 것으로 간다.
-  const next = nextGuide(guides, completed, thisGuide);
-  const nextHref = next ? guideLessonHref(code, next) : null;
-  const finish = next
-    ? t.guideDoneNext(t.guides[thisGuide], t.guides[next])
-    : t.allDone;
+  // 아직 안 마친 다른 안내와 끝 인사. 모든 안내가 같은 guideFinish로 정한다.
+  const {
+    next,
+    nextHref,
+    message: finish,
+  } = guideFinish(t, code, thisGuide, guides, completed);
   const [state, dispatch] = useReducer(
     (current: LessonState, action: LessonAction) =>
       reduceLesson(lessons, current, action),

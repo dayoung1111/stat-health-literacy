@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { guideLessonHref } from '@/lib/guide-progress';
 import type { GuideKind } from '@/lib/guide-catalog';
 
-import { useLanguageOr } from '../../../language-provider';
+import { GuideFinish } from '../../guide-finish';
 import { completeGuide } from '../../records';
-import { ButtonLink } from '../../ui';
 
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/day-before.html)은 ?embed=1로 열면
 // 자체 "뒤로" 버튼을 숨기고, 앱의 소리 설정(stat-sound)을 따르고, 아래 두 가지를 알려 준다.
 // - stat-lesson-height: 수업 화면 높이가 바뀜 → 액자 높이를 맞춘다.
 // - stat-lesson-finished: 퀴즈까지 끝남 → "다 봤어요"를 기록하고 다음 안내 버튼을 보여 준다.
+//   다음 안내는 대장내시경 수업처럼 화면이 받은 목록으로 바로 정한다(GuideFinish). 서버 저장은 뒤에서 한다.
 type LessonMessage =
   | { type: 'stat-lesson-height'; lesson: 'day-before'; height: number }
   | { type: 'stat-lesson-finished'; lesson: 'day-before' };
@@ -36,16 +35,20 @@ const firstHeight = 720;
 export function DayBeforeFrame({
   code,
   language,
+  guides,
+  completed,
 }: {
   code: string;
   /** 의료진이 발급 때 고른 언어. 환자가 고른 언어가 있으면 그것을 쓴다. */
   language: string;
+  /** 발급된 안내 중 끝까지 볼 수 있는 것 */
+  guides: GuideKind[];
+  /** 이 화면을 열 때 이미 마친 안내 */
+  completed: GuideKind[];
 }) {
-  const { t } = useLanguageOr(language);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(firstHeight);
-  // 다 봤어요를 기록한 뒤 돌려받은 다음 안내. undefined: 아직 안 끝남, null: 남은 안내 없음
-  const [next, setNext] = useState<GuideKind | null | undefined>(undefined);
+  const [finished, setFinished] = useState(false);
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -62,10 +65,8 @@ export function DayBeforeFrame({
       // 다시 보고 또 끝내도 기록은 한 번만 남긴다.
       if (recorded.current) return;
       recorded.current = true;
-      // 기록하지 못했으면(확인되지 않은 환자 등) 홈으로 가는 버튼만 보여 준다.
-      void completeGuide(code, 'checkup').then((result) =>
-        setNext(result.ok ? result.next : null),
-      );
+      setFinished(true);
+      void completeGuide(code, 'checkup');
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -82,21 +83,14 @@ export function DayBeforeFrame({
         style={{ height }}
         className="block w-full border-0"
       />
-      {next !== undefined && (
-        <div role="status" className="mt-6 flex flex-col gap-3">
-          <p className="text-2xl font-bold break-keep">
-            {next
-              ? t.guideDoneNext(t.guides.checkup, t.guides[next])
-              : t.allDone}
-          </p>
-          {next ? (
-            <ButtonLink href={guideLessonHref(code, next)}>
-              {t.nextButton(t.guides[next])}
-            </ButtonLink>
-          ) : (
-            <ButtonLink href={`/p/${code}/home`}>🏠 홈으로</ButtonLink>
-          )}
-        </div>
+      {finished && (
+        <GuideFinish
+          code={code}
+          guide="checkup"
+          guides={guides}
+          completed={completed}
+          language={language}
+        />
       )}
     </>
   );
