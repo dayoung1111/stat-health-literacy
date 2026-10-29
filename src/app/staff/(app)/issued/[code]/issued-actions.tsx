@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { staffButton } from '../../../ui';
 
-export function IssuedActions({ code, link }: { code: string; link: string }) {
+export function IssuedActions({ link }: { link: string }) {
   const [copied, setCopied] = useState<'done' | 'failed' | null>(null);
 
   async function copyLink() {
@@ -38,7 +38,7 @@ export function IssuedActions({ code, link }: { code: string; link: string }) {
       <p role="status" className="min-h-6 text-center text-base">
         {copied === 'done' && '링크를 복사했어요. 문자에 붙여 넣으세요.'}
         {copied === 'failed' &&
-          `복사하지 못했어요. 주소를 직접 알려 주세요: /p/${code}`}
+          `복사하지 못했어요. 주소를 직접 알려 주세요: ${link}`}
       </p>
       <Link href="/staff/new" className={staffButton.primary}>
         + 다음 환자

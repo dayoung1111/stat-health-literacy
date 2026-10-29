@@ -48,6 +48,9 @@ export const ko = {
     checking: '확인 중…',
     callHelp: '📞 잘 안 되면 병원에 전화',
     typeCode: '교육 번호를 직접 넣을게요',
+    badCode: '코드를 다시 확인해 주세요',
+    badCodeHint:
+      '받은 링크나 QR을 다시 열어 주세요.\n그래도 안 되면 병원에 전화해 주세요.',
     sixDigits: '숫자 6자리를 넣어 주세요',
     locked: '5번 틀려서 잠겼어요. 병원에 전화해서 새 번호를 받아 주세요.',
     wrong: (remaining?: number) =>

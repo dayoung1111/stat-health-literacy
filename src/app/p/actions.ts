@@ -3,13 +3,18 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { isCodeShape } from '@/lib/code-token';
 import { startDemoSession } from '@/lib/demo-patient';
 import { checkPatientEntry } from '@/lib/education-store';
 
 // 오류는 글이 아니라 종류만 돌려주고, 화면이 고른 언어로 보여 준다(src/lib/messages/ entry).
 const sixDigits = z.string().regex(/^\d{6}$/);
 
-const entrySchema = z.object({ code: sixDigits, birthDate: sixDigits });
+// 코드는 직접 넣는 6자리 번호 또는 링크로 온 코드(DEMO·토큰)
+const entrySchema = z.object({
+  code: z.string().refine(isCodeShape),
+  birthDate: sixDigits,
+});
 
 export type EntryError =
   { kind: 'locked' } | { kind: 'wrong'; remaining?: number };

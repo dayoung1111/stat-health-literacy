@@ -34,6 +34,9 @@ export const zh: Messages = {
     checking: '正在确认…',
     callHelp: '📞 有困难请致电医院',
     typeCode: '我自己输入教育号码',
+    badCode: '请再确认一下代码',
+    badCodeHint:
+      '请重新打开收到的链接或二维码。\n如果还是不行，请给医院打电话。',
     sixDigits: '请输入6位数字',
     locked: '已输错5次，已被锁定。请致电医院获取新号码。',
     wrong: (remaining) =>

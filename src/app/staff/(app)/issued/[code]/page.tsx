@@ -1,5 +1,4 @@
 import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 
 import { requireStaff } from '@/lib/demo-staff';
@@ -37,7 +36,22 @@ async function patientLink(code: string) {
 async function Issued({ code }: { code: string }) {
   const staff = await requireStaff();
   const issued = await findCodeForStaff(staff.id, code);
-  if (!issued) notFound();
+  // 위조·변조·만료된 링크이거나 다른 간호사가 발급한 코드
+  if (!issued) {
+    return (
+      <div className="mx-auto max-w-xl">
+        <StaffBack fallback="/staff/new" />
+        <Panel title="코드를 다시 확인해 주세요">
+          <p role="alert" className="text-lg text-zinc-700">
+            이 발급 링크를 읽지 못했어요. 주소가 바뀌었거나 7일이 지났을 수
+            있어요. 필요하면 새로 발급해 주세요.
+          </p>
+        </Panel>
+      </div>
+    );
+  }
+  // 예전 6자리 번호는 크게 보여 주고, 링크용 코드(토큰)는 길어서 QR·링크로만 보낸다.
+  const shortCode = code.length <= 6;
 
   const link = await patientLink(code);
   const qr = await QRCode.toDataURL(link, { margin: 1, width: 320 });
@@ -57,9 +71,15 @@ async function Issued({ code }: { code: string }) {
           <p className="text-base font-semibold text-zinc-600">
             환자 교육 코드
           </p>
-          <p className="mt-2 font-mono text-6xl font-bold tracking-[0.2em] text-blue-700">
-            {code}
-          </p>
+          {shortCode ? (
+            <p className="mt-2 font-mono text-6xl font-bold tracking-[0.2em] text-blue-700">
+              {code}
+            </p>
+          ) : (
+            <p className="mt-2 text-xl font-bold text-blue-700">
+              아래 QR이나 링크로 보내 주세요
+            </p>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element -- 서버에서 만든 QR 그림(data URL) */}
           <img
             src={qr}
@@ -83,7 +103,7 @@ async function Issued({ code }: { code: string }) {
             <dd>{settingLabel(issued)}</dd>
           </div>
         </dl>
-        <IssuedActions code={code} link={link} />
+        <IssuedActions link={link} />
       </Panel>
     </div>
   );

@@ -1,19 +1,29 @@
 import 'server-only';
 
-import { randomInt } from 'node:crypto';
-
 import { connection } from 'next/server';
 
 import { isOwnedBy } from './code-access';
+import {
+  birthCheckFor,
+  createCodeToken,
+  DEMO_CODE,
+  looksLikeCodeToken,
+  matchesBirthDate,
+  readCodeToken,
+} from './code-token';
 import { demoGuide } from './demo-guide';
+import { getCodeTokenSecret } from './env';
 import type { GuideKind } from './guide-catalog';
+import { createLoginThrottle } from './login-throttle';
 import type { MedicationId } from './medication-guide';
-import { hashSecret, matchesSecret } from './password';
+import { matchesSecret } from './password';
 
 // 교육 코드와 환자 기록의 "시연용 임시 저장소"(앱 서버 메모리).
 // prisma/schema.prisma의 EducationCode·MedicationCheck·TeachbackResult·ConfusionMark와 같은 모양이다.
 // DB를 연결할 때는 이 파일의 함수 안쪽만 Prisma 조회로 바꾼다. 화면·서버 처리 코드는 그대로 둔다.
 // 주의: 앱을 다시 켜면 지워지고(시연 데이터만 다시 생김), Vercel처럼 서버가 여러 대면 서로 공유되지 않는다.
+// 그래서 새로 발급하는 코드와 /p/DEMO는 여기에 저장하지 않는다. 발급 내용은 암호화·서명한 토큰(code-token.ts)으로
+// 링크·QR에 담고, 읽을 때마다 토큰을 풀어 같은 모양의 행을 만든다. 그 코드의 결과 기록(약·티치백 등)은 남지 않는다.
 // 환자 이름·등록번호·전화번호는 받지도 저장하지도 않는다.
 
 export type TeachbackOutcome = 'correct' | 'retry_correct' | 'wrong';
@@ -59,9 +69,7 @@ export type EducationCode = {
 
 export const MAX_ATTEMPTS = 5;
 
-// 시연용으로 늘 남겨 두는 코드. 랜덤 발급에서는 이 번호가 나오지 않는다.
-// 000000(생년월일 111111)은 시연이 꼬였을 때 쓰는 예비 코드다.
-const RESERVED_CODES = new Set(['000000', '482917']);
+// 000000(생년월일 111111)은 시연이 꼬였을 때 쓰는 예비 코드다(아래 seedDemoCodes, 서버 메모리).
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
 // 시연용 코드의 생년월일은 해시로만 둔다(원래 값은 README의 시연 안내에 있다).
@@ -100,13 +108,8 @@ async function removeExpired() {
   }
 }
 
-function newCode() {
-  for (;;) {
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    if (!codes().has(code) && !RESERVED_CODES.has(code)) return code;
-  }
-}
-
+// 발급: 서버에 저장하지 않고, 발급 내용을 암호화·서명한 토큰을 코드로 쓴다(링크·QR에 그대로 담김).
+// 그래서 서버가 여러 대이거나 다시 켜져도 발급 화면·환자 화면이 열린다.
 export async function createEducationCode(input: {
   staffId: string;
   guides: GuideKind[];
@@ -118,31 +121,98 @@ export async function createEducationCode(input: {
   bloodThinnerStopDate: string | null;
   birthDate: string;
 }) {
-  await removeExpired();
   const now = new Date();
   const { birthDate, ...rest } = input;
-  const row: EducationCode = {
-    ...rest,
-    code: newCode(),
-    birthDateHash: hashSecret(birthDate),
+  const code = createCodeToken(
+    getCodeTokenSecret(),
+    {
+      ...rest,
+      createdAt: now,
+      expiresAt: new Date(now.getTime() + SEVEN_DAYS),
+    },
+    birthDate,
+  );
+  const row = await findActiveCode(code);
+  if (!row) throw new Error('방금 만든 교육 코드를 읽지 못했어요.');
+  return row;
+}
+
+// 토큰·고정 시연 코드는 저장된 행이 없으므로, 읽을 때마다 같은 모양의 행을 만들어 돌려준다.
+// 생년월일 확인값은 앞에 token:을 붙여 예전 해시와 구분한다. 결과 기록(약·티치백 등)은 남지 않는다.
+const tokenHashPrefix = 'token:';
+
+function rowFromToken(
+  code: string,
+  data: Omit<
+    EducationCode,
+    | 'code'
+    | 'birthDateHash'
+    | 'failedAttempts'
+    | 'lockedAt'
+    | 'medicationCheck'
+    | 'teachbackResults'
+    | 'confusionMarks'
+    | 'guideCompletions'
+  >,
+  birthCheck: string,
+): EducationCode {
+  return {
+    ...data,
+    code,
+    birthDateHash: tokenHashPrefix + birthCheck,
     failedAttempts: 0,
     lockedAt: null,
-    expiresAt: new Date(now.getTime() + SEVEN_DAYS),
-    createdAt: now,
     medicationCheck: null,
     teachbackResults: [],
     confusionMarks: [],
     guideCompletions: [],
   };
-  codes().set(row.code, row);
-  return row;
 }
 
-/** 만료되지 않은 코드. 없으면 null. */
+// /p/DEMO: 4개 안내(기본 검진 → 위내시경 → 대장내시경 → 복용약), 생년월일 800101,
+// 검사일은 들어온 날(한국 날짜) + 2일. 소스코드 고정값이라 서버 저장이 필요 없다.
+function demoRow(): EducationCode {
+  const secret = getCodeTokenSecret();
+  const todayKst = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+  }).format(new Date());
+  const exam = new Date(`${todayKst}T00:00:00Z`);
+  exam.setUTCDate(exam.getUTCDate() + 2);
+  const now = new Date();
+  return rowFromToken(
+    DEMO_CODE,
+    {
+      staffId: 'demo',
+      guides: ['checkup', 'gastroscopy', 'colonoscopy', 'medication'],
+      ageGroup: '60',
+      level: 'easy',
+      language: 'ko',
+      extras: [],
+      examDate: exam.toISOString().slice(0, 10),
+      bloodThinnerStopDate: null,
+      createdAt: now,
+      expiresAt: new Date(now.getTime() + SEVEN_DAYS),
+    },
+    birthCheckFor(secret, '800101'),
+  );
+}
+
+/** 만료되지 않은 코드. 없으면(위조·변조·만료 토큰 포함) null. */
 export async function findActiveCode(code: string) {
   await removeExpired();
+  if (code === DEMO_CODE) return demoRow();
+  if (looksLikeCodeToken(code)) {
+    const data = readCodeToken(getCodeTokenSecret(), code);
+    if (!data) return null;
+    const { birthCheck, ...rest } = data;
+    return rowFromToken(code, rest, birthCheck);
+  }
   return codes().get(code) ?? null;
 }
+
+// 토큰·시연 코드의 생년월일 실패 잠금. 저장소가 없어 서버 한 대 안에서만 세는 보조 장치다
+// (서버가 바뀌면 처음부터 센다). 화면 표시는 이것에 기대지 않는다.
+const tokenEntryThrottle = createLoginThrottle({ max: MAX_ATTEMPTS });
 
 export type EntryResult =
   | { ok: true }
@@ -156,6 +226,20 @@ export async function checkPatientEntry(
 ): Promise<EntryResult> {
   const row = await findActiveCode(code);
   if (!row) return { ok: false, reason: 'not-found' };
+  if (row.birthDateHash.startsWith(tokenHashPrefix)) {
+    const key = code.slice(0, 64);
+    if (tokenEntryThrottle.isLocked(key))
+      return { ok: false, reason: 'locked' };
+    const check = row.birthDateHash.slice(tokenHashPrefix.length);
+    if (matchesBirthDate(getCodeTokenSecret(), birthDate, check)) {
+      tokenEntryThrottle.reset(key);
+      return { ok: true };
+    }
+    const { locked, remaining } = tokenEntryThrottle.recordFailure(key);
+    return locked
+      ? { ok: false, reason: 'locked' }
+      : { ok: false, reason: 'wrong', remaining };
+  }
   if (row.lockedAt) return { ok: false, reason: 'locked' };
   if (matchesSecret(birthDate, row.birthDateHash)) {
     row.failedAttempts = 0;

@@ -34,6 +34,9 @@ export const en: Messages = {
     checking: 'Checking…',
     callHelp: '📞 Having trouble? Call the hospital',
     typeCode: 'I will type the education number',
+    badCode: 'Please check your code again',
+    badCodeHint:
+      'Please open the link or QR code you received again.\nIf it still does not work, please call the hospital.',
     sixDigits: 'Please enter 6 digits',
     locked:
       'Locked after 5 wrong tries. Please call the hospital for a new number.',

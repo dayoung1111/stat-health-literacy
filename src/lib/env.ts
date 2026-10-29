@@ -54,6 +54,30 @@ export function getSessionSecret() {
   return devSecret.statDevSessionSecret;
 }
 
+// 교육 코드 토큰(링크·QR에 담는 발급 내용) 암호화·서명용 비밀값. 서버에서만 읽는다.
+// 없으면 개발용 기본값을 쓰고 경고를 남긴다. 기본값은 소스에 공개돼 있어 누구나 토큰을 만들 수 있으므로,
+// 배포(Vercel)에서는 꼭 32글자 이상의 무작위 값을 환경 변수로 넣어야 한다.
+// 값을 바꾸면 그 전에 발급한 링크·QR은 모두 "코드를 다시 확인해 주세요"가 된다.
+const devCodeTokenSecret =
+  'stat-dev-only-code-token-secret-do-not-use-in-production';
+const codeTokenWarned = globalThis as unknown as {
+  statCodeTokenWarned?: boolean;
+};
+
+export function getCodeTokenSecret() {
+  const raw = process.env.CODE_TOKEN_SECRET?.trim();
+  if (raw && raw.length >= 32) return raw;
+  if (!codeTokenWarned.statCodeTokenWarned) {
+    codeTokenWarned.statCodeTokenWarned = true;
+    console.warn(
+      raw
+        ? '[경고] CODE_TOKEN_SECRET이 32글자보다 짧아 개발용 기본값을 씁니다. 32글자 이상의 무작위 값으로 바꿔 주세요.'
+        : '[경고] CODE_TOKEN_SECRET이 없어 개발용 기본값으로 교육 코드 링크를 만듭니다. 배포 환경에서는 꼭 Vercel 환경 변수에 넣어 주세요.',
+    );
+  }
+  return devCodeTokenSecret;
+}
+
 // AI 번역용 Anthropic API 키(선택). 서버에서만 읽고 NEXT_PUBLIC_을 붙이지 않는다.
 // 없으면 null을 돌려주고, 이때 화면은 번역하지 않고 한국어로 보여 준다(앱은 정상 작동).
 export function getTranslationEnv() {
