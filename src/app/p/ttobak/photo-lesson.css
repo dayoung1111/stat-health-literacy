@@ -916,7 +916,22 @@
   line-height: 1.2;
   text-align: center;
   white-space: pre-line;
+}
+/* 단어 중간에서 자르지 않는다. 글자가 길면 fit-text.tsx가 글자 크기를 줄인다. */
+.ld-name:lang(ko) {
   word-break: keep-all;
+}
+.fit-text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ld-name-cell {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
 }
 .ld-name.teal {
   color: #0f6670;
@@ -981,17 +996,12 @@
   height: 100%;
   flex: none;
 }
+.ld-food .ld-name-cell {
+  padding: 0 0.8cqw;
+}
 .ld-food .ld-name {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0 0.4cqw;
   font-size: 2.5cqw;
   line-height: 1.15;
-  /* 일본어·중국어·베트남어처럼 띄어쓰기 없는 긴 이름도 잘리지 않고 줄을 바꾼다. */
-  overflow-wrap: anywhere;
 }
 .ld-food.is-now {
   outline: 0.45cqw solid #15262b;
@@ -1031,8 +1041,10 @@
 .ld-column .ld-photo {
   width: 100%;
 }
-.ld-column .ld-name {
+.ld-column .ld-name-cell {
   padding: 0.7cqw 0.5cqw;
+}
+.ld-column .ld-name {
   font-size: 2.8cqw;
 }
 .ld-row.three .ld-column {
@@ -1042,6 +1054,7 @@
 /* 4교시: ① 대변 받기 → ② 약 먹기, 아래 노란 띠 */
 .ld-stool {
   display: flex;
+  max-width: 100%;
   flex-direction: column;
   align-items: center;
   gap: 1.6cqw;
@@ -1087,13 +1100,19 @@
 .ld-stool-card.first .ld-stool-no {
   background: #2e9e6b;
 }
+.ld-stool-card .ld-name-cell {
+  width: 100%;
+  flex: none;
+  padding: 0 1cqw;
+  box-sizing: border-box;
+}
 .ld-stool-card .ld-name {
   font-size: 3cqw;
 }
 .ld-art {
   display: flex;
-  width: 12cqw;
-  height: 12cqw;
+  width: 11cqw;
+  height: 11cqw;
 }
 .ld-art > svg {
   width: 100%;
@@ -1105,7 +1124,10 @@
   height: 4.7cqw;
 }
 .ld-band {
+  max-width: 100%;
+  box-sizing: border-box;
   margin: 0;
+  text-align: center;
   padding: 0.8cqw 2.4cqw;
   border: 0.3cqw solid #f5c33b;
   border-radius: 999px;
@@ -1242,7 +1264,7 @@
 }
 .ld-box-art {
   display: flex;
-  height: 17cqw;
+  height: 15cqw;
   align-items: center;
   justify-content: center;
 }
@@ -1253,13 +1275,13 @@
 }
 .ld-box-text {
   display: flex;
+  width: 100%;
   flex-direction: column;
   align-items: center;
   gap: 0.3cqw;
 }
 .ld-box .ld-name {
   font-size: 2.9cqw;
-  white-space: nowrap;
 }
 .ld-box .ld-name.teal {
   font-size: 2.5cqw;
@@ -1279,8 +1301,10 @@
 .ld-row.five .ld-column {
   width: 11.8cqw;
 }
-.ld-row.five .ld-name {
+.ld-row.five .ld-name-cell {
   padding: 0.5cqw 0.3cqw;
+}
+.ld-row.five .ld-name {
   font-size: 2.6cqw;
 }
 .ld-okbox {

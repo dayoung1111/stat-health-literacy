@@ -320,7 +320,7 @@ export function PhotoLesson({
   const parts = splitKeys(lineText, lineKeys);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div ref={shellRef} className={immersive ? 'pl-immersive' : ''}>
         <div className={immersive ? 'pl-rotor' : 'flex flex-col gap-3.5'}>
           {immersive && (
@@ -424,7 +424,7 @@ export function PhotoLesson({
             )}
           </section>
 
-          <div className="pl-fit flex w-full items-center gap-3.5">
+          <div className="pl-fit flex w-full flex-wrap items-center gap-3.5">
             <button
               type="button"
               onClick={() => move('prev')}
@@ -465,7 +465,7 @@ export function PhotoLesson({
               aria-valuemin={1}
               aria-valuemax={total}
               aria-valuenow={here + 1}
-              className="flex flex-1 gap-1.5"
+              className="flex min-w-48 flex-1 gap-1.5"
             >
               {Array.from({ length: total }, (_, index) => (
                 <span

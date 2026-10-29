@@ -7,6 +7,7 @@ import { screenTexts } from '@/lib/screen-texts';
 import { FittedSvgText, T, useTranslatedTexts } from '../../translated';
 import { Drawing } from '../pictures';
 import { getPhoto, type Lesson, type LessonStep } from './photo-lesson';
+import { FitText } from './fit-text';
 import { Bottle, Cup, Pouch, PrepScene, WaterBottle } from './prep-scene';
 
 // 또박이 선생님 수업 1~7교시 화면 모양(밝은 베이지 바탕 + 맨 위 제목 카드 + 가운데 그림).
@@ -439,13 +440,15 @@ function FoodGrid({ cards, stepId }: { cards: PhotoCard[]; stepId: string }) {
           <FramedPhoto
             src={card.src}
             alt={card.alt}
-            boxAspect={1.7}
+            boxAspect={1.2}
             tone={card.tone}
             delay={0.5 + index * 0.3}
             cover
           />
-          <span className="ld-name">
-            <T>{card.name}</T>
+          <span className="ld-name-cell">
+            <FitText className="ld-name" maxLines={3}>
+              {card.name}
+            </FitText>
           </span>
         </li>
       ))}
@@ -477,8 +480,8 @@ function PhotoRow({
             tone={card.tone}
             delay={0.5 + index * 0.25}
           />
-          <span className="ld-name">
-            <T>{card.name}</T>
+          <span className="ld-name-cell">
+            <FitText className="ld-name">{card.name}</FitText>
           </span>
         </li>
       ))}
@@ -520,15 +523,15 @@ function StoolFlow({ cardIndex }: { cardIndex: number }) {
               <span role="img" aria-label={item.alt} className="ld-art">
                 <Drawing visual={{ kind: item.art }} />
               </span>
-              <span className="ld-name">
-                <T>{item.label}</T>
+              <span className="ld-name-cell">
+                <FitText className="ld-name">{item.label}</FitText>
               </span>
             </div>
           </Fragment>
         ))}
       </div>
       <p className={`ld-band ${cardIndex === 1 ? 'is-now' : ''}`}>
-        <T>{screenTexts.design.stoolBand}</T>
+        <FitText>{screenTexts.design.stoolBand}</FitText>
       </p>
     </div>
   );
@@ -737,12 +740,10 @@ function SecondDose({ stepId }: { stepId: string }) {
       ),
       lines: (
         <>
-          <span className="ld-name">
-            <T>{screenTexts.design.sameWay}</T>
-          </span>
-          <span className="ld-name teal">
-            <T>{screenTexts.design.fourTimes}</T>
-          </span>
+          <FitText className="ld-name">{screenTexts.design.sameWay}</FitText>
+          <FitText className="ld-name teal">
+            {screenTexts.design.fourTimes}
+          </FitText>
         </>
       ),
     },
@@ -750,9 +751,7 @@ function SecondDose({ stepId }: { stepId: string }) {
       // 검수 필요: 가소콜액 복용 방법 (그림은 "1포"만 보여 준다)
       art: <GasocolPack />,
       lines: (
-        <span className="ld-name">
-          <T>{screenTexts.design.gasocolPack}</T>
-        </span>
+        <FitText className="ld-name">{screenTexts.design.gasocolPack}</FitText>
       ),
     },
     {
@@ -766,9 +765,7 @@ function SecondDose({ stepId }: { stepId: string }) {
         </svg>
       ),
       lines: (
-        <span className="ld-name">
-          <T>{screenTexts.design.water500}</T>
-        </span>
+        <FitText className="ld-name">{screenTexts.design.water500}</FitText>
       ),
     },
   ];
