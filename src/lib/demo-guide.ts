@@ -50,6 +50,10 @@ export type Question = {
 
 const emoji = (e: string): Visual => ({ kind: 'emoji', emoji: e });
 
+// 팀 확정(2026-10-29) 혈압약 예외. 앱 전체에서 이 문장 하나만 쓴다.
+export const BLOOD_PRESSURE_EXCEPTION =
+  '혈압약은 검사 날 새벽 6시까지 물 조금과 함께 드셔도 돼요.';
+
 export const demoGuide = {
   examName: '대장내시경',
   sections: [
@@ -104,56 +108,37 @@ export const demoGuide = {
       title: '전날 저녁',
       paragraphs: [
         {
-          id: 'evening-porridge',
+          id: 'evening',
           action: 'alarm',
+          // 팀 확정(2026-10-29): 전날 저녁 7시 전에 흰죽, 그 뒤로는 음식 금지(맑은 물은 괜찮음).
           pictures: [
             {
               visual: { kind: 'clock', hour: 7 },
               label: '저녁 7시 전',
               lines: [1],
             },
-            { visual: emoji('🥣'), label: '흰죽만', lines: [2] },
-            { visual: emoji('🥢'), label: '반찬', no: true, lines: [2] },
-          ],
-          lines: [
-            '검사 전날 저녁은 7시 전에 드세요.',
-            '반찬 없이 흰죽만 드세요.',
-          ],
-          easier: [
-            { visual: { kind: 'clock', hour: 7 }, label: '저녁은 7시 전에' },
-            { visual: emoji('🥣'), label: '흰죽만 드세요' },
-            { visual: emoji('🥢'), label: '반찬은 안 돼요', no: true },
-          ],
-        },
-        {
-          id: 'evening-fasting',
-          action: 'stop',
-          pictures: [
+            { visual: emoji('🥣'), label: '흰죽만', lines: [1] },
             {
-              visual: { kind: 'clock', hour: 12 },
-              label: '밤 12시부터',
-              lines: [1],
-            },
-            { visual: emoji('🍚'), label: '음식', no: true, lines: [1] },
-            {
-              visual: emoji('💊'),
-              label: '약과 물은 안내 시간대로',
+              visual: emoji('🍚'),
+              label: '그 뒤로 음식',
+              no: true,
               lines: [2],
             },
+            { visual: emoji('💧'), label: '맑은 물은 괜찮아요', lines: [3] },
           ],
-          // 새벽 약과 헷갈리지 않도록 음식과 약·물을 나눠 말한다.
           lines: [
-            '음식은 밤 12시부터 드시지 마세요.',
-            '약과 물은 안내한 시간대로 드세요.',
+            '검사 전날 저녁은 7시 전에 반찬 없이 흰죽만 드세요.',
+            '그 뒤로는 음식을 드시지 마세요.',
+            '맑은 물은 괜찮아요.',
           ],
           term: '금식',
           easier: [
             {
-              visual: { kind: 'clock', hour: 12 },
-              label: '밤 12시부터 음식은 그만',
-              no: true,
+              visual: { kind: 'clock', hour: 7 },
+              label: '저녁 7시 전에 흰죽만',
             },
-            { visual: emoji('💊'), label: '약과 물은 안내 시간대로 드세요' },
+            { visual: emoji('🍚'), label: '그 뒤로는 음식 안 돼요', no: true },
+            { visual: emoji('💧'), label: '맑은 물은 괜찮아요' },
           ],
         },
       ],
@@ -228,11 +213,13 @@ export const demoGuide = {
               label: '15분마다 4번',
               lines: [2],
             },
+            // 검수 필요: 생수 500mL
             { visual: emoji('💧'), label: '생수 500mL', lines: [3] },
           ],
           lines: [
             '첫 번째 약은 전날 밤 9시~10시에 드세요.',
             '15분마다 4번에 나눠서, 1시간 동안 드세요.',
+            // 검수 필요: 생수 500mL
             '생수 500mL도 드세요.',
           ],
           easier: [
@@ -241,6 +228,7 @@ export const demoGuide = {
               visual: { kind: 'cups', count: 4 },
               label: '15분마다 1번, 모두 4번',
             },
+            // 검수 필요: 생수 500mL
             { visual: emoji('💧'), label: '생수 500mL 더' },
           ],
         },
@@ -258,6 +246,7 @@ export const demoGuide = {
               label: '첫 번째와 같은 방법',
               lines: [2],
             },
+            // 검수 필요: 가소콜액 1포, 생수 500mL
             { visual: emoji('🧴'), label: '가소콜액 1포', lines: [3] },
             { visual: emoji('💧'), label: '생수 500mL', lines: [4] },
           ],
@@ -265,14 +254,16 @@ export const demoGuide = {
           lines: [
             '두 번째 약은 검사 당일 새벽 5시에 드세요.',
             '첫 번째 약과 같은 방법으로 드세요.',
+            // 검수 필요: 가소콜액 1포, 생수 500mL
             '가소콜액 1포도 함께 드세요.',
             '생수 500mL도 드세요.',
           ],
           easier: [
             { visual: { kind: 'clock', hour: 5 }, label: '당일 새벽 5시' },
             { visual: { kind: 'cups', count: 4 }, label: '첫 번째와 똑같이' },
-            // 검수 필요: 가소콜액
+            // 검수 필요: 가소콜액 1포, 생수 500mL
             { visual: emoji('🧴'), label: '가소콜액 1포도 함께' },
+            // 검수 필요: 생수 500mL
             { visual: emoji('💧'), label: '생수 500mL 더' },
           ],
         },
@@ -292,13 +283,19 @@ export const demoGuide = {
               lines: [1, 2],
             },
             { visual: emoji('💧'), label: '물', no: true, lines: [3] },
-            { visual: emoji('💊'), label: '약', no: true, lines: [3] },
-            { visual: emoji('🍬'), label: '껌·담배', no: true, lines: [3] },
+            { visual: emoji('💊'), label: '약·껌·담배', no: true, lines: [3] },
+            {
+              visual: emoji('🩺'),
+              label: '혈압약은 새벽 6시까지',
+              lines: [4],
+            },
           ],
+          // 팀 확정(2026-10-29): 혈압약 예외 문구는 앱 전체에서 똑같이 쓴다.
           lines: [
             '두 번째 약을 다 드신 뒤에는',
             '검사 전까지 아무것도 드시지 마세요.',
             '물, 약, 껌, 담배 모두 안 돼요.',
+            BLOOD_PRESSURE_EXCEPTION,
           ],
           term: '금식',
           easier: [
@@ -310,6 +307,10 @@ export const demoGuide = {
             },
             { visual: emoji('💧'), label: '물도 안 돼요', no: true },
             { visual: emoji('💊'), label: '다른 약도 안 돼요', no: true },
+            {
+              visual: emoji('🩺'),
+              label: '혈압약은 새벽 6시까지 물 조금과 함께',
+            },
           ],
         },
         {
@@ -345,7 +346,7 @@ export const demoGuide = {
         choices: [
           { visual: { kind: 'clock', hour: 6 }, text: '저녁 6시' },
           { visual: { kind: 'clock', hour: 9 }, text: '밤 9시', correct: true },
-          { visual: { kind: 'clock', hour: 12 }, text: '밤 12시' },
+          { visual: { kind: 'clock', hour: 3 }, text: '새벽 3시' },
         ],
       },
     },
@@ -390,10 +391,12 @@ export const demoGuide = {
           { visual: { kind: 'pouch' }, label: '두 번째 약 다 드신 뒤' },
           { visual: emoji('💧'), label: '물', no: true },
           { visual: emoji('💊'), label: '약', no: true },
+          { visual: emoji('🩺'), label: '혈압약은 새벽 6시까지' },
         ],
         lines: [
           '두 번째 약을 다 드신 뒤에는',
           '검사 전까지 아무것도 드시지 마세요.',
+          BLOOD_PRESSURE_EXCEPTION,
         ],
       },
       retry: {
@@ -406,7 +409,7 @@ export const demoGuide = {
       },
     },
   ] satisfies Question[],
-  // 검수 필요: 위험 신호는 원본 대본에 없는 팀 기획 화면의 예시다. 원본 안내문과 대조해야 한다.
+  // 검수 필요: 위험 신호 목록. 위험 신호는 원본 대본에 없는 팀 기획 화면의 예시다. 원본 안내문과 대조해야 한다.
   dangerSigns: [
     { emoji: '😣', text: '배가 아주 많이 아파요' },
     { emoji: '🩸', text: '피가 많이 나와요' },
@@ -490,7 +493,7 @@ export function getTodo(
         { visual: { kind: 'clock', hour: 9 }, label: '밤 9~10시 첫 번째 약' },
         { visual: { kind: 'cups', count: 4 }, label: '15분마다 4번' },
       ],
-      line: '음식은 밤 12시부터 금지, 약과 물은 안내 시간대로',
+      line: '저녁 7시 전에 흰죽, 그 뒤로는 음식 금지(맑은 물은 괜찮아요)',
       speech: '밤 9시예요. 첫 번째 약 드실 시간이에요.',
     };
   }
@@ -500,9 +503,10 @@ export function getTodo(
       pictures: [
         { visual: { kind: 'clock', hour: 5 }, label: '새벽 5시 두 번째 약' },
         { visual: { kind: 'cups', count: 4 }, label: '15분마다 4번' },
+        // 검수 필요: 생수 500mL
         { visual: emoji('💧'), label: '생수 500mL' },
       ],
-      line: '두 번째 약을 다 드신 뒤에는 아무것도 드시지 마세요',
+      line: `두 번째 약을 다 드신 뒤에는 아무것도 드시지 마세요. ${BLOOD_PRESSURE_EXCEPTION}`,
       speech: '새벽 5시예요. 두 번째 약 드실 시간이에요.',
     };
   }
