@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   useEffect,
   useReducer,
@@ -24,6 +25,11 @@ import {
   type LessonAction,
   type LessonState,
 } from './lesson-state';
+import type { GuideKind } from '@/lib/guide-catalog';
+import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
+import { getMessages } from '@/lib/messages';
+
+import { completeGuide } from '../records';
 import { CardScene } from './card-scene';
 import { getPhoto, photoLessons, type FoodPhoto } from './photo-lesson';
 import { PrepScene } from './prep-scene';
@@ -70,7 +76,32 @@ const isPhoneScreen = () =>
 const controlClass =
   'flex h-13 items-center justify-center rounded-2xl border-[1.5px] border-[#CAD6D6] bg-white px-5 text-lg font-semibold text-[#15262B] hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670] disabled:cursor-not-allowed disabled:opacity-40';
 
-export function PhotoLesson({ code }: { code: string }) {
+// 이 수업이 맡은 안내
+const thisGuide: GuideKind = 'colonoscopy';
+
+export function PhotoLesson({
+  code,
+  language,
+  guides,
+  completed: initialCompleted,
+}: {
+  code: string;
+  /** 의료진이 고른 언어. 안내 사이 이동 문구에 쓴다(수업 본문은 한국어). */
+  language: string;
+  /** 발급된 안내 중 끝까지 볼 수 있는 것 */
+  guides: GuideKind[];
+  /** 이미 마친 안내 */
+  completed: GuideKind[];
+}) {
+  const router = useRouter();
+  const t = getMessages(language);
+  const [completed, setCompleted] = useState(initialCompleted);
+  // 아직 안 마친 다른 안내. 순서는 정하지 않고 남은 것으로 간다.
+  const next = nextGuide(guides, completed, thisGuide);
+  const nextHref = next ? guideLessonHref(code, next) : null;
+  const finish = next
+    ? t.guideDoneNext(t.guides[thisGuide], t.guides[next])
+    : t.allDone;
   const [state, dispatch] = useReducer(
     (current: LessonState, action: LessonAction) =>
       reduceLesson(lessons, current, action),
@@ -87,7 +118,7 @@ export function PhotoLesson({ code }: { code: string }) {
 
   const lesson = lessons[state.lesson];
   const step = currentStep(lessons, state);
-  const subtitle = getSubtitle(lessons, state);
+  const subtitle = getSubtitle(lessons, state, finish);
   const minMs = getMinDuration(lessons, state);
   const autoNext = advancesByItself(state.mode);
   const here = flatIndex(lessons, state.lesson, state.step);
@@ -162,6 +193,16 @@ export function PhotoLesson({ code }: { code: string }) {
       window.removeEventListener('keydown', onKey);
     };
   }, [immersive]);
+
+  // 마지막 교시까지 마치면 이 안내를 "완료"로 저장한다.
+  // 화면 표시(완료 목록)는 그리는 중에 바로 바꾸고, 서버 저장은 그린 뒤에 한다.
+  const finished = state.mode === 'done';
+  if (finished && !completed.includes(thisGuide)) {
+    setCompleted([...completed, thisGuide]);
+  }
+  useEffect(() => {
+    if (finished) void completeGuide(code, thisGuide);
+  }, [finished, code]);
 
   // 다른 화면으로 나가면 음성을 멈춘다.
   useEffect(
@@ -391,11 +432,16 @@ export function PhotoLesson({ code }: { code: string }) {
                   ))}
                 </div>
               )}
-              {state.mode === 'done' && (
-                <button type="button" onClick={play} className="pl-replay">
-                  처음부터 다시
-                </button>
-              )}
+              {state.mode === 'done' &&
+                (next && nextHref ? (
+                  <Link href={nextHref} className="pl-replay pl-next-link">
+                    {t.nextButton(t.guides[next])}
+                  </Link>
+                ) : (
+                  <button type="button" onClick={play} className="pl-replay">
+                    {t.restart}
+                  </button>
+                ))}
             </div>
 
             {!state.started && (
@@ -436,10 +482,15 @@ export function PhotoLesson({ code }: { code: string }) {
                   ? '처음부터'
                   : '재생'}
             </button>
+            {/* 마지막 장면에서는 남은 안내가 있으면 그 안내로 간다. */}
             <button
               type="button"
-              onClick={() => move('next')}
-              disabled={here === total - 1}
+              onClick={() =>
+                here === total - 1 && nextHref
+                  ? router.push(nextHref)
+                  : move('next')
+              }
+              disabled={here === total - 1 && !nextHref}
               className={controlClass}
             >
               다음
@@ -464,6 +515,45 @@ export function PhotoLesson({ code }: { code: string }) {
       </div>
 
       <aside className="flex flex-col gap-4 text-[#15262B]">
+        {guides.length > 1 && (
+          <section className="flex flex-col gap-2 rounded-2xl border border-[#CAD6D6] bg-white p-4">
+            <h2 className="text-lg font-bold">{t.progressTitle}</h2>
+            <ul className="flex flex-col gap-1.5">
+              {guides.map((kind) => {
+                const done = completed.includes(kind);
+                const label = (
+                  <>
+                    <span className="text-base font-bold break-keep">
+                      {t.guides[kind]}
+                    </span>
+                    <span
+                      className={`flex-none text-sm font-bold ${done ? 'text-[#1D6E47]' : 'text-[#0F6670]'}`}
+                    >
+                      {done ? t.statusDone : t.statusLeft}
+                    </span>
+                  </>
+                );
+                const rowClass = `flex items-center justify-between gap-2 rounded-xl border-[1.5px] px-3 py-2.5 ${done ? 'border-[#2E9E6B] bg-[#DDF3E8]' : 'border-[#CAD6D6]'}`;
+                // 남은 다른 안내는 눌러서 바로 갈 수 있다.
+                return (
+                  <li key={kind}>
+                    {!done && kind !== thisGuide ? (
+                      <Link
+                        href={guideLessonHref(code, kind)}
+                        className={`${rowClass} hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]`}
+                      >
+                        {label}
+                      </Link>
+                    ) : (
+                      <div className={rowClass}>{label}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         <section className="flex flex-col gap-2.5 rounded-2xl border border-[#CAD6D6] bg-white p-4">
           <h2 className="text-lg font-bold">대장내시경 수업</h2>
           <ol className="flex flex-col gap-1.5">

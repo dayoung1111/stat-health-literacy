@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 
+import type { GuideKind } from '@/lib/guide-catalog';
+import { guideLessonHref, nextGuide } from '@/lib/guide-progress';
 import {
   medications,
   verdictLabels,
@@ -11,11 +13,16 @@ import {
   type MedicationId,
   type Verdict,
 } from '@/lib/medication-guide';
+import { getMessages } from '@/lib/messages';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
 import { Ttobagi } from '../../../ttobagi';
 import { Drawing } from '../../pictures';
-import { recordMedicationQuiz, saveMyMedications } from '../../records';
+import {
+  completeGuide,
+  recordMedicationQuiz,
+  saveMyMedications,
+} from '../../records';
 import { buttonClass, ButtonLink, CallButton } from '../../ui';
 import { MedIcon, VerdictMark } from './med-icons';
 
@@ -42,13 +49,25 @@ const confirmButton = buttonClass.primary
 const inOrder = (ids: MedicationId[]) =>
   medications.filter((m) => ids.includes(m.id));
 
+// 이 화면이 맡은 안내
+const thisGuide: GuideKind = 'medication';
+
 export function MedicationFlow({
   code,
   initial,
   hasSaved,
   stopDate,
+  language,
+  guides,
+  completed,
 }: {
   code: string;
+  /** 의료진이 고른 언어. 안내 사이 이동 문구에 쓴다. */
+  language: string;
+  /** 발급된 안내 중 끝까지 볼 수 있는 것 */
+  guides: GuideKind[];
+  /** 이미 마친 안내 */
+  completed: GuideKind[];
   initial: MedicationId[];
   /** 전에 한 번이라도 저장했는지("약이 없어요" 포함). 그렇다면 정리 화면부터 연다. */
   hasSaved: boolean;
@@ -64,13 +83,17 @@ export function MedicationFlow({
     hasSaved ? { kind: 'summary' } : { kind: 'select', adding: false },
   );
   const [saving, startSaving] = useTransition();
+  const t = getMessages(language);
+  // "확인했어요"를 누르면 이 안내는 마친 것. 아직 안 마친 다른 안내가 다음에 볼 곳이다.
+  const next = nextGuide(guides, [...completed, thisGuide], thisGuide);
+  const nextHref = next ? guideLessonHref(code, next) : null;
 
-  // "확인했어요" 뒤 또박이가 칭찬하고 잠시 뒤 홈으로 간다.
+  // "확인했어요" 뒤 또박이가 칭찬하고, 남은 안내가 있으면 잠시 뒤 그 안내로 간다.
   useEffect(() => {
-    if (phase.kind !== 'done') return;
-    const timer = setTimeout(() => router.push(`/p/${code}/home`), 3500);
+    if (phase.kind !== 'done' || !nextHref) return;
+    const timer = setTimeout(() => router.push(nextHref), 3500);
     return () => clearTimeout(timer);
-  }, [phase.kind, router, code]);
+  }, [phase.kind, router, nextHref]);
 
   const save = (ids: MedicationId[], after: () => void) =>
     startSaving(async () => {
@@ -278,6 +301,7 @@ export function MedicationFlow({
           onClick={() => {
             setEditing(false);
             setPhase({ kind: 'done' });
+            void completeGuide(code, thisGuide);
           }}
           className={`mt-4 ${confirmButton}`}
         >
@@ -293,10 +317,31 @@ export function MedicationFlow({
         <h1 id="done-title" className="sr-only">
           약 확인을 마쳤어요
         </h1>
-        <Ttobagi pose="cheer" message="잘하셨어요." />
-        <p className="mt-4 text-xl text-zinc-700">잠시 뒤 홈으로 갈게요.</p>
-        <div className="mt-6">
-          <ButtonLink href={`/p/${code}/home`}>🏠 홈으로</ButtonLink>
+        <Ttobagi
+          pose="cheer"
+          message={
+            next
+              ? t.guideDoneNext(t.guides[thisGuide], t.guides[next])
+              : t.allDone
+          }
+        />
+        <div className="mt-6 flex flex-col gap-3">
+          {next && nextHref ? (
+            <ButtonLink href={nextHref}>
+              {t.nextButton(t.guides[next])}
+            </ButtonLink>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPhase({ kind: 'summary' })}
+              className={buttonClass.primary}
+            >
+              {t.restart}
+            </button>
+          )}
+          <ButtonLink href={`/p/${code}/home`} variant="outline">
+            🏠 홈으로
+          </ButtonLink>
         </div>
       </section>
     );

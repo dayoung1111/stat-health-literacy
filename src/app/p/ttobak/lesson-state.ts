@@ -202,10 +202,14 @@ export function currentStep(lessons: Lesson[], state: LessonState): LessonStep {
   return lessons[state.lesson].steps[state.step];
 }
 
-/** 지금 자막(=읽을 말)과 강조할 말 */
+/**
+ * 지금 자막(=읽을 말)과 강조할 말.
+ * finish: 마지막 교시를 마쳤을 때 할 말(다음 안내로 가기 / 모든 수업 끝). 없으면 마지막 퀴즈의 칭찬.
+ */
 export function getSubtitle(
   lessons: Lesson[],
   state: LessonState,
+  finish?: string,
 ): { text: string; keys: SayKey[] } {
   const { quiz } = lessons[state.lesson];
   if (!state.started) {
@@ -221,6 +225,8 @@ export function getSubtitle(
       return { text: '다시 볼까요?', keys: [] };
     case 'praise':
     case 'done': {
+      const last = state.lesson === lessons.length - 1;
+      if (last && finish) return { text: finish, keys: [praised] };
       const text = quiz?.praise ?? lessons.at(-1)?.quiz?.praise ?? '';
       return { text, keys: [praised] };
     }

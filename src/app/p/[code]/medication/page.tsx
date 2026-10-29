@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { requireDemoPatient } from '@/lib/demo-patient';
+import { readyGuides } from '@/lib/guide-progress';
 import { verdictLabels, type Verdict } from '@/lib/medication-guide';
 
 import { CheckWithStaff, PatientTopBar } from '../../ui';
@@ -53,6 +54,9 @@ async function Medication({ code }: { code: string }) {
         initial={issued.medicationCheck?.medications ?? []}
         hasSaved={issued.medicationCheck !== null}
         stopDate={stopDate(issued.bloodThinnerStopDate)}
+        language={issued.language}
+        guides={readyGuides(issued.guides)}
+        completed={issued.guideCompletions.map((c) => c.guide)}
       />
       <CheckWithStaff />
     </>

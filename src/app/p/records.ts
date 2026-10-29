@@ -6,9 +6,12 @@ import { demoGuide, guideSteps } from '@/lib/demo-guide';
 import { getPatientCode } from '@/lib/demo-patient';
 import {
   addConfusionMark,
+  markGuideCompleted,
   saveMedicationCheck,
   saveTeachbackResult,
 } from '@/lib/education-store';
+import { guideKinds } from '@/lib/guide-catalog';
+import { nextGuide } from '@/lib/guide-progress';
 import { medicationIds } from '@/lib/medication-guide';
 
 // 환자 화면에서 남기는 기록. 생년월일을 확인한 같은 코드의 환자만 저장할 수 있다.
@@ -84,4 +87,24 @@ export async function recordConfusion(code: string, paragraphId: string) {
     'colonoscopy',
     parsed.data.paragraphId,
   );
+}
+
+// 안내 하나를 끝까지 마쳤을 때. 아직 안 마친 다른 안내(다음에 볼 곳)를 돌려준다.
+export async function completeGuide(code: string, guide: string) {
+  const parsed = z
+    .object({ code: codeSchema, guide: z.enum(guideKinds) })
+    .safeParse({ code, guide });
+  if (!parsed.success || !(await getPatientCode(parsed.data.code))) {
+    return { ok: false as const };
+  }
+  const row = await markGuideCompleted(parsed.data.code, parsed.data.guide);
+  if (!row) return { ok: false as const };
+  return {
+    ok: true as const,
+    next: nextGuide(
+      row.guides,
+      row.guideCompletions.map((c) => c.guide),
+      parsed.data.guide,
+    ),
+  };
 }
