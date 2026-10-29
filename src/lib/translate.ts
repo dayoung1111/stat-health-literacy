@@ -5,6 +5,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 
 import { getTranslationEnv } from './env';
+import { presetFor } from './preset-translations';
 import {
   cacheKey,
   isTranslatable,
@@ -13,7 +14,7 @@ import {
 } from './translation-rules';
 
 // 한국어 문장을 고른 언어로 AI 번역한다. 한국어가 원본이고, 번역이 안 되면 한국어 그대로 돌려준다.
-// 한 번 번역한 문장은 저장해서 다시 쓴다(지금은 서버 메모리. 서버를 다시 켜면 비워진다).
+// 찾는 순서: ① 미리 번역 파일 ② 이미 번역해 저장한 것(서버 메모리, 서버를 다시 켜면 비워진다) ③ AI.
 const MODEL = 'claude-haiku-5-5';
 const BATCH_SIZE = 20;
 const TIMEOUT_MS = 15_000;
@@ -32,6 +33,7 @@ const systemPrompt = (
   language: TranslatableLanguage,
 ) => `You translate Korean hospital patient-education sentences into ${languageNames[language]}.
 The readers are patients with low health literacy, so use short, plain, everyday words.
+The sentences come from a colonoscopy preparation guide and a medication check screen. For medicine, "먹다/드시다" means "take" (not "eat"); for food, it means "eat"; for drinks, "drink".
 
 Rules (follow all of them):
 - Translate only what the source says. Never add, remove, explain, or soften anything.
@@ -97,14 +99,20 @@ async function askModel(
  * texts(한국어)를 language로 번역해 같은 순서로 돌려준다.
  * 한국어·모르는 언어·API 키 없음·실패·느림·규칙 위반(숫자가 바뀜 등)이면 그 문장은 한국어 원문 그대로다.
  */
-export async function translateTexts(language: string, texts: string[]) {
+export async function translateTexts(
+  language: string,
+  texts: string[],
+  // 미리 번역 파일을 만들 때(scripts/build-translations.ts)만 한 시간 호출 한도를 건너뛴다.
+  { skipLimit = false }: { skipLimit?: boolean } = {},
+) {
   const result = [...texts];
   if (!isTranslatable(language)) return result;
 
   const missing = new Map<string, number[]>(); // 원문 → 그 문장이 있는 자리들
   texts.forEach((text, index) => {
     if (text.trim() === '') return;
-    const hit = saved().get(cacheKey(language, text));
+    const hit =
+      presetFor(language, text) ?? saved().get(cacheKey(language, text));
     if (hit !== undefined) {
       result[index] = hit;
     } else {
@@ -120,7 +128,7 @@ export async function translateTexts(language: string, texts: string[]) {
   const sources = [...missing.keys()];
   for (let start = 0; start < sources.length; start += BATCH_SIZE) {
     const batch = sources.slice(start, start + BATCH_SIZE);
-    if (!takeCallSlot()) break;
+    if (!skipLimit && !takeCallSlot()) break;
     try {
       const translated = await askModel(client, language, batch);
       if (!translated) continue;

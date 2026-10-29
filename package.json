@@ -21,6 +21,8 @@
     "format:check": "prettier --check .",
     "check": "npm run typecheck && npm run lint && npm run format:check",
     "test": "tsx --test \"src/**/*.test.ts\"",
+    "translate:build": "tsx --conditions react-server --env-file=.env scripts/build-translations.ts",
+    "translate:check": "tsx --conditions react-server scripts/build-translations.ts --check",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate:dev": "prisma migrate dev",

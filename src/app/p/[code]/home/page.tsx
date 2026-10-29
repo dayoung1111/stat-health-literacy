@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { hospital } from '@/lib/demo-guide';
 import { requireDemoPatient } from '@/lib/demo-patient';
 import { guideCatalog, guideKinds } from '@/lib/guide-catalog';
+import { homeTexts } from '@/lib/home-texts';
 
 import { GuideIconSvg } from '../../../guide-icon';
-import { Ttobagi } from '../../../ttobagi';
+import { T, TranslatedTtobagi } from '../../../translated';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
@@ -43,11 +44,16 @@ async function PatientHome({ code }: { code: string }) {
   return (
     <>
       <PatientTopBar code={code} back={{ href: '/' }} showHome={false} />
-      <p className="text-xl text-zinc-700">{hospital.name}</p>
+      <p className="text-xl text-zinc-700">
+        <T>{hospital.name}</T>
+      </p>
       <h1 className="mt-2 mb-4 text-3xl leading-snug font-bold break-keep">
-        안녕하세요 🙂
+        <T>{homeTexts.greeting}</T>
       </h1>
-      <Ttobagi pose="hello" message={`${guides.length}개 안내가 왔어요.`} />
+      <TranslatedTtobagi
+        pose="hello"
+        message={homeTexts.guidesCame(guides.length)}
+      />
 
       <nav aria-label="받은 안내" className="mt-6 flex flex-col gap-4">
         {guides.map((kind) => {
@@ -61,15 +67,17 @@ async function PatientHome({ code }: { code: string }) {
               <GuideIconSvg name={guide.icon} className="size-14 shrink-0" />
               <span className="flex flex-col gap-1">
                 <span className="text-2xl font-bold break-keep">
-                  {guide.patientName ?? guide.name}
+                  <T>{guide.patientName ?? guide.name}</T>
                 </span>
                 {guide.hint && (
                   <span className="text-xl break-keep text-zinc-700">
-                    {guide.hint}
+                    <T>{guide.hint}</T>
                   </span>
                 )}
                 {!guide.ready && (
-                  <span className="text-xl text-zinc-600">준비 중이에요</span>
+                  <span className="text-xl text-zinc-600">
+                    <T>{homeTexts.notReady}</T>
+                  </span>
                 )}
               </span>
               <span aria-hidden="true" className="ml-auto text-3xl">
