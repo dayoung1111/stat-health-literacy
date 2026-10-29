@@ -54,6 +54,10 @@ export type EducationCode = {
 };
 
 export const MAX_ATTEMPTS = 5;
+
+// 시연용으로 늘 남겨 두는 코드. 랜덤 발급에서는 이 번호가 나오지 않는다.
+// 000000(생년월일 111111)은 시연이 꼬였을 때 쓰는 예비 코드다.
+const RESERVED_CODES = new Set(['000000', '482917']);
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
 // 생년월일 6자리를 되돌릴 수 없게 바꾼다(코드마다 다른 소금). DB 단계에서도 같은 방식을 쓴다.
@@ -96,7 +100,7 @@ async function removeExpired() {
 function newCode() {
   for (;;) {
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    if (!codes().has(code)) return code;
+    if (!codes().has(code) && !RESERVED_CODES.has(code)) return code;
   }
 }
 
@@ -222,7 +226,8 @@ export async function addConfusionMark(
   else row.confusionMarks.push({ guide, paragraphId, count: 1, lastAt });
 }
 
-// 시연 데이터. 482917(생년월일 590312)은 결과가 비어 있어, 환자 화면에서 한 결과가 그대로 쌓인다.
+// 시연 데이터. 000000(생년월일 111111, 예비)과 482917(생년월일 590312)은 결과가 비어 있어,
+// 환자 화면에서 한 결과가 그대로 쌓인다.
 // 나머지는 의료진 목록이 비어 보이지 않게 넣은 예시이며, 550031은 다른 간호사 코드(보이면 안 됨).
 function seedDemoCodes(map: Map<string, EducationCode>) {
   const now = new Date();
@@ -245,6 +250,17 @@ function seedDemoCodes(map: Map<string, EducationCode>) {
   const minutesAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);
 
   const rows: EducationCode[] = [
+    {
+      ...base,
+      code: '000000',
+      staffId: 'nurse01',
+      guides: ['colonoscopy', 'medication'],
+      ageGroup: '60',
+      level: 'easy',
+      language: 'ko',
+      birthDateHash: hashBirthDate('111111'),
+      createdAt: minutesAgo(10),
+    },
     {
       ...base,
       code: '482917',
