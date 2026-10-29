@@ -28,7 +28,7 @@ export function medicationRows(code: EducationCode) {
   });
 }
 
-// 목록 칸 한 줄. 예: "혈압약·당뇨약⚠" (확인 질문을 틀린 약에 ⚠)
+// 목록 칸 한 줄. 예: "혈압약 · 당뇨약⚠" (확인 질문을 틀린 약에 ⚠)
 export function medicationCell(code: EducationCode) {
   if (!code.guides.includes('medication')) return { text: '—', muted: true };
   if (!code.medicationCheck) return { text: '아직 안 고름', muted: true };
@@ -37,7 +37,8 @@ export function medicationCell(code: EducationCode) {
   return {
     text: rows
       .map((r) => `${r.name}${r.quiz === 'wrong' ? '⚠' : ''}`)
-      .join('·'),
+      // 약 이름에 이미 '·'가 있어(영양제·한약) 약 사이는 띄어 구분한다.
+      .join(' · '),
     muted: false,
   };
 }
