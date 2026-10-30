@@ -18,6 +18,7 @@ import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
 import { FrameWithBoard } from '../../lesson-layout';
 import { translateLesson } from '../../translate-lesson';
+import { useLessonFrame, VideoFrame } from '../../video-frame';
 
 // 검진 전날 수업 액자. 위내시경 수업 액자(gastroscopy-frame.tsx)와 같은 방식이다.
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/day-before.html)은 ?embed=1로 열면
@@ -70,6 +71,8 @@ export function DayBeforeFrame({
   completed: GuideKind[];
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null);
+  // 전체 화면 영상 틀(공통 부품): 수업 안 재생 버튼·크게 보기와 이어진다.
+  const fullscreen = useLessonFrame(frameRef, 'day-before');
   const [height, setHeight] = useState(firstHeight);
   const [finished, setFinished] = useState(false);
   // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
@@ -163,15 +166,17 @@ export function DayBeforeFrame({
       frameRef={frameRef}
       lesson="day-before"
       frame={
-        <iframe
-          ref={frameRef}
-          src="/lessons/day-before.html?embed=1"
-          title={texts?.ui.frameTitle ?? dayBeforeLessonKo.ui.frameTitle}
-          allow="fullscreen; autoplay"
-          allowFullScreen
-          style={{ height }}
-          className="block w-full border-0"
-        />
+        <VideoFrame frame={fullscreen} shape="frame">
+          <iframe
+            ref={frameRef}
+            src="/lessons/day-before.html?embed=1"
+            title={texts?.ui.frameTitle ?? dayBeforeLessonKo.ui.frameTitle}
+            allow="fullscreen; autoplay"
+            allowFullScreen
+            style={fullscreen.fullscreen ? undefined : { height }}
+            className="vf-fill block w-full border-0"
+          />
+        </VideoFrame>
       }
       after={
         finished && (

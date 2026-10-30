@@ -7,6 +7,7 @@ import { screenTexts } from '@/lib/screen-texts';
 
 import { Fill, T } from '../../translated';
 
+import { BigViewButton, useFullscreenFrame, VideoFrame } from '../video-frame';
 import { PrepScene } from './prep-scene';
 import './photo-lesson.css';
 
@@ -24,50 +25,71 @@ const filled = `${buttonClass} bg-[#0F6670] text-white hover:bg-[#0B4E56]`;
 export function PrepFollow() {
   const [index, setIndex] = useState(0);
   const step = prepSteps[index];
+  // 전체 화면 영상 틀(공통 부품). 세로 카드 모양이라 16:9 틀 안에 줄여 넣는다(shape="card").
+  const frame = useFullscreenFrame();
+  // 전체 화면에서는 같은 내용을 두 칸(왼쪽 그림, 오른쪽 설명·버튼)으로 놓아 16:9에 맞춘다.
+  const wide = frame.fullscreen;
 
   return (
-    <div className="flex flex-col gap-5 text-[#15262B]">
-      <p className="text-lg font-bold text-[#0F6670]">
-        <Fill
-          template={screenTexts.prep.stepOf}
-          values={{ n: index + 1, total: prepSteps.length }}
-        />{' '}
-        · <T>{step.name}</T>
-      </p>
+    <VideoFrame frame={frame} shape="card">
       <div
-        key={step.id}
-        className="aspect-[5/3] w-full rounded-3xl border border-[#CAD6D6] bg-[#F4EFE6] p-4"
+        className={
+          wide
+            ? 'grid grid-cols-[1.15fr_1fr] items-start gap-x-8 gap-y-5 p-8 text-[#15262B]'
+            : 'flex flex-col gap-5 text-[#15262B]'
+        }
       >
-        <PrepScene scene={step.scene} hour={9} />
-      </div>
-      <p
-        aria-live="polite"
-        className="text-2xl leading-snug font-bold break-keep"
-      >
-        <T>{step.line.say}</T>
-      </p>
-
-      {step.scene === 'cups' && <CupTimer />}
-
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => setIndex(index - 1)}
-          disabled={index === 0}
-          className={outline}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-lg font-bold text-[#0F6670]">
+            <Fill
+              template={screenTexts.prep.stepOf}
+              values={{ n: index + 1, total: prepSteps.length }}
+            />{' '}
+            · <T>{step.name}</T>
+          </p>
+          <BigViewButton frame={frame} className={outline} />
+        </div>
+        <div
+          key={step.id}
+          className={`aspect-[5/3] w-full rounded-3xl border border-[#CAD6D6] bg-[#F4EFE6] p-4 ${wide ? 'col-start-1 row-span-3 row-start-2' : ''}`}
         >
-          <T>{screenTexts.lesson.prev}</T>
-        </button>
-        <button
-          type="button"
-          onClick={() => setIndex(index + 1)}
-          disabled={index === prepSteps.length - 1}
-          className={filled}
+          <PrepScene scene={step.scene} hour={9} />
+        </div>
+        <p
+          aria-live="polite"
+          className={`text-2xl leading-snug font-bold break-keep ${wide ? 'col-start-2 row-start-1 row-span-2' : ''}`}
         >
-          <T>{screenTexts.lesson.next}</T>
-        </button>
+          <T>{step.line.say}</T>
+        </p>
+
+        {step.scene === 'cups' && (
+          <div className={wide ? 'col-start-2 row-start-3' : 'contents'}>
+            <CupTimer />
+          </div>
+        )}
+
+        <div
+          className={`grid grid-cols-2 gap-3 ${wide ? 'col-start-2 row-start-4' : ''}`}
+        >
+          <button
+            type="button"
+            onClick={() => setIndex(index - 1)}
+            disabled={index === 0}
+            className={outline}
+          >
+            <T>{screenTexts.lesson.prev}</T>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIndex(index + 1)}
+            disabled={index === prepSteps.length - 1}
+            className={filled}
+          >
+            <T>{screenTexts.lesson.next}</T>
+          </button>
+        </div>
       </div>
-    </div>
+    </VideoFrame>
   );
 }
 
