@@ -12,6 +12,8 @@ import { LabeledBox, T } from '../../../translated';
 import { useCompletedGuides } from '../../guide-done';
 import { LineIcon } from '../../screen-design';
 
+import './guide-list.css';
+
 export type GuideListItem = {
   kind: GuideKind;
   href: string;
@@ -63,58 +65,60 @@ export function GuideList({
           </div>
         </div>
       )}
-      <LabeledBox
-        as="nav"
-        label={screenTexts.common.navReceivedGuides}
-        className="grid gap-4 lg:grid-cols-2"
-      >
-        {items.map((item, i) => {
-          const done = completed.includes(item.kind);
-          return (
-            <Link
-              key={item.kind}
-              href={item.href}
-              className="sd-card flex min-h-28 items-center gap-4 px-5 py-4"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#0F6670] text-lg font-bold text-white">
-                {i + 1}
-              </span>
-              <GuideIconSvg
-                name={item.icon}
-                className="size-11 shrink-0 text-[#0F6670]"
-              />
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-2xl font-bold break-keep">
-                  <T>{item.name}</T>
+      <div className="gl-wrap">
+        <LabeledBox
+          as="nav"
+          label={screenTexts.common.navReceivedGuides}
+          className="gl-grid"
+        >
+          {items.map((item, i) => {
+            const done = completed.includes(item.kind);
+            return (
+              <Link
+                key={item.kind}
+                href={item.href}
+                className="sd-card gl-card"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#0F6670] text-base font-bold text-white">
+                  {i + 1}
                 </span>
-                {item.hint && (
-                  <span className="text-lg break-keep text-zinc-600">
-                    <T>{item.hint}</T>
+                <GuideIconSvg
+                  name={item.icon}
+                  className="size-11 shrink-0 text-[#0F6670]"
+                />
+                <span className="gl-text">
+                  <span className="gl-name">
+                    <T>{item.name}</T>
+                  </span>
+                  {item.hint && (
+                    <span className="gl-hint">
+                      <T>{item.hint}</T>
+                    </span>
+                  )}
+                  {item.notReady && (
+                    <span className="gl-hint">
+                      <T>{item.notReady}</T>
+                    </span>
+                  )}
+                </span>
+                {!item.notReady && (
+                  <span
+                    className={`sd-chip ${done ? 'sd-chip-done' : 'sd-chip-left'}`}
+                  >
+                    <T>
+                      {done ? designTexts.statusDone : designTexts.statusLeft}
+                    </T>
                   </span>
                 )}
-                {item.notReady && (
-                  <span className="text-lg text-zinc-600">
-                    <T>{item.notReady}</T>
-                  </span>
-                )}
-              </span>
-              {!item.notReady && (
-                <span
-                  className={`sd-chip ${done ? 'sd-chip-done' : 'sd-chip-left'}`}
-                >
-                  <T>
-                    {done ? designTexts.statusDone : designTexts.statusLeft}
-                  </T>
-                </span>
-              )}
-              <LineIcon
-                name="chevron"
-                className="size-6 shrink-0 text-zinc-400"
-              />
-            </Link>
-          );
-        })}
-      </LabeledBox>
+                <LineIcon
+                  name="chevron"
+                  className="size-5 shrink-0 text-zinc-400"
+                />
+              </Link>
+            );
+          })}
+        </LabeledBox>
+      </div>
     </>
   );
 }
