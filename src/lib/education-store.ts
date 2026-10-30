@@ -6,7 +6,7 @@ import { connection } from 'next/server';
 
 import { Prisma } from '@/generated_prisma/client';
 
-import { isOwnedBy } from './code-access';
+import { demoResetWhere, isDemoCode, isOwnedBy } from './code-access';
 import { DEMO_CODE } from './code-shape';
 import { demoGuide } from './demo-guide';
 import { getDb } from './db';
@@ -374,6 +374,50 @@ export async function markGuideCompleted(code: string, guide: GuideKind) {
     update: {},
   });
   return findActiveCode(code);
+}
+
+// 관리자 "🔄 시연 기록 초기화": 시연 코드(code-access.ts DEMO_CODES)의 약 체크·티치백·헷갈려요·안내 완료를 지우고
+// 틀린 횟수 0, 잠금 해제. 코드는 남긴다. 고르는 조건은 demoResetWhere 하나뿐이라 실제 발급 코드는 건드리지 않는다.
+// 역할 확인은 부르는 쪽(staff/actions.ts)에서 한다. 초기화한 코드 수를 돌려준다.
+export async function resetDemoRecords() {
+  await ensureDemoCodes();
+  const db = getDb();
+  const demo = await db.educationCode.findMany({
+    where: demoResetWhere(),
+    select: { id: true },
+  });
+  const ids = demo.map((row) => row.id);
+  const ofDemo = { codeId: { in: ids } };
+  await db.$transaction([
+    db.medicationCheck.deleteMany({ where: ofDemo }),
+    db.teachbackResult.deleteMany({ where: ofDemo }),
+    db.confusionMark.deleteMany({ where: ofDemo }),
+    db.guideCompletion.deleteMany({ where: ofDemo }),
+    db.educationCode.updateMany({
+      where: { id: { in: ids } },
+      data: { failedAttempts: 0, lockedAt: null },
+    }),
+  ]);
+  return ids.length;
+}
+
+// "🔓 잠금 풀기": 틀린 횟수 0, 잠금 해제. 권한 확인은 부르는 쪽에서 한다.
+export async function unlockCode(code: string) {
+  await connection();
+  await getDb().educationCode.updateMany({
+    where: { code, expiresAt: { gt: new Date() } },
+    data: { failedAttempts: 0, lockedAt: null },
+  });
+}
+
+// "🗑️ 코드 폐기": 코드와 묶인 기록을 함께 지운다(DB 관계의 cascade). 시연 코드는 지우지 않는다.
+// 권한 확인은 부르는 쪽에서 한다. 지웠으면 true.
+export async function discardCode(code: string) {
+  if (isDemoCode(code)) return false;
+  const { count } = await getDb().educationCode.deleteMany({
+    where: { code },
+  });
+  return count > 0;
 }
 
 // 시연 데이터를 DB에 한 번만 넣는다. 이미 있는 코드는 건드리지 않아 결과가 쌓인 채로 남는다.

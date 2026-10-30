@@ -1,3 +1,4 @@
+import { isDemoCode } from '@/lib/code-access';
 import { requireStaff } from '@/lib/demo-staff';
 import { listCodesForStaff } from '@/lib/education-store';
 import { guideNames } from '@/lib/guide-catalog';
@@ -28,6 +29,8 @@ async function MyCodes() {
     meds: medicationCell(c),
     passed: teachbackOnly(c).filter((r) => r.result !== 'wrong').length,
     total: teachbackOnly(c).length,
+    locked: c.lockedAt !== null,
+    demo: isDemoCode(c.code),
   }));
 
   return (

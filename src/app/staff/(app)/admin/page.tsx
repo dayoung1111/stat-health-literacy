@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { isDemoCode } from '@/lib/code-access';
 import { demoGuide, guideSteps } from '@/lib/demo-guide';
 import { listStaffAccounts, roleLabels } from '@/lib/demo-staff';
 import { listAllCodes, type EducationCode } from '@/lib/education-store';
@@ -7,7 +8,9 @@ import { guideCatalog, guideKinds, guideNames } from '@/lib/guide-catalog';
 import { confusionLabel } from '@/lib/guide-labels';
 import { medications } from '@/lib/medication-guide';
 import { medicationCell, teachbackOnly } from '@/lib/medication-summary';
+import { mostMissedQuestions } from '@/lib/teachback-stats';
 
+import { CodeRowActions, ResetDemoButton } from '../../code-actions';
 import { Panel } from '../../ui';
 import { StaffPage } from '../../staff-page';
 
@@ -69,6 +72,8 @@ async function AdminOverview() {
   const ranking = [...marks.values()]
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
+  // 이해 확인(티치백)에서 처음에 틀린 코드가 많은 질문 3개
+  const missed = mostMissedQuestions(codes);
 
   return (
     <div className="flex flex-col gap-6">
@@ -91,6 +96,9 @@ async function AdminOverview() {
 
       <section id="stats" className="scroll-mt-4">
         <Panel title="통계">
+          <div className="mb-4">
+            <ResetDemoButton />
+          </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <Stat
               label="이해 확인 통과율"
@@ -140,6 +148,28 @@ async function AdminOverview() {
               ))}
             </ol>
           )}
+          <h3 className="mt-6 mb-2 text-lg font-bold">
+            ❌ 많이 틀린 문제 TOP 3
+          </h3>
+          {missed.length === 0 ? (
+            <Empty>아직 틀린 문제가 없어요.</Empty>
+          ) : (
+            <ol className="flex flex-col gap-2">
+              {missed.map((m, i) => (
+                <li
+                  key={m.label}
+                  className="flex items-center gap-3 rounded-lg bg-red-50 px-4 py-2 text-lg"
+                >
+                  <span className="w-8 font-bold text-red-900">{i + 1}위</span>
+                  <span className="flex-1">{m.label}</span>
+                  <strong>{m.count}회</strong>
+                </li>
+              ))}
+            </ol>
+          )}
+          <p className="mt-2 text-sm text-zinc-500">
+            틀린 횟수: 그 문제를 처음에 틀린 코드 수(틀림 + 다시 설명 후 맞힘)
+          </p>
         </Panel>
       </section>
 
@@ -153,6 +183,7 @@ async function AdminOverview() {
               '검사일',
               '드시는 약',
               '이해 확인',
+              '관리',
             ]}
           >
             {codes.map((c) => {
@@ -190,6 +221,13 @@ async function AdminOverview() {
                     {total === 0
                       ? '아직 없음'
                       : `${passed(c)}/${total} ${ok ? '✓' : '⚠ 재교육'}`}
+                  </td>
+                  <td className="px-3 py-3">
+                    <CodeRowActions
+                      code={c.code}
+                      locked={c.lockedAt !== null}
+                      demo={isDemoCode(c.code)}
+                    />
                   </td>
                 </tr>
               );

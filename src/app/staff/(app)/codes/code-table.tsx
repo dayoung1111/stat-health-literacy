@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { CodeRowActions } from '../../code-actions';
+
 type Row = {
   code: string;
   guides: string;
@@ -12,6 +14,10 @@ type Row = {
   meds: { text: string; muted: boolean };
   passed: number;
   total: number;
+  /** 생년월일을 5번 틀려 잠김 */
+  locked: boolean;
+  /** 시연 코드(폐기할 수 없음) */
+  demo: boolean;
 };
 
 export function CodeTable({ rows }: { rows: Row[] }) {
@@ -40,6 +46,7 @@ export function CodeTable({ rows }: { rows: Row[] }) {
             <th className="px-3 py-3">설정</th>
             <th className="px-3 py-3">드시는 약</th>
             <th className="px-3 py-3">이해 확인</th>
+            <th className="px-3 py-3">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -54,6 +61,11 @@ export function CodeTable({ rows }: { rows: Row[] }) {
                   >
                     {row.code}
                   </Link>
+                  {row.locked && (
+                    <span className="ml-2 rounded bg-red-100 px-1.5 text-sm text-red-700">
+                      잠김
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-3">{row.guides}</td>
                 <td className="px-3 py-3">{row.examDate}</td>
@@ -76,12 +88,19 @@ export function CodeTable({ rows }: { rows: Row[] }) {
                     ? '아직 없음'
                     : `${row.passed}/${row.total} ${ok ? '✓' : '⚠ 재교육'}`}
                 </td>
+                <td className="px-3 py-3">
+                  <CodeRowActions
+                    code={row.code}
+                    locked={row.locked}
+                    demo={row.demo}
+                  />
+                </td>
               </tr>
             );
           })}
           {shown.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-3 py-6 text-center text-zinc-600">
+              <td colSpan={7} className="px-3 py-6 text-center text-zinc-600">
                 맞는 코드가 없어요
               </td>
             </tr>

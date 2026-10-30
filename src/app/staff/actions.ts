@@ -1,16 +1,26 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { refresh } from 'next/cache';
+import { notFound, redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { canDiscardCode, canManageCode } from '@/lib/code-access';
+import { isCodeShape } from '@/lib/code-shape';
 import {
   endStaffSession,
   checkStaffLogin,
+  getStaff,
   homeFor,
   requireStaff,
   startStaffSession,
 } from '@/lib/demo-staff';
-import { createEducationCode } from '@/lib/education-store';
+import {
+  createEducationCode,
+  discardCode,
+  findActiveCode,
+  resetDemoRecords,
+  unlockCode,
+} from '@/lib/education-store';
 import { guideKinds } from '@/lib/guide-catalog';
 import { ages, extras, languages, levels } from '@/lib/staff-options';
 
@@ -149,4 +159,50 @@ export async function issueCode(
     staffId: staff.id,
   });
   redirect(`/staff/issued/${issued.code}`);
+}
+
+// ── 코드 관리(관리자 화면·내 코드 목록의 버튼) ─────────────────────────
+// 버튼을 누를 때마다 서버가 로그인과 역할을 다시 확인한다(화면에 버튼이 보이는지와 상관없이).
+
+export type CodeActionResult = { ok: true } | { ok: false; message: string };
+
+// 🔄 시연 기록 초기화: 관리자만. 시연 코드(000000·482917·777777·DEMO)의 기록만 지우고 코드는 남긴다.
+export async function resetDemoRecordsAction(): Promise<CodeActionResult> {
+  await requireStaff('admin');
+  await resetDemoRecords();
+  refresh();
+  return { ok: true };
+}
+
+// 관리할 수 있는 코드(관리자: 모든 코드, 간호사: 자기가 발급한 코드). 남의 코드·없는 코드는 404.
+async function managedCode(code: unknown) {
+  const staff = await getStaff();
+  if (!staff) redirect('/staff');
+  if (typeof code !== 'string' || !isCodeShape(code)) notFound();
+  const row = await findActiveCode(code);
+  if (!row || !canManageCode(staff, row)) notFound();
+  return { staff, row };
+}
+
+// 🔓 잠금 풀기: 틀린 횟수 0, 잠금 해제
+export async function unlockCodeAction(
+  code: string,
+): Promise<CodeActionResult> {
+  const { row } = await managedCode(code);
+  await unlockCode(row.code);
+  refresh();
+  return { ok: true };
+}
+
+// 🗑️ 코드 폐기: 코드와 기록을 지운다. 시연 코드는 폐기할 수 없다.
+export async function discardCodeAction(
+  code: string,
+): Promise<CodeActionResult> {
+  const { staff, row } = await managedCode(code);
+  if (!canDiscardCode(staff, row)) {
+    return { ok: false, message: '시연 코드는 폐기할 수 없어요' };
+  }
+  await discardCode(row.code);
+  refresh();
+  return { ok: true };
 }

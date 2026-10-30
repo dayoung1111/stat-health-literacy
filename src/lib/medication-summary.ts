@@ -44,7 +44,7 @@ export function medicationCell(code: EducationCode) {
 }
 
 // "이해 확인"(티치백) 결과만. 복용약 확인 질문은 "드시는 약" 칸에서 따로 보여 준다.
-export function teachbackOnly(code: EducationCode) {
+export function teachbackOnly(code: Pick<EducationCode, 'teachbackResults'>) {
   return code.teachbackResults.filter((r) => r.guide !== 'medication');
 }
 
