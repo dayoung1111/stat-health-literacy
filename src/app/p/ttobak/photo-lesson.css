@@ -698,32 +698,55 @@
   }
 }
 
-/* 휴대폰 전체 화면: 화면 전체에 고정하고, 세로로 들고 있으면 90도 돌려 16:9로 꽉 채운다. */
+/* 휴대폰 전체 화면: 플레이어를 <body> 바로 아래로 옮겨(photo-lesson-player.tsx) 보이는 화면 전체를 덮는다.
+   바탕은 검은색, 16:9 영상은 들어갈 수 있는 가장 큰 크기로 가운데. 세로로 들고 있으면 90도 돌려 꽉 채운다.
+   100vh 대신 100dvh/100dvw를 써서 주소창·툴바가 있어도 잘리지 않게 한다. */
 .pl-immersive {
   position: fixed;
   inset: 0;
-  z-index: 100;
-  background: #0b1416;
+  z-index: 1000;
+  width: 100dvw;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: #000000;
 }
 .pl-rotor {
-  --w: 100dvw;
-  --h: 100dvh;
+  /* 노치·홈바(safe-area)를 피하는 여백. 이 상자 기준(돌리면 함께 돈다)의 위·오른쪽·아래·왼쪽 */
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
+  /* 영상 아래 버튼 줄(52px) + 간격 */
+  --below: 60px;
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100dvw;
+  height: 100dvh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px;
+  padding: calc(var(--sa-t) + 8px) calc(var(--sa-r) + 8px)
+    calc(var(--sa-b) + 8px) calc(var(--sa-l) + 8px);
+  /* 안쪽 크기(cqw·cqh)를 이 상자 기준으로 잰다. */
+  container-type: size;
+}
+/* 앱 안 브라우저: 위쪽 회색 띠(32px) + 간격만큼 영상을 줄인다. */
+.pl-rotor.pl-inapp {
+  --below: 100px;
 }
 @media (orientation: portrait) {
+  /* 시계 방향으로 90도 돌린다. 휴대폰을 옆으로 눕혀 보면 똑바로 보인다.
+     돌린 상자의 왼쪽=화면 위, 위쪽=화면 오른쪽, 오른쪽=화면 아래, 아래쪽=화면 왼쪽 */
   .pl-immersive .pl-rotor {
-    --w: 100dvh;
-    --h: 100dvw;
-    inset: auto;
-    top: 0;
+    --sa-t: env(safe-area-inset-right, 0px);
+    --sa-r: env(safe-area-inset-bottom, 0px);
+    --sa-b: env(safe-area-inset-left, 0px);
+    --sa-l: env(safe-area-inset-top, 0px);
     left: 100dvw;
     width: 100dvh;
     height: 100dvw;
@@ -731,24 +754,72 @@
     transform: rotate(90deg);
   }
 }
+/* 영상과 버튼 줄의 너비: 양옆 닫기 버튼 자리(68px씩)를 남기고, 높이에서 버튼 줄을 뺀 16:9 중 작은 쪽 */
 .pl-immersive .pl-fit {
-  width: min(calc(var(--w) - 16px), calc((var(--h) - 72px) * 16 / 9));
+  width: min(calc(100cqw - 136px), calc((100cqh - var(--below)) * 16 / 9));
 }
+.pl-immersive .pl-controls {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.pl-immersive .pl-controls > button {
+  flex: none;
+  white-space: nowrap;
+}
+.pl-immersive .pl-controls [role='progressbar'] {
+  min-width: 0;
+}
+/* 오른쪽 위(검은 여백 쪽) 흰 동그라미 닫기 버튼 */
 .pl-close {
   position: absolute;
   z-index: 20;
-  top: 8px;
-  right: 8px;
+  top: calc(var(--sa-t) + 8px);
+  right: calc(var(--sa-r) + 8px);
   display: flex;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   align-items: center;
   justify-content: center;
-  border: 3px solid #ffffff;
+  border: none;
   border-radius: 50%;
-  background: rgba(21, 38, 43, 0.85);
-  color: #ffffff;
-  font-size: 28px;
+  background: #ffffff;
+  color: #15262b;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.pl-close:focus-visible {
+  outline: 3px solid #fee500;
+  outline-offset: 3px;
+}
+/* 앱 안 브라우저에서만: "Safari나 크롬으로 열면 더 크게 볼 수 있어요" + 노란 열기 */
+.pl-open-outside {
+  display: flex;
+  height: 32px;
+  max-width: calc(100cqw - 136px);
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 0 14px;
+  border-radius: 999px;
+  background: #3a3f42;
+  color: #e4e7e8;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.pl-open-outside span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-open-outside button {
+  flex: none;
+  height: 24px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fee500;
+  color: #191919;
+  font-size: 13px;
   font-weight: 700;
 }
 
