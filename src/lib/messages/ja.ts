@@ -38,7 +38,7 @@ export const ja: Messages = {
     bubbleBirth: '生年月日6桁を入れてください',
     privacy: '生年月日は本人確認にだけ使い、お名前はお聞きしません。',
     checking: '確認中…',
-    callHelp: '📞 うまくいかないときは病院に電話',
+    callHelp: 'うまくいかないときは病院に電話',
     typeCode: '教育番号を自分で入れます',
     badCode: 'コードをもう一度確認してください',
     badCodeHint:

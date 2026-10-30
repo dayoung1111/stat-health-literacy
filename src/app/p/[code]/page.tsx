@@ -9,7 +9,7 @@ import { findActiveCode } from '@/lib/education-store';
 import { EntryText, EntryTtobagi } from '../entry-text';
 import { ReportOnce } from '../error-report';
 import { PatientEntryForm } from '../patient-entry-form';
-import { WideFrame } from '../screen-design';
+import { LineIcon, WideFrame } from '../screen-design';
 import { CallButton, Loading } from '../ui';
 
 export default function BirthDatePage({ params }: PageProps<'/p/[code]'>) {
@@ -38,6 +38,7 @@ function EntryLinks({ language }: { language?: string }) {
   return (
     <div className="mt-6 flex flex-col gap-4 lg:ml-auto lg:w-1/2 lg:pl-3">
       <CallButton variant="outline">
+        <LineIcon name="phone" className="mr-2 size-6 text-[#0F6670]" />
         <EntryText name="callHelp" language={language} />
       </CallButton>
       <Link
@@ -72,8 +73,10 @@ async function BirthDateStep({ code }: { code: string }) {
   const language = await issuedLanguage(code);
   // 휴대폰은 한 줄, PC는 왼쪽 또박이 · 오른쪽 입력 카드.
   return (
-    <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
-      <EntryTtobagi birthOnly language={language} />
+    <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="sd-big-col">
+        <EntryTtobagi birthOnly language={language} />
+      </div>
       <div>
         <h1 className="sr-only">
           <EntryText name="birthOnlyTitle" language={language} />

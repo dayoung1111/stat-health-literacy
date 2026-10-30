@@ -38,7 +38,7 @@ export const zh: Messages = {
     bubbleBirth: '请输入6位出生日期',
     privacy: '出生日期仅用于确认本人身份，不会询问您的姓名。',
     checking: '正在确认…',
-    callHelp: '📞 有困难请致电医院',
+    callHelp: '有困难请致电医院',
     typeCode: '我自己输入教育号码',
     badCode: '请再确认一下代码',
     badCodeHint:

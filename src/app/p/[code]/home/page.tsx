@@ -36,7 +36,7 @@ async function PatientHome({ code }: { code: string }) {
   // 화면 순서는 안내 목록 순서를 따른다.
   const guides = guideKinds.filter((kind) => issued.guides.includes(kind));
 
-  // 휴대폰은 한 줄, PC는 카드 2×2.
+  // 휴대폰은 한 줄, PC는 왼쪽 또박이 · 오른쪽 진행 막대와 카드 2×2.
   return (
     <WideFrame>
       <DesignTopBar code={code} back={{ href: '/' }} showHome={false} />
@@ -46,28 +46,32 @@ async function PatientHome({ code }: { code: string }) {
       <h1 className="sr-only">
         <T>{homeTexts.greeting}</T>
       </h1>
-      <div className="mt-3 mb-5">
-        <TealTtobagi
-          pose="hello"
-          message={designTexts.guidesCame(guides.length)}
-        />
+      <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-6">
+        <div className="sd-big-col">
+          <TealTtobagi
+            pose="hello"
+            message={designTexts.guidesCame(guides.length)}
+          />
+        </div>
+        <div>
+          <GuideList
+            code={code}
+            language={issued.language}
+            completed={issued.guideCompletions.map((c) => c.guide)}
+            items={guides.map((kind) => {
+              const guide = guideCatalog[kind];
+              return {
+                kind,
+                href: guideHref(code, kind),
+                name: guide.patientName ?? guide.name,
+                hint: guide.hint,
+                icon: guide.icon,
+                notReady: guide.ready ? undefined : homeTexts.notReady,
+              };
+            })}
+          />
+        </div>
       </div>
-      <GuideList
-        code={code}
-        language={issued.language}
-        completed={issued.guideCompletions.map((c) => c.guide)}
-        items={guides.map((kind) => {
-          const guide = guideCatalog[kind];
-          return {
-            kind,
-            href: guideHref(code, kind),
-            name: guide.patientName ?? guide.name,
-            hint: guide.hint,
-            icon: guide.icon,
-            notReady: guide.ready ? undefined : homeTexts.notReady,
-          };
-        })}
-      />
       <CheckWithStaff />
     </WideFrame>
   );

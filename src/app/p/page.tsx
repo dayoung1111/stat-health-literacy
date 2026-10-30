@@ -5,7 +5,7 @@ import { screenTexts } from '@/lib/screen-texts';
 import { LabeledBox } from '../translated';
 import { EntryText, EntryTtobagi } from './entry-text';
 import { PatientEntryForm } from './patient-entry-form';
-import { WideFrame } from './screen-design';
+import { LineIcon, WideFrame } from './screen-design';
 import { CallButton } from './ui';
 
 // 번호 입력 화면. 글은 고른 언어(src/lib/messages/)로 보여 준다.
@@ -25,12 +25,15 @@ export default function PatientEntryPage() {
       <h1 className="sr-only">
         <EntryText name="title" />
       </h1>
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
-        <EntryTtobagi />
+      <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+        <div className="sd-big-col">
+          <EntryTtobagi />
+        </div>
         <div>
           <PatientEntryForm />
           <div className="mt-6">
             <CallButton variant="outline">
+              <LineIcon name="phone" className="mr-2 size-6 text-[#0F6670]" />
               <EntryText name="callHelp" />
             </CallButton>
           </div>

@@ -39,7 +39,7 @@ export const vi: Messages = {
     privacy:
       'Ngày sinh chỉ dùng để xác nhận đúng là bạn, chúng tôi không hỏi tên.',
     checking: 'Đang kiểm tra…',
-    callHelp: '📞 Gặp khó khăn? Gọi bệnh viện',
+    callHelp: 'Gặp khó khăn? Gọi bệnh viện',
     typeCode: 'Tôi sẽ tự nhập mã số giáo dục',
     badCode: 'Vui lòng kiểm tra lại mã',
     badCodeHint:

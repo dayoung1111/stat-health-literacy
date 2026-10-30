@@ -52,7 +52,7 @@ export const ko = {
     bubbleBirth: '생년월일 6자리를 넣어 주세요',
     privacy: '생년월일은 본인 확인에만 쓰고, 이름은 묻지 않아요.',
     checking: '확인 중…',
-    callHelp: '📞 잘 안 되면 병원에 전화',
+    callHelp: '잘 안 되면 병원에 전화',
     typeCode: '교육 번호를 직접 넣을게요',
     badCode: '코드를 다시 확인해 주세요',
     badCodeHint:
