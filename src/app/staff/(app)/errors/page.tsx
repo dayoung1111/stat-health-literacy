@@ -49,7 +49,7 @@ async function ErrorLogs({ query }: { query: string }) {
   const badSearch = query.trim() !== '' && search === null;
   const logs = badSearch ? [] : await listErrorLogs(staff, search);
   const groups = groupErrorLogs(logs);
-  const accounts = listStaffAccounts();
+  const accounts = await listStaffAccounts();
   const nameOf = (id: string | null) =>
     id ? (accounts.find((a) => a.id === id)?.name ?? id) : '—';
   const isAdmin = staff.role === 'admin';

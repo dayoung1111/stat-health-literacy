@@ -5,28 +5,33 @@ import { redirect } from 'next/navigation';
 
 import { getSessionSecret } from './env';
 import { createLoginThrottle } from './login-throttle';
-import { matchesSecret } from './password';
 import { isHttpsRequest } from './request-origin';
 import { signToken, verifyToken } from './session-token';
+import {
+  findActiveStaffAccount,
+  listDbStaffAccounts,
+} from './staff-account-store';
+import {
+  verifyLogin,
+  type StaffAccountRow,
+  type StaffLogin,
+  type StaffRole,
+} from './staff-accounts';
 
-// 시연용 임시 의료진 계정. 발급 기록은 education-store.ts(Supabase)에 있다. DB 단계에서 계정 표로 바꾼다.
+// 시연용 의료진 계정(코드에 고정, 항상 로그인 가능). 관리자가 만든 간호사 계정은 DB(staff-account-store.ts)에 있다.
+// 발급 기록은 education-store.ts(Supabase)에 있다.
 // 비밀번호는 글자 그대로 두지 않고 해시(scrypt)만 저장한다. 시연 비밀번호는 README에 적혀 있다.
 // 쿠키에는 서버 비밀값(SESSION_SECRET)으로 서명한 아이디만 담고, 서명이 맞지 않으면 로그인하지 않은 것으로 본다.
 // 역할(간호사/관리자)은 쿠키가 아니라 아래 계정 정보에서 서버가 매번 다시 찾는다.
 
-export type StaffRole = 'nurse' | 'admin';
+export type { StaffRole };
 
 export const roleLabels: Record<StaffRole, string> = {
   nurse: '간호사',
   admin: '관리자',
 };
 
-const demoAccounts: {
-  id: string;
-  passwordHash: string;
-  name: string;
-  role: StaffRole;
-}[] = [
+const demoAccounts: StaffAccountRow[] = [
   {
     id: 'nurse01',
     passwordHash:
@@ -59,33 +64,48 @@ const memory = globalThis as unknown as {
 };
 const throttle = () => (memory.statStaffThrottle ??= createLoginThrottle());
 
-export type StaffLogin =
-  | { ok: true; id: string; role: StaffRole }
-  | { ok: false; reason: 'wrong' | 'locked' };
+export type { StaffLogin };
 
-// 없는 아이디도 같은 시간이 걸리고 같은 실패로 처리해서, 아이디가 있는지 알아내지 못하게 한다.
-export async function checkStaffLogin(
+// 시연 계정을 먼저 찾고, 없으면 DB 계정(사용 중인 것만)을 찾는다. DB를 읽지 못하면 없는 계정으로 본다.
+async function findAccount(id: string): Promise<StaffAccountRow | null> {
+  const demo = demoAccounts.find((a) => a.id === id);
+  if (demo) return demo;
+  try {
+    return await findActiveStaffAccount(id);
+  } catch {
+    return null;
+  }
+}
+
+export function checkStaffLogin(
   id: string,
   password: string,
 ): Promise<StaffLogin> {
-  const limit = throttle();
-  if (limit.isLocked(id)) return { ok: false, reason: 'locked' };
-  const account = demoAccounts.find((a) => a.id === id);
-  const matched = matchesSecret(
+  return verifyLogin(
+    {
+      throttle: throttle(),
+      find: findAccount,
+      fallbackHash: demoAccounts[0].passwordHash,
+    },
+    id,
     password,
-    (account ?? demoAccounts[0]).passwordHash,
   );
-  if (account && matched) {
-    limit.reset(id);
-    return { ok: true, id: account.id, role: account.role };
-  }
-  const { locked } = limit.recordFailure(id);
-  return { ok: false, reason: locked ? 'locked' : 'wrong' };
 }
 
-// 관리자 화면의 계정 목록. 비밀번호는 내보내지 않는다.
-export function listStaffAccounts() {
-  return demoAccounts.map(({ id, name, role }) => ({ id, name, role }));
+// 관리자 화면의 계정 목록(시연 계정 + DB 계정). 비밀번호는 내보내지 않는다.
+export async function listStaffAccounts() {
+  const demo = demoAccounts.map(({ id, name, role }) => ({
+    id,
+    name,
+    role,
+    active: true,
+    demo: true,
+  }));
+  const created = await listDbStaffAccounts().catch(() => []);
+  return [
+    ...demo,
+    ...created.map((a) => ({ ...a, role: 'nurse' as const, demo: false })),
+  ];
 }
 
 // 로그인한 뒤 처음 보여 줄 화면
@@ -116,10 +136,18 @@ export async function getStaff() {
     (await cookies()).get(cookieName)?.value,
     'staff',
   );
-  const account = demoAccounts.find((a) => a.id === saved);
-  return account
-    ? { id: account.id, name: account.name, role: account.role }
-    : null;
+  if (!saved) return null;
+  const demo = demoAccounts.find((a) => a.id === saved);
+  if (demo) return { id: demo.id, name: demo.name, role: demo.role };
+  // DB 계정은 요청마다 다시 확인해서, 사용 중지한 계정은 이미 로그인했어도 바로 막는다.
+  try {
+    const account = await findActiveStaffAccount(saved);
+    return account
+      ? { id: account.id, name: account.name, role: account.role }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 // 로그인하지 않았으면(환자 포함) 의료진 로그인 화면으로, 역할이 다르면 자기 첫 화면으로 보낸다.

@@ -154,6 +154,23 @@ model ErrorLog {
   @@map("error_logs")
 }
 
+/// 관리자가 만든 간호사 계정. 시연 계정(nurse01·nurse02·admin01)은 코드(demo-staff.ts)에 있고 이 표에 없다.
+/// 비밀번호는 글자 그대로 저장하지 않고 scrypt 해시("소금:해시")만 저장한다.
+/// 접근 규칙(RLS)으로 Supabase 공개 API에서는 읽을 수 없고, 앱 서버만 읽고 쓴다.
+model StaffAccount {
+  /// 로그인 아이디(영문·숫자·_·-, 3~32자). 로그인 때 소문자로 맞추지 않으므로 그대로 비교한다.
+  id           String   @id
+  name         String
+  passwordHash String   @map("password_hash")
+  /// 지금은 nurse만 만든다. 관리자 계정은 이 화면에서 만들지 않는다.
+  role         String   @default("nurse")
+  /// false면 로그인할 수 없고, 이미 로그인한 상태도 다음 요청부터 끝난다. 발급한 코드는 그대로 남는다.
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("staff_accounts")
+}
+
 /// 티치백 결과: 처음에 맞힘 / 다시 설명 후 맞힘 / 틀림
 enum TeachbackOutcome {
   correct

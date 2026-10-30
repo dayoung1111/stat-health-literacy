@@ -22,6 +22,15 @@ import {
   unlockCode,
 } from '@/lib/education-store';
 import { guideKinds } from '@/lib/guide-catalog';
+import {
+  deactivateStaffAccount,
+  insertStaffAccount,
+} from '@/lib/staff-account-store';
+import {
+  createNurseAccount,
+  disableNurseAccount,
+  type AccountResult,
+} from '@/lib/staff-accounts';
 import { ages, extras, languages, levels } from '@/lib/staff-options';
 
 export type LoginState = { message?: string };
@@ -205,4 +214,38 @@ export async function discardCodeAction(
   await discardCode(row.code);
   refresh();
   return { ok: true };
+}
+
+// ── 간호사 계정 관리(관리자 화면) ─────────────────────────────────────
+// 누를 때마다 서버가 관리자인지 다시 확인한다(requireStaff). 규칙은 lib/staff-accounts.ts에 있다.
+
+export type CreateAccountState = AccountResult | { ok?: undefined };
+
+export async function createAccountAction(
+  _prev: CreateAccountState,
+  formData: FormData,
+): Promise<CreateAccountState> {
+  const staff = await requireStaff('admin');
+  const result = await createNurseAccount(
+    { role: staff.role, insert: insertStaffAccount },
+    {
+      id: String(formData.get('id') ?? ''),
+      name: String(formData.get('name') ?? ''),
+      password: String(formData.get('password') ?? ''),
+    },
+  );
+  if (result.ok) refresh();
+  return result;
+}
+
+export async function disableAccountAction(
+  id: string,
+): Promise<CodeActionResult> {
+  const staff = await requireStaff('admin');
+  const result = await disableNurseAccount(
+    { role: staff.role, disable: deactivateStaffAccount },
+    id,
+  );
+  if (result.ok) refresh();
+  return result;
 }

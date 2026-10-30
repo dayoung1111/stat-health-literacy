@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 
 import {
+  createAccountAction,
+  disableAccountAction,
   discardCodeAction,
   resetDemoRecordsAction,
   unlockCodeAction,
@@ -103,5 +105,109 @@ export function CodeRowActions({
         </span>
       )}
     </div>
+  );
+}
+
+/** 간호사 계정 「사용 중지」 버튼 */
+export function DisableAccountButton({ id }: { id: string }) {
+  const { pending, message, run } = useCodeAction();
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() =>
+          run(
+            () => disableAccountAction(id),
+            `${id} 계정을 사용 중지할까요?\n이 계정은 더 로그인할 수 없어요. 이미 발급한 코드는 그대로예요.`,
+          )
+        }
+        aria-label={`${id} 사용 중지`}
+        className={`${smallButton} border-red-700 bg-white text-red-700 hover:bg-red-50`}
+      >
+        {pending ? '중지하는 중…' : '사용 중지'}
+      </button>
+      {message && (
+        <span role="status" className="text-sm text-red-700">
+          {message}
+        </span>
+      )}
+    </div>
+  );
+}
+
+const fieldClass =
+  'min-h-12 w-full rounded-lg border-2 border-zinc-400 px-3 text-lg focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700';
+
+/** 새 간호사 계정 만들기 폼 */
+export function NewAccountForm() {
+  const [state, action, pending] = useActionState(createAccountAction, {});
+  const error = state.ok === false ? state : null;
+  // 만든 뒤에는 칸을 비우려고 key를 바꿔 새로 그린다(비밀번호가 화면에 남지 않게).
+  const formKey = state.ok ? 'done' : 'edit';
+  return (
+    <form
+      key={formKey}
+      action={action}
+      className="mt-4 grid gap-3 rounded-xl bg-zinc-50 p-4 sm:grid-cols-3"
+    >
+      <h3 className="text-lg font-bold sm:col-span-3">새 계정 만들기</h3>
+      <label className="flex flex-col gap-1 text-base font-semibold">
+        아이디
+        <input
+          name="id"
+          required
+          minLength={3}
+          maxLength={32}
+          pattern="[A-Za-z0-9_\-]+"
+          autoComplete="off"
+          aria-invalid={error?.field === 'id' || undefined}
+          className={fieldClass}
+        />
+        <span className="text-sm font-normal text-zinc-600">
+          영문·숫자·_·- 3~32자
+        </span>
+      </label>
+      <label className="flex flex-col gap-1 text-base font-semibold">
+        이름
+        <input
+          name="name"
+          required
+          maxLength={30}
+          autoComplete="off"
+          aria-invalid={error?.field === 'name' || undefined}
+          className={fieldClass}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-base font-semibold">
+        비밀번호
+        <input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          maxLength={64}
+          autoComplete="new-password"
+          aria-invalid={error?.field === 'password' || undefined}
+          className={fieldClass}
+        />
+        <span className="text-sm font-normal text-zinc-600">8자 이상</span>
+      </label>
+      <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex min-h-12 items-center rounded-lg bg-blue-700 px-5 text-lg font-bold text-white hover:bg-blue-800 disabled:bg-zinc-400 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+        >
+          {pending ? '만드는 중…' : '계정 만들기'}
+        </button>
+        <span role="status" className="text-base">
+          {error && <span className="text-red-700">{error.message}</span>}
+          {state.ok && (
+            <span className="text-green-700">계정을 만들었어요</span>
+          )}
+        </span>
+      </div>
+    </form>
   );
 }

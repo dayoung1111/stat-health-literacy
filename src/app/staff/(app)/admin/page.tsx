@@ -10,7 +10,12 @@ import { medications } from '@/lib/medication-guide';
 import { medicationCell, teachbackOnly } from '@/lib/medication-summary';
 import { mostMissedQuestions } from '@/lib/teachback-stats';
 
-import { CodeRowActions, ResetDemoButton } from '../../code-actions';
+import {
+  CodeRowActions,
+  DisableAccountButton,
+  NewAccountForm,
+  ResetDemoButton,
+} from '../../code-actions';
 import { Panel } from '../../ui';
 import { StaffPage } from '../../staff-page';
 
@@ -34,7 +39,7 @@ function passed(code: EducationCode) {
 
 async function AdminOverview() {
   const codes = await listAllCodes();
-  const accounts = listStaffAccounts();
+  const accounts = await listStaffAccounts();
   const nameOf = (id: string) => accounts.find((a) => a.id === id)?.name ?? id;
 
   // 이해 확인 통과율: 확인 질문(대장내시경 티치백 + 복용약 확인 질문) 중 맞힘·다시 설명 후 맞힘 비율
@@ -238,7 +243,7 @@ async function AdminOverview() {
 
       <section id="accounts" className="scroll-mt-4">
         <Panel title="간호사 계정">
-          <Table head={['아이디', '이름', '역할', '발급한 코드']}>
+          <Table head={['아이디', '이름', '역할', '발급한 코드', '상태']}>
             {accounts.map((a) => (
               <tr key={a.id} className="border-b border-zinc-200">
                 <td className="px-3 py-3 font-mono">{a.id}</td>
@@ -249,12 +254,24 @@ async function AdminOverview() {
                     ? `${codes.filter((c) => c.staffId === a.id).length}개`
                     : '—'}
                 </td>
+                <td className="px-3 py-3">
+                  {a.demo ? (
+                    <span className="text-sm text-zinc-500">시연 계정</span>
+                  ) : a.active ? (
+                    <DisableAccountButton id={a.id} />
+                  ) : (
+                    <span className="font-semibold text-red-700">
+                      사용 중지됨
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </Table>
+          <NewAccountForm />
           <p className="mt-3 text-sm text-zinc-500">
-            시연용 계정입니다. 계정 추가·비밀번호 변경은 로그인 단계(DB)에서
-            만들어요.
+            시연 계정(nurse01·nurse02·admin01)은 항상 쓸 수 있어요. 새 간호사는
+            자기가 발급한 코드만 볼 수 있어요. 비밀번호 변경은 아직 없어요.
           </p>
         </Panel>
       </section>
