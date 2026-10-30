@@ -55,6 +55,10 @@ async function StaffMenu() {
               관리자 화면
             </Link>
           )}
+          {/* 관리자는 전체, 간호사는 자기가 발급한 코드의 오류만 본다. */}
+          <Link href="/staff/errors" className="hover:underline">
+            오류 기록
+          </Link>
           <span className="font-semibold">
             {staff.name}
             <span className="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-xs">

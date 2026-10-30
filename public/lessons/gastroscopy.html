@@ -385,6 +385,9 @@ function set(patch){Object.assign(st,patch);render()}
 
 // ===== 소리 =====
 // 읽어 주는 목소리는 고른 언어(ko-KR / en-US / ja-JP / zh-CN / vi-VN)를 따른다. 그 언어 목소리가 없으면 기기 기본 목소리로 읽는다.
+// 읽을 때만 또박이 이름을 발음용 철자로 바꾼다(앱이 언어별로 알려 준다. 화면 글자는 그대로).
+let SPEECH_NAME=null;
+function spokenText(t){return SPEECH_NAME&&SPEECH_NAME.written!==SPEECH_NAME.spoken?t.split(SPEECH_NAME.written).join(SPEECH_NAME.spoken):t}
 function pickVoice(){const tag=VOICE_LANG[LANG]||'ko-KR',v=speechSynthesis.getVoices();
   voice=v.find(x=>x.lang&&x.lang.replace('_','-')===tag)||v.find(x=>x.lang&&x.lang.toLowerCase().startsWith(tag.slice(0,2)))||null}
 if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=pickVoice}
@@ -397,7 +400,7 @@ function say(text,cb,minMs){
   const tryFin=()=>{if(spoke&&minDone)fin()};
   setTimeout(()=>{minDone=true;tryFin()},minMs||0);
   if(sound&&'speechSynthesis' in window){try{
-    const u=new SpeechSynthesisUtterance(text);u.lang=VOICE_LANG[LANG]||'ko-KR';if(voice)u.voice=voice;u.pitch=1.3;u.rate=.88;
+    const u=new SpeechSynthesisUtterance(spokenText(text));u.lang=VOICE_LANG[LANG]||'ko-KR';if(voice)u.voice=voice;u.pitch=1.3;u.rate=.88;
     u.onend=()=>setTimeout(()=>{spoke=true;tryFin()},600);
     speechSynthesis.speak(u);
   }catch(e){}}
@@ -518,7 +521,7 @@ setTimeout(sendHeight,300);
 window.addEventListener('message',e=>{
   if(e.origin!==location.origin||e.source!==window.parent)return;
   const d=e.data;
-  if(d&&d.type==='stat-lesson-texts'&&d.lesson==='gastroscopy'&&d.texts&&Array.isArray(d.texts.lines))applyTexts(d.language,d.texts);
+  if(d&&d.type==='stat-lesson-texts'&&d.lesson==='gastroscopy'&&d.texts&&Array.isArray(d.texts.lines)){SPEECH_NAME=d.speechName&&d.speechName.written?d.speechName:null;applyTexts(d.language,d.texts)}
 });
 tellApp({type:'stat-lesson-ready',lesson:'gastroscopy'});
 </script>

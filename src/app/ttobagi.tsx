@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 
 import { getMessages } from '@/lib/messages';
+import { forSpeech } from '@/lib/speech-names';
 
 import { useLanguage } from './language-provider';
 
@@ -364,7 +365,8 @@ export function speak(text: string, fromTap = false, speechLang = 'ko-KR') {
   lastSpoken = { text, at: now };
   const synth = window.speechSynthesis;
   synth.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
+  // 화면 글자는 그대로 두고, 읽을 때만 또박이 이름을 발음용 철자로 바꾼다.
+  const utterance = new SpeechSynthesisUtterance(forSpeech(text, speechLang));
   utterance.lang = speechLang;
   utterance.rate = 0.9;
   const voice = findVoice(speechLang);

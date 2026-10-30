@@ -5,16 +5,16 @@ import { useEffect, useRef, useState } from 'react';
 import {
   gastroLessonKo,
   gastroLessonSources,
-  mapLessonStrings,
   type GastroLessonTexts,
 } from '@/lib/gastro-lesson';
 import type { GuideKind } from '@/lib/guide-catalog';
+import { characterNames } from '@/lib/speech-names';
 
 import { useLanguageOr } from '../../../language-provider';
 import { GuideBoard } from '../../guide-board';
 import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
-import { translateForPatient } from '../../translate-actions';
+import { translateLesson } from '../../translate-lesson';
 
 // 위내시경 수업 액자. 검진 전날 수업 액자(day-before-frame.tsx)와 같은 방식이다.
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/gastroscopy.html)은 ?embed=1로 열면
@@ -50,26 +50,6 @@ function isLessonMessage(data: unknown): data is LessonMessage {
 // 처음 높이(수업이 높이를 알려 주기 전까지)
 const firstHeight = 720;
 
-// 고른 언어로 수업 글자를 번역한다(미리 번역 파일 → 저장된 번역 → AI, 대장내시경과 같은 서버 함수).
-// 번역이 안 된 글자는 한국어 그대로 남는다.
-async function translateLesson(language: string): Promise<GastroLessonTexts> {
-  if (language === 'ko') return gastroLessonKo;
-  const sources = gastroLessonSources();
-  const done = new Map<string, string>();
-  for (let start = 0; start < sources.length; start += 40) {
-    const chunk = sources.slice(start, start + 40);
-    try {
-      const out = await translateForPatient(language, chunk);
-      chunk.forEach((text, i) => {
-        if (out[i]) done.set(text, out[i]);
-      });
-    } catch {
-      // 이 묶음은 한국어로 보여 준다.
-    }
-  }
-  return mapLessonStrings(gastroLessonKo, (text) => done.get(text) ?? text);
-}
-
 export function GastroscopyFrame({
   code,
   language,
@@ -96,9 +76,11 @@ export function GastroscopyFrame({
 
   useEffect(() => {
     let current = true;
-    void translateLesson(shown).then((next) => {
-      if (current) setTexts(next);
-    });
+    void translateLesson(shown, gastroLessonKo, gastroLessonSources()).then(
+      (next) => {
+        if (current) setTexts(next);
+      },
+    );
     return () => {
       current = false;
     };
@@ -113,6 +95,11 @@ export function GastroscopyFrame({
         lesson: 'gastroscopy',
         language: shown,
         texts,
+        // 읽어 줄 때만 또박이 이름을 발음용 철자로 바꾼다(화면 글자는 그대로).
+        speechName:
+          shown in characterNames
+            ? characterNames[shown as keyof typeof characterNames]
+            : null,
       },
       window.location.origin,
     );
