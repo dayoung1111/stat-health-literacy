@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import {
@@ -8,6 +9,7 @@ import {
   type DayBeforeLessonTexts,
 } from '@/lib/day-before-lesson';
 import type { GuideKind } from '@/lib/guide-catalog';
+import { guideFinish } from '@/lib/guide-progress';
 import { characterNames } from '@/lib/speech-names';
 
 import { useLanguageOr } from '../../../language-provider';
@@ -28,7 +30,8 @@ import { translateLesson } from '../../translate-lesson';
 type LessonMessage =
   | { type: 'stat-lesson-ready'; lesson: 'day-before' }
   | { type: 'stat-lesson-height'; lesson: 'day-before'; height: number }
-  | { type: 'stat-lesson-finished'; lesson: 'day-before' };
+  | { type: 'stat-lesson-finished'; lesson: 'day-before' }
+  | { type: 'stat-lesson-next'; lesson: 'day-before' };
 
 function isLessonMessage(data: unknown): data is LessonMessage {
   if (typeof data !== 'object' || data === null) return false;
@@ -36,6 +39,7 @@ function isLessonMessage(data: unknown): data is LessonMessage {
   if (message.lesson !== 'day-before') return false;
   if (
     message.type === 'stat-lesson-finished' ||
+    message.type === 'stat-lesson-next' ||
     message.type === 'stat-lesson-ready'
   ) {
     return true;
@@ -71,7 +75,9 @@ export function DayBeforeFrame({
   // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
   const completed = useCompletedGuides(code, fromServer);
   const recorded = useRef(false);
-  const { language: shown } = useLanguageOr(language);
+  const router = useRouter();
+  const { language: shown, t } = useLanguageOr(language);
+  const { nextHref } = guideFinish(t, code, 'checkup', guides, completed);
   const [texts, setTexts] = useState<DayBeforeLessonTexts | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -108,6 +114,19 @@ export function DayBeforeFrame({
     );
   }, [ready, texts, shown]);
 
+  // 다음 안내가 있는지 수업에 알려 준다. 마지막 장면에서 "다음"을 누르면 수업이 이에 따라 움직인다.
+  useEffect(() => {
+    if (!ready) return;
+    frameRef.current?.contentWindow?.postMessage(
+      {
+        type: 'stat-lesson-has-next',
+        lesson: 'day-before',
+        hasNext: nextHref !== null,
+      },
+      window.location.origin,
+    );
+  }, [ready, nextHref]);
+
   useEffect(() => {
     function onMessage(event: MessageEvent) {
       // 우리 앱 주소에서, 이 액자 안의 수업이 보낸 말만 믿는다.
@@ -124,14 +143,20 @@ export function DayBeforeFrame({
         return;
       }
       // 다시 보고 또 끝내도 기록은 한 번만 남긴다.
-      if (recorded.current) return;
-      recorded.current = true;
+      if (!recorded.current) {
+        recorded.current = true;
+        markGuideDone(code, 'checkup');
+      }
+      // 마지막 장면에서 "다음"을 누르면 "다 봤어요"를 기록하고 바로 다음 안내로 간다.
+      if (event.data.type === 'stat-lesson-next') {
+        if (nextHref) router.push(nextHref);
+        return;
+      }
       setFinished(true);
-      markGuideDone(code, 'checkup');
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [code]);
+  }, [code, nextHref, router]);
 
   return (
     <FrameWithBoard

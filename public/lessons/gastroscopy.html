@@ -383,7 +383,7 @@ function parseMark(s){const m=/\*\*(.+?)\*\*/.exec(s);
 // ===== 상태 =====
 const $=id=>document.getElementById(id);
 const st={line:0,maxLine:0,playing:false,started:false,quiz:false,cheer:false,done:false,wrong:-1};
-let token=0,timer=null,reviewing=false,sound=true,shownScene=null,voice=null;
+let HAS_NEXT=false,token=0,timer=null,reviewing=false,sound=true,shownScene=null,voice=null;
 function set(patch){Object.assign(st,patch);render()}
 
 // ===== 소리 =====
@@ -472,7 +472,12 @@ function render(){
   $('lessons').innerHTML=LESSONS.map(n=>{
     let lastIdx=0;LINES.forEach((x,i)=>{if(x.lesson===n)lastIdx=i});
     const now=st.started&&!finished&&cur.lesson===n,dn=st.started&&(st.maxLine>lastIdx||finished);
-    return `<li class="${now?'now':dn?'done':''}"><b>${esc(TX.lessonNames[n-1])}</b><span>${now?esc(TX.ui.now):dn?esc(TX.ui.done):''}</span></li>`}).join('');
+    return `<li class="${now?'now':dn?'done':''}" data-lesson="${n}" role="button" tabindex="0"><b>${esc(TX.lessonNames[n-1])}</b><span>${now?esc(TX.ui.now):dn?esc(TX.ui.done):''}</span></li>`}).join('');
+  // 오른쪽 "오늘의 수업" 목록: 누르면 그 교시의 첫 장면으로 바로 넘어간다.
+  $('lessons').querySelectorAll('li').forEach(li=>{
+    const go=()=>{const idx=LINES.findIndex(x=>x.lesson===+li.dataset.lesson);if(idx<0)return;reviewing=false;set({started:true,playing:true});playLine(idx)};
+    li.onclick=go;li.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+  });
   [...$('bars').children].forEach((b,i)=>b.className=st.started&&i<=st.maxLine?'on':'');
   $('playBtn').textContent=st.playing?TX.ui.pause:TX.ui.play;
 }
@@ -505,7 +510,14 @@ $('playBtn').onclick=()=>{
 function step(n){reviewing=false;
   if(st.playing)playLine(n);else{stopAll();set({started:true,line:n,maxLine:Math.max(st.maxLine,n),quiz:false,cheer:false,done:false})}}
 $('prevBtn').onclick=()=>step(Math.max(0,st.line-1));
-$('nextBtn').onclick=()=>step(Math.min(LINES.length-1,st.line+1));
+$('nextBtn').onclick=()=>{
+  // 마지막 장면(퀴즈 포함)에서 "다음": 같은 장면을 다시 틀지 않고, 다음 안내가 있으면 앱이 넘겨 주고 없으면 수업 완료 화면.
+  if(st.line===LINES.length-1){
+    reviewing=false;stopAll();
+    if(HAS_NEXT){set({started:true,playing:false});tellApp({type:'stat-lesson-next',lesson:'gastroscopy'})}
+    else{set({started:true,playing:false,maxLine:LINES.length-1,quiz:false,cheer:true,done:true});tellApp({type:'stat-lesson-finished',lesson:'gastroscopy'})}
+    return}
+  step(st.line+1)};
 function showSound(){const b=$('soundBtn');b.setAttribute('aria-pressed',String(sound));if(TX)b.textContent=sound?TX.ui.soundOn:TX.ui.soundOff}
 $('soundBtn').onclick=()=>{sound=!sound;try{localStorage.setItem('stat-sound',sound?'on':'off')}catch(_){}showSound();if(!sound)try{speechSynthesis.cancel()}catch(_){}};
 $('backBtn').onclick=()=>{if(history.length>1)history.back();else location.href='/'};
@@ -526,6 +538,7 @@ window.addEventListener('message',e=>{
   const d=e.data;
   // 앱이 받은 안내 칸을 오른쪽 칸 맨 위에 놓을 때, 이 목록을 그만큼 아래로 내린다.
   if(d&&d.type==='stat-lesson-offset'&&d.lesson==='gastroscopy'&&typeof d.offset==='number'){document.querySelector('aside').style.marginTop=Math.max(0,Math.round(d.offset))+'px';sendHeight();return}
+  if(d&&d.type==='stat-lesson-has-next'&&d.lesson==='gastroscopy'){HAS_NEXT=d.hasNext===true;return}
   if(d&&d.type==='stat-lesson-texts'&&d.lesson==='gastroscopy'&&d.texts&&Array.isArray(d.texts.lines)){SPEECH_NAME=d.speechName&&d.speechName.written?d.speechName:null;applyTexts(d.language,d.texts)}
 });
 tellApp({type:'stat-lesson-ready',lesson:'gastroscopy'});
