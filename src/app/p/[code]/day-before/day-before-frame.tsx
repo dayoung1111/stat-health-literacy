@@ -23,7 +23,7 @@ import { translateLesson } from '../../translate-lesson';
 // - stat-lesson-ready: 수업 파일이 열림 → 앱이 고른 언어로 번역한 글자(day-before-lesson.ts)를 stat-lesson-texts로 보낸다.
 //   수업 파일에는 글자가 없고, 화면 글자·말풍선·읽어 주는 목소리의 언어를 모두 이 글자와 언어에 따른다.
 // - stat-lesson-height: 수업 화면 높이가 바뀜 → 액자 높이를 맞춘다.
-// - stat-lesson-finished: 퀴즈까지 끝남 → "다 봤어요"를 기록하고 다음 안내 버튼을 보여 준다.
+// - stat-lesson-finished: 마지막 장면까지 끝남(퀴즈 없음) → "다 봤어요"를 기록하고 다음 안내 버튼을 보여 준다.
 //   다음 안내는 대장내시경 수업처럼 화면이 받은 목록으로 바로 정한다(GuideFinish). 서버 저장은 뒤에서 한다.
 type LessonMessage =
   | { type: 'stat-lesson-ready'; lesson: 'day-before' }
