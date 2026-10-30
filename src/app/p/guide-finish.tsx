@@ -52,7 +52,7 @@ export function GuideFinish({
         <ButtonLink href={nextHref}>{t.nextButton(t.guides[next])}</ButtonLink>
       ) : (
         <ButtonLink href={`/p/${code}/home`}>
-          🏠 <T>{screenTexts.teachback.toHome}</T>
+          🏠 <T>{screenTexts.common.home}</T>
         </ButtonLink>
       )}
     </div>

@@ -7,12 +7,14 @@ export const vi: Messages = {
   languagePicker: 'Chọn ngôn ngữ',
 
   home: {
-    hello: 'Xin chào, tôi là Ttobagi.',
+    hello: 'Xin chào, tôi là Ttobagi!',
     headline: 'Hướng dẫn bệnh viện khó hiểu,\nnay thật dễ hiểu',
     enter: 'Vào dành cho bệnh nhân',
-    enterHint: 'Tôi có mã số từ bệnh viện',
+    enterHint: 'Hãy nhập mã số bệnh viện đã đưa',
     call: 'Không có mã số? Gọi bệnh viện',
     staff: 'Đăng nhập nhân viên y tế',
+    howTitle: 'Cách dùng',
+    how: ['Nhập mã số', 'Bài học Ttobagi', 'Câu đố nhanh'],
   },
 
   ttobagi: {
@@ -31,7 +33,11 @@ export const vi: Messages = {
     birthHint: 'Ví dụ: ngày 4 tháng 7 năm 1985 → 850704',
     codeDigit: (n) => `Mã số giáo dục, số thứ ${n}`,
     birthDigit: (n) => `Ngày sinh, số thứ ${n}`,
-    submit: 'Xác nhận ▶',
+    submit: 'Vào',
+    bubble: 'Hãy nhập số ghi trên tờ giấy',
+    bubbleBirth: 'Hãy nhập 6 số ngày sinh',
+    privacy:
+      'Ngày sinh chỉ dùng để xác nhận đúng là bạn, chúng tôi không hỏi tên.',
     checking: 'Đang kiểm tra…',
     callHelp: '📞 Gặp khó khăn? Gọi bệnh viện',
     typeCode: 'Tôi sẽ tự nhập mã số giáo dục',

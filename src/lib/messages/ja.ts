@@ -7,12 +7,14 @@ export const ja: Messages = {
   languagePicker: '言語の選択',
 
   home: {
-    hello: 'こんにちは、トバギです。',
+    hello: 'こんにちは、トバギです！',
     headline: 'むずかしい病院の案内を、\nやさしくお伝えします',
     enter: '患者として入る',
-    enterHint: '病院でもらった番号があります',
+    enterHint: '病院でもらった番号を入れてください',
     call: '番号がわからないときは病院に電話',
     staff: '医療スタッフのログイン',
+    howTitle: 'つかいかた',
+    how: ['番号を入れる', 'トバギの授業', 'とつぜんクイズ'],
   },
 
   ttobagi: {
@@ -31,7 +33,10 @@ export const ja: Messages = {
     birthHint: '例：1985年7月4日 → 850704',
     codeDigit: (n) => `教育番号 ${n}けた目`,
     birthDigit: (n) => `生年月日 ${n}けた目`,
-    submit: '確認 ▶',
+    submit: '進む',
+    bubble: '紙に書かれた番号を入れてください',
+    bubbleBirth: '生年月日6桁を入れてください',
+    privacy: '生年月日は本人確認にだけ使い、お名前はお聞きしません。',
     checking: '確認中…',
     callHelp: '📞 うまくいかないときは病院に電話',
     typeCode: '教育番号を自分で入れます',

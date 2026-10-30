@@ -1,0 +1,153 @@
+/* 환자 화면(번호 넣기·받은 안내 목록·검사별 안내 홈) 전용 겉모양.
+   공통 부품(뒤로 버튼·소리 버튼·또박이)의 파일은 고치지 않고, 감싼 칸 안에서만 모양을 덮어쓴다. */
+
+.sd {
+  --sd-teal: #0f6670;
+  --sd-ink: #15262b;
+  --sd-paper: #f3f6f5;
+  --sd-mint: #dcedee;
+  --sd-done: #2e9e6b;
+  --sd-yellow: #f2d06b;
+  --sd-red: #d9363e;
+  --sd-line: #cad6d6;
+  color: var(--sd-ink);
+}
+
+/* 위쪽 버튼(뒤로/소리/처음으로): 같은 높이의 흰 동그란 버튼 + 회색 테두리 */
+.sd-top a,
+.sd-top button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1.5px solid var(--sd-line);
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0 1.125rem;
+  color: var(--sd-ink);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.sd-top a:hover,
+.sd-top button:hover {
+  border-color: var(--sd-teal);
+  color: var(--sd-teal);
+}
+.sd-top a:focus-visible,
+.sd-top button:focus-visible {
+  outline: 4px solid var(--sd-teal);
+  outline-offset: 2px;
+}
+
+/* 소리 버튼: 이모지 대신 선 아이콘(누른 상태는 그대로 aria-pressed로 구분) */
+.sd-top button[aria-pressed] {
+  width: 3rem;
+  justify-content: center;
+  padding: 0;
+}
+.sd-top button[aria-pressed] > span {
+  display: none;
+}
+.sd-top button[aria-pressed]::before {
+  content: '';
+  width: 1.5rem;
+  height: 1.5rem;
+  background: currentColor;
+  mask: var(--sd-sound-icon) center / contain no-repeat;
+}
+.sd-top button[aria-pressed='true'] {
+  --sd-sound-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12'/%3E%3C/svg%3E");
+}
+.sd-top button[aria-pressed='false'] {
+  --sd-sound-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M17 9l5 6M22 9l-5 6'/%3E%3C/svg%3E");
+}
+
+/* 또박이 말풍선: 청록 바탕 + 흰 글자(또박이 그림은 그대로) */
+.sd-bubble > button > span:last-child {
+  border-color: var(--sd-teal);
+  background: var(--sd-teal);
+}
+.sd-bubble > button > span:last-child > span:first-child {
+  border-color: var(--sd-teal);
+  background: var(--sd-teal);
+}
+.sd-bubble > button > span:last-child > span:last-child {
+  color: #fff;
+}
+
+/* 모든 카드 같은 모양: 흰 바탕, 연한 테두리, 둥근 모서리 */
+.sd-card {
+  border: 1.5px solid var(--sd-line);
+  border-radius: 1.25rem;
+  background: #fff;
+}
+a.sd-card:hover {
+  border-color: var(--sd-teal);
+}
+a.sd-card:focus-visible,
+.sd-focus:focus-visible {
+  outline: 4px solid var(--sd-teal);
+  outline-offset: 3px;
+}
+.sd-card-danger {
+  border-color: #f1c4c6;
+  background: #fbeced;
+  color: var(--sd-red);
+}
+a.sd-card-danger:hover {
+  border-color: var(--sd-red);
+}
+
+/* 청록 큰 버튼 */
+.sd-primary {
+  border-radius: 1.25rem;
+  background: var(--sd-teal);
+  color: #fff;
+}
+.sd-primary:hover {
+  background: #0a4d55;
+}
+.sd-primary:disabled {
+  background: #a1a1aa;
+}
+
+/* 상태 칩 */
+.sd-chip {
+  flex: none;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sd-chip-done {
+  background: #ddf3e8;
+  color: #1d6e47;
+}
+.sd-chip-left {
+  background: var(--sd-mint);
+  color: var(--sd-teal);
+}
+
+/* 진행 막대 */
+.sd-bar {
+  height: 0.75rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--sd-mint);
+}
+.sd-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--sd-done);
+}
+
+/* 번호 칸 사이 줄표(3-3, 년-월-일) */
+.sd-dash {
+  align-self: center;
+  flex: none;
+  color: #71717a;
+  font-size: 1.5rem;
+  font-weight: 700;
+}

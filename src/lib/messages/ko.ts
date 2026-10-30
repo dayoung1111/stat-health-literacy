@@ -19,12 +19,14 @@ export const ko = {
 
   // 첫 화면
   home: {
-    hello: '안녕하세요, 또박이예요.',
+    hello: '안녕하세요, 또박이예요!',
     headline: '어려운 병원 안내문,\n쉽게 알려 드릴게요',
     enter: '환자로 들어가기',
-    enterHint: '병원에서 받은 번호가 있어요',
+    enterHint: '병원에서 받은 번호를 넣어 주세요',
     call: '번호를 모르면 병원에 전화',
     staff: '의료진 로그인',
+    howTitle: '이렇게 쓰여요',
+    how: ['번호 넣기', '또박이 수업', '돌발 퀴즈'],
   },
 
   // 또박이 말풍선·소리 버튼(화면 읽기 프로그램용)
@@ -45,7 +47,10 @@ export const ko = {
     birthHint: '예: 1985년 7월 4일 → 850704',
     codeDigit: (n: number) => `교육 번호 ${n}번째 자리`,
     birthDigit: (n: number) => `생년월일 ${n}번째 자리`,
-    submit: '확인 ▶',
+    submit: '들어가기',
+    bubble: '종이에 적힌 번호를 넣어 주세요',
+    bubbleBirth: '생년월일 6자리를 넣어 주세요',
+    privacy: '생년월일은 본인 확인에만 쓰고, 이름은 묻지 않아요.',
     checking: '확인 중…',
     callHelp: '📞 잘 안 되면 병원에 전화',
     typeCode: '교육 번호를 직접 넣을게요',

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   useActionState,
   useImperativeHandle,
   useRef,
@@ -10,7 +11,7 @@ import {
 
 import { useLanguageOr } from '../language-provider';
 import { enterPatient, type EntryState } from './actions';
-import { buttonClass } from './ui';
+import { LineIcon } from './screen-design';
 
 // 코드가 주어지면(문자 링크) 생년월일 칸만 보여 준다.
 // 교육 번호 6칸과 생년월일 6칸은 하나로 이어진다: 다 채우면 다음 묶음으로, 빈 첫 칸에서 지우면 앞 묶음으로.
@@ -40,13 +41,17 @@ export function PatientEntryForm({
         : null;
 
   return (
-    <form action={formAction} className="flex flex-col gap-8">
+    <form
+      action={formAction}
+      className="sd sd-card flex flex-col gap-7 p-5 sm:p-6"
+    >
       {code ? (
         <input type="hidden" name="code" value={code} />
       ) : (
         <DigitBoxes
           ref={codeBoxes}
           name="code"
+          groups={[3]}
           label={t.entry.codeLabel}
           hint={t.entry.codeHint}
           boxLabel={t.entry.codeDigit}
@@ -58,6 +63,7 @@ export function PatientEntryForm({
       <DigitBoxes
         ref={birthBoxes}
         name="birthDate"
+        groups={[2, 4]}
         label={t.entry.birthLabel}
         hint={t.entry.birthHint}
         boxLabel={t.entry.birthDigit}
@@ -69,7 +75,7 @@ export function PatientEntryForm({
       {message && (
         <p
           role="alert"
-          className="rounded-3xl bg-stat-alert-soft p-5 text-xl font-semibold text-stat-alert"
+          className="rounded-2xl border-[1.5px] border-[#F1C4C6] bg-[#FBECED] p-5 text-xl font-semibold text-[#D9363E]"
         >
           {message}
         </p>
@@ -78,10 +84,14 @@ export function PatientEntryForm({
         ref={submit}
         type="submit"
         disabled={pending}
-        className={buttonClass.primary}
+        className="sd-primary sd-focus flex min-h-18 w-full items-center justify-center text-2xl font-bold"
       >
         {pending ? t.entry.checking : t.entry.submit}
       </button>
+      <p className="flex items-start gap-2 text-lg leading-snug break-keep text-zinc-600">
+        <LineIcon name="lock" className="mt-0.5 size-5 shrink-0" />
+        {t.entry.privacy}
+      </p>
     </form>
   );
 }
@@ -98,11 +108,12 @@ type DigitBoxesHandle = {
   eraseLast: () => void;
 };
 
-// 숫자 한 칸씩 6칸. 숫자를 넣으면 다음 칸으로, 빈 칸에서 지우면 앞 칸으로, 화살표로 좌우 이동,
+// 숫자 한 칸씩 6칸(groups 자리 앞에 줄표만 보여 준다. 예: [3] → 123-456). 숫자를 넣으면 다음 칸으로, 빈 칸에서 지우면 앞 칸으로, 화살표로 좌우 이동,
 // 붙여 넣으면 나눠 채운다. 숫자가 아닌 글자는 받지 않는다.
 function DigitBoxes({
   ref,
   name,
+  groups = [],
   label,
   hint,
   boxLabel,
@@ -114,6 +125,8 @@ function DigitBoxes({
 }: {
   ref: Ref<DigitBoxesHandle>;
   name: string;
+  /** 이 자리 앞에 줄표를 보여 준다(보이기만 하고 입력에는 영향 없음). */
+  groups?: number[];
   label: string;
   hint: string;
   /** 칸마다 읽어 줄 이름(예: "교육 번호 1번째 자리") */
@@ -178,58 +191,64 @@ function DigitBoxes({
         {hint}
       </p>
       <input type="hidden" name={name} value={digits.join('')} />
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex gap-1.5">
         {digits.map((digit, i) => (
-          <input
-            key={i}
-            ref={(el) => {
-              boxes.current[i] = el;
-            }}
-            value={digit}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="off"
-            aria-label={boxLabel(i + 1)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errorId : undefined}
-            // 칸에 들어가면 있던 숫자를 골라 두어, 새 숫자를 넣으면 바로 바뀐다.
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === '') return clear(i);
-              // 숫자가 아닌 글자는 무시한다(칸은 그대로).
-              const typed = value.replace(/\D/g, '');
-              if (typed) fill(i, typed.slice(-1));
-            }}
-            onPaste={(e) => {
-              e.preventDefault();
-              fill(i, e.clipboardData.getData('text'));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Backspace' && digit === '') {
+          <Fragment key={i}>
+            {groups.includes(i) && (
+              <span aria-hidden="true" className="sd-dash">
+                -
+              </span>
+            )}
+            <input
+              ref={(el) => {
+                boxes.current[i] = el;
+              }}
+              value={digit}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              aria-label={boxLabel(i + 1)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? errorId : undefined}
+              // 칸에 들어가면 있던 숫자를 골라 두어, 새 숫자를 넣으면 바로 바뀐다.
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') return clear(i);
+                // 숫자가 아닌 글자는 무시한다(칸은 그대로).
+                const typed = value.replace(/\D/g, '');
+                if (typed) fill(i, typed.slice(-1));
+              }}
+              onPaste={(e) => {
                 e.preventDefault();
-                if (i > 0) {
-                  clear(i - 1);
-                  focusBox(i - 1);
-                } else {
-                  onEraseBeforeFirst?.();
+                fill(i, e.clipboardData.getData('text'));
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Backspace' && digit === '') {
+                  e.preventDefault();
+                  if (i > 0) {
+                    clear(i - 1);
+                    focusBox(i - 1);
+                  } else {
+                    onEraseBeforeFirst?.();
+                  }
+                } else if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  if (i > 0) focusBox(i - 1);
+                  else onBeforeFirst?.();
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  if (i < length - 1) focusBox(i + 1);
+                  else onAfterLast?.();
                 }
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                if (i > 0) focusBox(i - 1);
-                else onBeforeFirst?.();
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                if (i < length - 1) focusBox(i + 1);
-                else onAfterLast?.();
-              }
-            }}
-            className="h-16 w-full min-w-0 flex-1 rounded-xl border-2 border-stat-green bg-white text-center font-mono text-3xl font-bold focus-visible:outline-4 focus-visible:outline-stat-mint aria-invalid:border-stat-alert"
-          />
+              }}
+              className="h-16 w-full min-w-0 flex-1 rounded-xl border-[1.5px] border-[#CAD6D6] bg-[#F3F6F5] text-center font-mono text-3xl font-bold focus-visible:border-[#0F6670] focus-visible:bg-white focus-visible:outline-4 focus-visible:outline-[#DCEDEE] aria-invalid:border-[#D9363E]"
+            />
+          </Fragment>
         ))}
       </div>
       {error && (
-        <p id={errorId} className="mt-2 text-xl text-stat-alert">
+        <p id={errorId} className="mt-2 text-xl text-[#D9363E]">
           {error}
         </p>
       )}
