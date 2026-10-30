@@ -33,7 +33,11 @@ export const en: Messages = {
     birthHint: 'e.g. July 4, 1985 → 850704',
     codeDigit: (n) => `Education number, digit ${n}`,
     birthDigit: (n) => `Date of birth, digit ${n}`,
-    submit: 'OK ▶',
+    submit: 'Enter',
+    bubble: 'Please enter the number on your paper.',
+    bubbleBirth: 'Please enter your 6-digit date of birth.',
+    privacy:
+      'We only use your date of birth to confirm it is you. We never ask your name.',
     checking: 'Checking…',
     callHelp: '📞 Having trouble? Call the hospital',
     typeCode: 'I will type the education number',
