@@ -1,10 +1,9 @@
-import Image from 'next/image';
-
 import type { CardItem, KeyTone, LessonCard } from '@/lib/demo-guide';
 
 import { screenTexts } from '@/lib/screen-texts';
 
 import { T } from '../../translated';
+import { SafeImage } from '../error-report';
 import { Drawing } from '../pictures';
 import { FitText } from './fit-text';
 
@@ -208,7 +207,7 @@ function ItemPicture({ item, wide }: { item: CardItem; wide: boolean }) {
   if (item.photo) {
     return (
       <span className="pc-photo">
-        <Image
+        <SafeImage
           src={item.photo.src}
           alt={item.photo.alt}
           fill
