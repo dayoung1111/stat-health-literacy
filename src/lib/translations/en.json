@@ -660,5 +660,12 @@
   "정답은 「안 먹어요」예요. 간호사에게 꼭 물어보세요.": "The answer is \"Do not take it.\" Be sure to ask your nurse.",
   "정답은 「간호사」예요. 간호사에게 꼭 물어보세요.": "The answer is \"Nurse.\" Be sure to ask your nurse.",
   "정답은 「안 돼요」예요. 간호사에게 꼭 물어보세요.": "The answer is \"Not allowed.\" Be sure to ask your nurse.",
-  "정답은 「전화해요」예요. 간호사에게 꼭 물어보세요.": "The answer is \"Call.\" Be sure to ask your nurse."
+  "정답은 「전화해요」예요. 간호사에게 꼭 물어보세요.": "The answer is \"Call.\" Be sure to ask your nurse.",
+  "안 봄": "Not seen",
+  "오늘 할 일": "Today's tasks",
+  "처음부터 보기": "Start from the beginning",
+  "안내가 1개 왔어요. 1번부터 같이 봐요!": "You have 1 notice. Let's look at No. 1 together!",
+  "안내가 2개 왔어요. 1번부터 같이 봐요!": "You have 2 notices. Let's look at No. 1 together!",
+  "안내가 3개 왔어요. 1번부터 같이 봐요!": "You have 3 notices. Let's look at No. 1 together!",
+  "안내가 4개 왔어요. 1번부터 같이 봐요!": "You have 4 notices. Let's look at No. 1 together!"
 }

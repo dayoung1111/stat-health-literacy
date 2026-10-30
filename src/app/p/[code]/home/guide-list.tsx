@@ -9,6 +9,7 @@ import { screenTexts } from '@/lib/screen-texts';
 import { GuideIconSvg } from '../../../guide-icon';
 import { useLanguageOr } from '../../../language-provider';
 import { LabeledBox, T } from '../../../translated';
+import { FitText } from '../../ttobak/fit-text';
 import { useCompletedGuides } from '../../guide-done';
 import { LineIcon } from '../../screen-design';
 
@@ -66,7 +67,7 @@ export function GuideList({
       <LabeledBox
         as="nav"
         label={screenTexts.common.navReceivedGuides}
-        className="grid gap-4 lg:grid-cols-2"
+        className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2"
       >
         {items.map((item, i) => {
           const done = completed.includes(item.kind);
@@ -74,7 +75,7 @@ export function GuideList({
             <Link
               key={item.kind}
               href={item.href}
-              className="sd-card flex min-h-28 items-center gap-4 px-5 py-4"
+              className="sd-card flex min-h-28 min-w-0 items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5"
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#0F6670] text-lg font-bold text-white">
                 {i + 1}
@@ -84,9 +85,10 @@ export function GuideList({
                 className="size-11 shrink-0 text-[#0F6670]"
               />
               <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-2xl font-bold break-keep">
-                  <T>{item.name}</T>
-                </span>
+                {/* 긴 번역 제목은 2줄 안에 들어가게 글자 크기를 줄인다. */}
+                <FitText className="block text-2xl font-bold break-keep">
+                  {item.name}
+                </FitText>
                 {item.hint && (
                   <span className="text-lg break-keep text-zinc-600">
                     <T>{item.hint}</T>

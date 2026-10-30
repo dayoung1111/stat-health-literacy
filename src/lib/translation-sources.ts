@@ -2,7 +2,8 @@ import { photoLessons } from '../app/p/ttobak/photo-lesson';
 import * as demoGuideModule from './demo-guide';
 import { dayBeforeLessonKo } from './day-before-lesson';
 import { gastroLessonKo } from './gastro-lesson';
-import { guideCatalog } from './guide-catalog';
+import { designTexts } from './design-screen-texts';
+import { guideCatalog, guideKinds } from './guide-catalog';
 import { homeSourceTexts } from './home-texts';
 import { medications, verdictLabels } from './medication-guide';
 import { screenFunctionTexts, screenTexts } from './screen-texts';
@@ -41,6 +42,9 @@ export function presetSourceTexts() {
       home: homeSourceTexts,
       screenTexts,
       screenFunctionTexts,
+      design: designTexts,
+      // 받은 안내 개수(1개부터 안내 종류 수까지)마다 문장이 달라진다.
+      designCounts: guideKinds.map((_, i) => designTexts.guidesCame(i + 1)),
     }),
   ];
 }
