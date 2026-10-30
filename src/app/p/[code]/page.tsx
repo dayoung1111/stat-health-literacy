@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { hasDemoSession, isOpenableCode } from '@/lib/demo-patient';
 
 import { EntryText } from '../entry-text';
+import { ReportOnce } from '../error-report';
 import { PatientEntryForm } from '../patient-entry-form';
 import { CallButton, Loading } from '../ui';
 
@@ -37,6 +38,7 @@ async function BirthDateStep({ code }: { code: string }) {
   if (!(await isOpenableCode(code))) {
     return (
       <div role="alert">
+        <ReportOnce kind="code-expired" />
         <h1 className="mt-4 mb-4 text-3xl leading-snug font-bold break-keep">
           <EntryText name="badCode" />
         </h1>

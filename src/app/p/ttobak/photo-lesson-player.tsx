@@ -24,6 +24,7 @@ import {
   type LessonAction,
   type LessonState,
 } from './lesson-state';
+import { lessonPlace } from '@/lib/error-log';
 import type { GuideKind } from '@/lib/guide-catalog';
 import { guideFinish } from '@/lib/guide-progress';
 
@@ -32,6 +33,7 @@ import { screenTexts } from '@/lib/screen-texts';
 import { useLanguageOr } from '../../language-provider';
 import { T, useTranslatedTexts } from '../../translated';
 
+import { setLessonPlace } from '../error-report';
 import { GuideBoard } from '../guide-board';
 import { markGuideDone, useCompletedGuides } from '../guide-done';
 import { CardScene } from './card-scene';
@@ -149,6 +151,14 @@ export function PhotoLesson({
   const minMs = getMinDuration(lessons, state);
   const autoNext = advancesByItself(state.mode);
   const here = flatIndex(lessons, state.lesson, state.step);
+
+  // 오류가 나면 "몇 교시 몇 단계"였는지 기록할 수 있게 지금 위치를 알려 둔다(화면에는 영향 없음).
+  useEffect(() => {
+    setLessonPlace(
+      lessonPlace(state.lesson, state.step, state.mode === 'quiz'),
+    );
+    return () => setLessonPlace(null);
+  }, [state.lesson, state.step, state.mode]);
 
   // 말하기: 음성이 끝나고 최소 시간이 지나면 다음으로. 음성이 없으면 시간에 맞춰 넘어간다.
   useEffect(() => {

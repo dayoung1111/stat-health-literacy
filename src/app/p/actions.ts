@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { isCodeShape } from '@/lib/code-shape';
 import { startDemoSession } from '@/lib/demo-patient';
 import { checkPatientEntry } from '@/lib/education-store';
+import { BIRTH_PLACE, newErrorNumber } from '@/lib/error-log';
+import { recordPatientError } from '@/lib/error-log-store';
 
 // 오류는 글이 아니라 종류만 돌려주고, 화면이 고른 언어로 보여 준다(src/lib/messages/ entry).
 const sixDigits = z.string().regex(/^\d{6}$/);
@@ -43,7 +45,16 @@ export async function enterPatient(
   const { code, birthDate } = parsed.data;
   const entry = await checkPatientEntry(code, birthDate);
   if (!entry.ok) {
-    if (entry.reason === 'locked') return { error: { kind: 'locked' } };
+    if (entry.reason === 'locked') {
+      // 오류 기록에는 코드·화면·종류만 남긴다(입력한 생년월일은 남기지 않는다).
+      await recordPatientError({
+        errorNumber: newErrorNumber(),
+        kind: 'birth-locked',
+        place: BIRTH_PLACE,
+        code,
+      });
+      return { error: { kind: 'locked' } };
+    }
     return {
       error:
         entry.reason === 'wrong'

@@ -1,10 +1,10 @@
-import Image from 'next/image';
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 
 import { prepSteps } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 
 import { FittedSvgText, T, useTranslatedTexts } from '../../translated';
+import { SafeImage } from '../error-report';
 import { Drawing } from '../pictures';
 import { getPhoto, type Lesson, type LessonStep } from './photo-lesson';
 import { FitText } from './fit-text';
@@ -171,7 +171,7 @@ function FramedPhoto({
         className="ld-photo-frame"
         style={frameStyle(src, boxAspect, cover)}
       >
-        <Image
+        <SafeImage
           src={src}
           alt={alt}
           fill

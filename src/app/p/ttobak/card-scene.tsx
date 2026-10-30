@@ -1,10 +1,9 @@
-import Image from 'next/image';
-
 import type { CardItem, KeyTone, LessonCard } from '@/lib/demo-guide';
 
 import { screenTexts } from '@/lib/screen-texts';
 
 import { T } from '../../translated';
+import { SafeImage } from '../error-report';
 import { Drawing } from '../pictures';
 
 // 3·4·7·8교시 카드 장면: 위에 큰 안내 카드, 아래에 이름표 붙은 사진(그림) 카드.
@@ -206,7 +205,7 @@ function ItemPicture({ item, wide }: { item: CardItem; wide: boolean }) {
   if (item.photo) {
     return (
       <span className="pc-photo">
-        <Image
+        <SafeImage
           src={item.photo.src}
           alt={item.photo.alt}
           fill
