@@ -421,7 +421,7 @@ function answer(i){
   if(i===QUIZ_CORRECT){
     reviewing=false;set({quiz:false,cheer:true});
     tellApp({type:'stat-lesson-finished',lesson:'gastroscopy'});
-    say(CHEER,()=>{stopAll();set({done:true,playing:false})},1500);
+    say(CHEER,()=>{stopAll();set({done:true,playing:false});if(HAS_NEXT)tellApp({type:'stat-lesson-next',lesson:'gastroscopy'})},1500);
   }else{
     set({wrong:i});reviewing=true;
     say(TX.ui.retry,()=>playLine(QUIZ_BACK),900);
@@ -570,6 +570,8 @@ function pauseLesson(){if(st.playing){stopAll();set({playing:false})}}
 if(EMBED)$('soundBtn').after(bigBtn);
 [$('bigplay'),$('playBtn')].forEach(b=>b.addEventListener('click',()=>{if(!st.playing)tellPlay()},true));
 $('lessons').addEventListener('click',e=>{if(e.target.closest('button'))tellPlay()});
+// 앱이 아직 준비 전이라 알림을 놓쳤을 수 있으니, 글자가 올 때까지 0.5초마다 다시 알린다(최대 10초).
+let readyTries=0;const readyTimer=setInterval(()=>{if(TX||++readyTries>20){clearInterval(readyTimer);return}tellApp({type:'stat-lesson-ready',lesson:'gastroscopy'})},500);
 tellApp({type:'stat-lesson-ready',lesson:'gastroscopy'});
 </script>
 </body>

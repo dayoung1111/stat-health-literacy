@@ -164,7 +164,22 @@ export function reduceLesson(
 
     case 'next':
     case 'prev': {
+      // 돌발 퀴즈·"다시 볼까요?"·칭찬 중에 "다음": 퀴즈를 풀지 않아도 다음 교시 첫 장면으로(마지막 교시면 수업 끝).
+      if (
+        action.type === 'next' &&
+        (state.mode === 'quiz' ||
+          state.mode === 'retry' ||
+          state.mode === 'praise')
+      ) {
+        return { ...nextLesson(lessons, state), started: true };
+      }
       const here = flatIndex(lessons, state.lesson, state.step);
+      // 마지막 교시의 마지막 장면에서 "다음": 수업을 마친다(화면이 "완료" 표시 후 다음 안내로 간다).
+      if (action.type === 'next' && here === totalSteps(lessons) - 1) {
+        return state.mode === 'done'
+          ? state
+          : { ...state, started: true, mode: 'done', playing: false };
+      }
       const target = fromFlat(
         lessons,
         action.type === 'next' ? here + 1 : here - 1,

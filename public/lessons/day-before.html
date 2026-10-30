@@ -550,7 +550,9 @@ function showQuiz(n){
 }
 function hideQuiz(){$('quiz').hidden=true}
 async function finish(){hideQuiz();tellApp({type:'stat-lesson-finished',lesson:'day-before'});buildScene(0);chip.textContent=TX.ui.finishChip;tt.dataset.pose='star';
-  sub.innerHTML='<span class="txt">'+markup(cheer,'g')+'</span>';fitSoon();await say(cheer)}
+  sub.innerHTML='<span class="txt">'+markup(cheer,'g')+'</span>';fitSoon();await say(cheer);
+  // 다 보면(마지막 교시까지) 다음 안내가 있으면 앱이 바로 넘겨 준다.
+  if(HAS_NEXT)tellApp({type:'stat-lesson-next',lesson:'day-before'})}
 
 // 버튼
 $('backBtn').onclick=()=>{if(history.length>1)history.back();else location.href='/';};
@@ -636,6 +638,8 @@ if(EMBED){$('fsBtn').style.display='none';$('playBtn').after(bigBtn)}
 $('bigplay').addEventListener('click',tellPlay,true);
 $('playBtn').addEventListener('click',()=>{if(!playing&&$('quiz').hidden)tellPlay()},true);
 $('chapters').addEventListener('click',e=>{if(e.target.closest('button'))tellPlay()});
+// 앱이 아직 준비 전이라 알림을 놓쳤을 수 있으니, 글자가 올 때까지 0.5초마다 다시 알린다(최대 10초).
+let readyTries=0;const readyTimer=setInterval(()=>{if(TX||++readyTries>20){clearInterval(readyTimer);return}tellApp({type:'stat-lesson-ready',lesson:'day-before'})},500);
 tellApp({type:'stat-lesson-ready',lesson:'day-before'});
 </script>
 
