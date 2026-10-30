@@ -14,6 +14,7 @@ import { useLanguageOr } from '../../../language-provider';
 import { GuideBoard } from '../../guide-board';
 import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
+import { FrameWithBoard } from '../../lesson-layout';
 import { translateLesson } from '../../translate-lesson';
 
 // 위내시경 수업 액자. 검진 전날 수업 액자(day-before-frame.tsx)와 같은 방식이다.
@@ -131,27 +132,32 @@ export function GastroscopyFrame({
   }, [code]);
 
   return (
-    <>
-      <iframe
-        ref={frameRef}
-        src="/lessons/gastroscopy.html?embed=1"
-        title={texts?.ui.frameTitle ?? gastroLessonKo.ui.frameTitle}
-        allow="fullscreen; autoplay"
-        allowFullScreen
-        style={{ height }}
-        className="block w-full border-0"
-      />
-      {finished && (
-        <GuideFinish
-          code={code}
-          guide="gastroscopy"
-          guides={guides}
-          completed={completed}
-          language={language}
+    <FrameWithBoard
+      frameRef={frameRef}
+      lesson="gastroscopy"
+      frame={
+        <iframe
+          ref={frameRef}
+          src="/lessons/gastroscopy.html?embed=1"
+          title={texts?.ui.frameTitle ?? gastroLessonKo.ui.frameTitle}
+          allow="fullscreen; autoplay"
+          allowFullScreen
+          style={{ height }}
+          className="block w-full border-0"
         />
-      )}
-      {/* 휴대폰에서는 수업 아래, 다 보면 다음 안내 버튼 아래에 보인다. */}
-      <div className="mt-6 max-w-xl">
+      }
+      after={
+        finished && (
+          <GuideFinish
+            code={code}
+            guide="gastroscopy"
+            guides={guides}
+            completed={completed}
+            language={language}
+          />
+        )
+      }
+      board={
         <GuideBoard
           code={code}
           current="gastroscopy"
@@ -159,7 +165,7 @@ export function GastroscopyFrame({
           completed={completed}
           language={language}
         />
-      </div>
-    </>
+      }
+    />
   );
 }
