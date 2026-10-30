@@ -528,6 +528,35 @@ window.addEventListener('message',e=>{
   if(d&&d.type==='stat-lesson-offset'&&d.lesson==='gastroscopy'&&typeof d.offset==='number'){document.querySelector('aside').style.marginTop=Math.max(0,Math.round(d.offset))+'px';sendHeight();return}
   if(d&&d.type==='stat-lesson-texts'&&d.lesson==='gastroscopy'&&d.texts&&Array.isArray(d.texts.lines)){SPEECH_NAME=d.speechName&&d.speechName.written?d.speechName:null;applyTexts(d.language,d.texts)}
 });
+// ----- 전체 화면 영상 틀(앱의 src/app/p/video-frame.tsx)과 잇기 -----
+// 재생을 누르면 앱에 알린다(휴대폰이면 앱이 전체 화면으로 연다). "크게 보기"는 언제나 전체 화면으로 연다.
+// 앱이 전체 화면으로 열면 영상과 버튼만 남기고 16:9 영상을 가장 크게 맞춘다. 닫으면 일시정지한다.
+const FULL_CSS='html.app-full,html.app-full body{height:100%;overflow:hidden;background:#000}html.app-full body{margin:0;padding:4px 0!important;box-sizing:border-box}html.app-full .wrap{max-width:none;height:100%;justify-content:center;gap:0}html.app-full header,html.app-full aside,html.app-full .hint,html.app-full #bigBtn{display:none!important}html.app-full .main{display:block}html.app-full .player{margin:0 auto}html.app-full .controls{display:flex!important;flex-wrap:nowrap;gap:8px}html.app-full .controls .btn{min-width:0;padding-left:12px;padding-right:12px;flex:none}html.app-full .controls .bars,html.app-full .controls .spacer{flex:1 1 0;min-width:0}';
+if(EMBED){const s=document.createElement('style');s.textContent=FULL_CSS;document.head.appendChild(s)}
+const bigBtn=document.createElement('button');bigBtn.type='button';bigBtn.className='btn';bigBtn.id='bigBtn';bigBtn.textContent='⛶ 크게 보기';
+bigBtn.onclick=()=>tellApp({type:'stat-lesson-bigview',lesson:LESSON});
+// 자막 줄 수가 바뀌어 높이가 달라져도 잘리지 않게, 전체 화면 동안에는 가장 작게 맞춘 너비를 쓴다(크기가 출렁이지 않게).
+let fullMax=Infinity;
+function fitFull(){const p=document.querySelector('.player');p.style.transform='';p.style.transformOrigin='';
+  if(!document.documentElement.classList.contains('app-full')){p.style.width='';fullMax=Infinity;return}
+  let w=innerWidth;for(let k=0;k<4;k++){p.style.width=w+'px';const rest=p.offsetHeight-w*9/16;w=Math.max(360,Math.min(innerWidth,fullMax,Math.floor((innerHeight-8-rest)*16/9)))}
+  fullMax=w;if(p.style.width!==w+'px')p.style.width=w+'px';
+  // 좁은 화면용 배치(말풍선이 그림 아래)라 그래도 높이가 모자라면, 내용은 그대로 두고 통째로 줄여 넣는다.
+  const h=p.offsetHeight,room=innerHeight-8;
+  if(h>room){const s=room/h;p.style.transformOrigin='top center';p.style.transform='translateY('+(h*(1-s)/2)+'px) scale('+s+')'}}window.addEventListener('resize',()=>{fullMax=Infinity;fitFull()});
+try{new ResizeObserver(()=>requestAnimationFrame(fitFull)).observe(document.querySelector('.player'))}catch(_){}
+const tellPlay=()=>tellApp({type:'stat-lesson-play',lesson:LESSON});
+window.addEventListener('message',e=>{
+  if(e.origin!==location.origin||e.source!==window.parent)return;
+  const d=e.data;if(!d||d.lesson!==LESSON)return;
+  if(d.type==='stat-lesson-full'){document.documentElement.classList.toggle('app-full',!!d.on);if(typeof d.bigView==='string'&&d.bigView)bigBtn.textContent='⛶ '+d.bigView;fitFull();sendHeight()}
+  if(d.type==='stat-lesson-pause')pauseLesson();
+});
+const LESSON='gastroscopy';
+function pauseLesson(){if(st.playing){stopAll();set({playing:false})}}
+if(EMBED)$('soundBtn').after(bigBtn);
+[$('bigplay'),$('playBtn')].forEach(b=>b.addEventListener('click',()=>{if(!st.playing)tellPlay()},true));
+$('lessons').addEventListener('click',e=>{if(e.target.closest('button'))tellPlay()});
 tellApp({type:'stat-lesson-ready',lesson:'gastroscopy'});
 </script>
 </body>

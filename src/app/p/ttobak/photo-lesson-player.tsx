@@ -2,15 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ReactNode,
-} from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useReducer } from 'react';
 
 import {
   advancesByItself,
@@ -39,8 +31,8 @@ import { T, useTranslatedTexts } from '../../translated';
 import { setLessonPlace } from '../error-report';
 import { GuideBoard } from '../guide-board';
 import { markGuideDone, useCompletedGuides } from '../guide-done';
+import { BigViewButton, useFullscreenFrame, VideoFrame } from '../video-frame';
 import { CardScene } from './card-scene';
-import { inAppBrowser, kakaoOpenExternal } from './in-app';
 import { designedLessonCount, LessonDesign } from './lesson-design';
 import { photoLessons } from './photo-lesson';
 import { Ttobak, type LessonPose } from './ttobak';
@@ -51,14 +43,6 @@ import './photo-lesson.css';
 
 const lessons = photoLessons;
 const total = totalSteps(lessons);
-
-type Orientation = ScreenOrientation & {
-  lock?: (orientation: 'landscape') => Promise<void>;
-  unlock?: () => void;
-};
-type WebkitElement = HTMLElement & {
-  webkitRequestFullscreen?: () => Promise<void> | void;
-};
 
 // speechLang: 읽을 문장의 언어(ko-KR, en-US, ja-JP, zh-CN, vi-VN)
 function getSpeech(speechLang: string) {
@@ -80,12 +64,6 @@ function unlockSpeech() {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
 }
-
-const subscribeNothing = () => () => {};
-// 휴대폰(손가락으로 누르는 작은 화면)이면 재생할 때 가로 전체 화면으로 바꾼다.
-const isPhoneScreen = () =>
-  window.matchMedia('(pointer: coarse)').matches &&
-  Math.min(window.screen.width, window.screen.height) < 600;
 
 const controlClass =
   'flex h-13 items-center justify-center rounded-2xl border-[1.5px] border-[#CAD6D6] bg-white px-5 text-lg font-semibold text-[#15262B] hover:border-[#0F6670] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670] disabled:cursor-not-allowed disabled:opacity-40';
@@ -123,21 +101,10 @@ export function PhotoLesson({
       reduceLesson(lessons, current, action),
     initialLessonState,
   );
-  const [immersive, setImmersive] = useState(false);
-  // 전체 화면일 때 플레이어를 옮겨 둘 자리(<body> 바로 아래).
-  // 페이지 안에 두면 위쪽 틀의 transform 때문에 position: fixed가 화면이 아니라 그 틀에 붙어 버린다.
-  const [host, setHost] = useState<HTMLElement | null>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const isPhone = useSyncExternalStore(
-    subscribeNothing,
-    isPhoneScreen,
-    () => false,
-  );
-  const inApp = useSyncExternalStore(
-    subscribeNothing,
-    () => inAppBrowser(navigator.userAgent),
-    () => null,
-  );
+  // 전체 화면 영상 틀(공통 부품). X로 닫으면 일시정지한다.
+  const frame = useFullscreenFrame({
+    onClose: () => dispatch({ type: 'pause' }),
+  });
 
   const lesson = lessons[state.lesson];
   const step = currentStep(lessons, state);
@@ -235,28 +202,6 @@ export function PhotoLesson({
     speechLang,
   ]);
 
-  // 전체 화면 동안 뒤 화면이 움직이지 않게 하고, 닫기 버튼에 초점을 둔다.
-  // 키보드 Esc로도 닫을 수 있다.
-  useEffect(() => {
-    if (!immersive) return;
-    const page = document.documentElement;
-    const before = [page.style.overflow, document.body.style.overflow];
-    page.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    closeRef.current?.focus();
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') closeRef.current?.click();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      [page.style.overflow, document.body.style.overflow] = before;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [immersive]);
-
-  // 수업 화면을 떠나면 옮겨 둘 자리도 지운다.
-  useEffect(() => () => host?.remove(), [host]);
-
   // 마지막 교시까지 마치면 이 안내를 "완료"로 저장한다(브라우저 + 서버).
   const finished = state.mode === 'done';
   useEffect(() => {
@@ -271,48 +216,10 @@ export function PhotoLesson({
     [],
   );
 
-  function enterImmersive() {
-    let shell = host as WebkitElement | null;
-    if (!shell) {
-      shell = document.createElement('div');
-      document.body.appendChild(shell);
-      setHost(shell);
-    }
-    setImmersive(true);
-    // 안드로이드: 전체 화면 + 가로 고정을 먼저 해 본다(누른 순간에 요청해야 허락된다).
-    // 아이폰·앱 안 브라우저는 안 되므로 CSS(화면 전체 고정 + 세로면 90도 돌리기)로 보여 준다.
-    try {
-      const request = shell.requestFullscreen
-        ? shell.requestFullscreen()
-        : shell.webkitRequestFullscreen?.();
-      Promise.resolve(request)
-        .then(() => (screen.orientation as Orientation).lock?.('landscape'))
-        .catch(() => {
-          // 방향 고정을 못 하는 기기: 세로면 CSS로 90도 돌려 보여 준다.
-        });
-    } catch {
-      // 전체 화면을 지원하지 않는 기기: 화면 전체 고정만 쓴다.
-    }
-  }
-
-  function exitImmersive() {
-    setImmersive(false);
-    dispatch({ type: 'pause' });
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {
-        // 이미 전체 화면이 아니면 할 일이 없다.
-      });
-    }
-    try {
-      (screen.orientation as Orientation).unlock?.();
-    } catch {
-      // 방향 고정을 지원하지 않는 기기
-    }
-  }
-
+  // 재생: 휴대폰이면 누를 때마다(처음·X로 닫은 뒤·일시정지 뒤) 전체 화면으로 연다.
   function play() {
     unlockSpeech();
-    if (isPhone && !immersive) enterImmersive();
+    frame.play();
     dispatch({ type: 'play' });
   }
 
@@ -333,7 +240,7 @@ export function PhotoLesson({
 
   function goLesson(index: number) {
     unlockSpeech();
-    if (isPhone && !immersive) enterImmersive();
+    frame.play();
     dispatch({ type: 'goLesson', lesson: index });
   }
 
@@ -350,181 +257,158 @@ export function PhotoLesson({
         : 'point';
 
   const parts = splitKeys(lineText, lineKeys);
-  // 전체 화면이면 플레이어를 <body> 바로 아래(host)에 그려 화면 맨 위 층을 덮는다.
-  const onTop = (player: ReactNode) =>
-    immersive && host ? createPortal(player, host) : player;
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      {onTop(
-        <div className={immersive ? 'pl-immersive' : ''}>
-          <div
-            className={
-              immersive
-                ? `pl-rotor ${inApp ? 'pl-inapp' : ''}`
-                : 'flex flex-col gap-3.5'
-            }
-          >
-            {immersive && (
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={exitImmersive}
-                aria-label="전체 화면 닫기"
-                className="pl-close"
-              >
-                ✕
-              </button>
-            )}
-            {immersive && inApp && <OpenOutside app={inApp} />}
+      {/* 전체 화면 영상 틀: 영상(16:9) + 아래 버튼 줄(52px + 간격) */}
+      <VideoFrame
+        frame={frame}
+        shape="video"
+        below={60}
+        className="flex flex-col gap-3.5"
+      >
+        <section
+          aria-label="또박이 선생님 사진 수업 영상"
+          className={`pl-stage vf-fit ${designed ? 'pl-designed' : ''} ${designed && state.lesson < 2 ? 'pl-wide' : ''}`}
+        >
+          {state.started && designed && (
+            <LessonDesign
+              key={`design-${state.lesson}`}
+              lessonIndex={state.lesson}
+              lesson={lesson}
+              step={step}
+              stepIndex={state.step}
+            />
+          )}
 
-            <section
-              aria-label="또박이 선생님 사진 수업 영상"
-              className={`pl-stage pl-fit ${designed ? 'pl-designed' : ''} ${designed && state.lesson < 2 ? 'pl-wide' : ''}`}
-            >
-              {state.started && designed && (
-                <LessonDesign
-                  key={`design-${state.lesson}`}
-                  lessonIndex={state.lesson}
-                  lesson={lesson}
-                  step={step}
-                  stepIndex={state.step}
-                />
+          {state.started && !designed && card && (
+            <CardScene
+              key={`card-${state.lesson}-${step.kind === 'card' ? step.card : 0}-${state.reviewing}`}
+              card={card}
+            />
+          )}
+
+          <div className="pl-ttobak-box">
+            <Ttobak
+              pose={pose}
+              talking={state.playing && state.mode !== 'done'}
+              moving={state.playing || state.mode === 'praise'}
+            />
+          </div>
+
+          <div className={`pl-bubble ${designed ? 'is-center' : ''}`}>
+            <p aria-live="polite" className="pl-sub">
+              {parts.map((part, index) =>
+                part.tone ? (
+                  <span key={index} className={`pl-key ${part.tone}`}>
+                    {part.text}
+                  </span>
+                ) : (
+                  part.text
+                ),
               )}
-
-              {state.started && !designed && card && (
-                <CardScene
-                  key={`card-${state.lesson}-${step.kind === 'card' ? step.card : 0}-${state.reviewing}`}
-                  card={card}
-                />
-              )}
-
-              <div className="pl-ttobak-box">
-                <Ttobak
-                  pose={pose}
-                  talking={state.playing && state.mode !== 'done'}
-                  moving={state.playing || state.mode === 'praise'}
-                />
-              </div>
-
-              <div className={`pl-bubble ${designed ? 'is-center' : ''}`}>
-                <p aria-live="polite" className="pl-sub">
-                  {parts.map((part, index) =>
-                    part.tone ? (
-                      <span key={index} className={`pl-key ${part.tone}`}>
-                        {part.text}
-                      </span>
-                    ) : (
-                      part.text
-                    ),
-                  )}
-                </p>
-                {state.mode === 'quiz' && lesson.quiz && (
-                  <div
-                    className="pl-choices"
-                    role="group"
-                    aria-label="답 고르기"
-                  >
-                    {lesson.quiz.options.map((option, index) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => answer(index)}
-                        className={`pl-choice ${state.wrong === index ? 'wrong' : ''}`}
-                      >
-                        <T>{option}</T>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {state.mode === 'done' &&
-                  (next && nextHref ? (
-                    <Link href={nextHref} className="pl-replay pl-next-link">
-                      {t.nextButton(t.guides[next])}
-                    </Link>
-                  ) : (
-                    <button type="button" onClick={play} className="pl-replay">
-                      {t.restart}
-                    </button>
-                  ))}
-              </div>
-
-              {!state.started && (
-                <div className="pl-start">
+            </p>
+            {state.mode === 'quiz' && lesson.quiz && (
+              <div className="pl-choices" role="group" aria-label="답 고르기">
+                {lesson.quiz.options.map((option, index) => (
                   <button
+                    key={option}
                     type="button"
-                    onClick={play}
-                    aria-label="수업 시작. 소리가 나와요."
-                    className="pl-start-button"
+                    onClick={() => answer(index)}
+                    className={`pl-choice ${state.wrong === index ? 'wrong' : ''}`}
                   >
-                    <svg aria-hidden="true" viewBox="0 0 24 24">
-                      <path d="M8 5 L19 12 L8 19 Z" fill="#FFFFFF" />
-                    </svg>
+                    <T>{option}</T>
                   </button>
-                  <span className="pl-start-title">
-                    <T>{screenTexts.lesson.startTitle}</T>
-                  </span>
-                  <span className="pl-start-sub">
-                    <T>{screenTexts.lesson.startSub}</T>
-                  </span>
-                </div>
-              )}
-            </section>
-
-            <div className="pl-fit pl-controls flex w-full flex-wrap items-center gap-3.5">
-              <button
-                type="button"
-                onClick={() => move('prev')}
-                disabled={here === 0}
-                className={controlClass}
-              >
-                <T>{screenTexts.lesson.prev}</T>
-              </button>
-              <button
-                type="button"
-                onClick={togglePlay}
-                className="flex h-13 items-center justify-center rounded-2xl bg-[#0F6670] px-6 text-lg font-bold text-white hover:bg-[#0B4E56] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]"
-              >
-                <T>
-                  {state.playing
-                    ? screenTexts.lesson.pause
-                    : state.mode === 'done'
-                      ? screenTexts.lesson.again
-                      : screenTexts.lesson.play}
-                </T>
-              </button>
-              {/* 마지막 장면에서는 남은 안내가 있으면 그 안내로 간다. */}
-              <button
-                type="button"
-                onClick={() =>
-                  here === total - 1 && nextHref
-                    ? router.push(nextHref)
-                    : move('next')
-                }
-                disabled={here === total - 1 && !nextHref}
-                className={controlClass}
-              >
-                <T>{screenTexts.lesson.next}</T>
-              </button>
-              <div
-                role="progressbar"
-                aria-label="수업 진행"
-                aria-valuemin={1}
-                aria-valuemax={total}
-                aria-valuenow={here + 1}
-                className="flex min-w-48 flex-1 gap-1.5"
-              >
-                {Array.from({ length: total }, (_, index) => (
-                  <span
-                    key={index}
-                    className={`h-2 flex-1 rounded ${state.started && index <= state.reached ? 'bg-[#0F6670]' : 'bg-[#CAD6D6]'}`}
-                  />
                 ))}
               </div>
-            </div>
+            )}
+            {state.mode === 'done' &&
+              (next && nextHref ? (
+                <Link href={nextHref} className="pl-replay pl-next-link">
+                  {t.nextButton(t.guides[next])}
+                </Link>
+              ) : (
+                <button type="button" onClick={play} className="pl-replay">
+                  {t.restart}
+                </button>
+              ))}
           </div>
-        </div>,
-      )}
+
+          {!state.started && (
+            <div className="pl-start">
+              <button
+                type="button"
+                onClick={play}
+                aria-label="수업 시작. 소리가 나와요."
+                className="pl-start-button"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M8 5 L19 12 L8 19 Z" fill="#FFFFFF" />
+                </svg>
+              </button>
+              <span className="pl-start-title">
+                <T>{screenTexts.lesson.startTitle}</T>
+              </span>
+              <span className="pl-start-sub">
+                <T>{screenTexts.lesson.startSub}</T>
+              </span>
+            </div>
+          )}
+        </section>
+
+        <div className="vf-fit pl-controls flex w-full flex-wrap items-center gap-3.5">
+          <button
+            type="button"
+            onClick={() => move('prev')}
+            disabled={here === 0}
+            className={controlClass}
+          >
+            <T>{screenTexts.lesson.prev}</T>
+          </button>
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="flex h-13 items-center justify-center rounded-2xl bg-[#0F6670] px-6 text-lg font-bold text-white hover:bg-[#0B4E56] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0F6670]"
+          >
+            <T>
+              {state.playing
+                ? screenTexts.lesson.pause
+                : state.mode === 'done'
+                  ? screenTexts.lesson.again
+                  : screenTexts.lesson.play}
+            </T>
+          </button>
+          <BigViewButton frame={frame} className={controlClass} />
+          {/* 마지막 장면에서는 남은 안내가 있으면 그 안내로 간다. */}
+          <button
+            type="button"
+            onClick={() =>
+              here === total - 1 && nextHref
+                ? router.push(nextHref)
+                : move('next')
+            }
+            disabled={here === total - 1 && !nextHref}
+            className={controlClass}
+          >
+            <T>{screenTexts.lesson.next}</T>
+          </button>
+          <div
+            role="progressbar"
+            aria-label="수업 진행"
+            aria-valuemin={1}
+            aria-valuemax={total}
+            aria-valuenow={here + 1}
+            className="flex min-w-48 flex-1 gap-1.5"
+          >
+            {Array.from({ length: total }, (_, index) => (
+              <span
+                key={index}
+                className={`h-2 flex-1 rounded ${state.started && index <= state.reached ? 'bg-[#0F6670]' : 'bg-[#CAD6D6]'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </VideoFrame>
 
       <aside className="flex flex-col gap-4 text-[#15262B]">
         <GuideBoard
@@ -584,47 +468,6 @@ export function PhotoLesson({
           </Link>
         )}
       </aside>
-    </div>
-  );
-}
-
-// 앱 안 브라우저(카카오톡 등)에서만 보이는 작은 회색 띠.
-// 카카오톡은 기기 기본 브라우저로 바로 열고, 다른 앱은 주소를 복사해 붙여 넣도록 안내한다.
-function OpenOutside({ app }: { app: 'kakao' | 'other' }) {
-  const [copied, setCopied] = useState<'yes' | 'no' | null>(null);
-
-  function open() {
-    const url = window.location.href;
-    if (app === 'kakao') {
-      window.location.href = kakaoOpenExternal(url);
-      return;
-    }
-    if (!navigator.clipboard) {
-      setCopied('no');
-      return;
-    }
-    navigator.clipboard.writeText(url).then(
-      () => setCopied('yes'),
-      () => setCopied('no'),
-    );
-  }
-
-  return (
-    <div className="pl-open-outside" role="note">
-      <span>
-        <T>
-          {copied === 'yes'
-            ? '주소를 복사했어요. Safari나 크롬 주소창에 붙여 넣어 주세요.'
-            : copied === 'no'
-              ? '오른쪽 위 메뉴(⋯)에서 "다른 브라우저로 열기"를 눌러 주세요.'
-              : 'Safari나 크롬으로 열면 더 크게 볼 수 있어요'}
-        </T>
-      </span>
-      {copied === null && (
-        <button type="button" onClick={open}>
-          <T>열기</T>
-        </button>
-      )}
     </div>
   );
 }
