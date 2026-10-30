@@ -1,4 +1,9 @@
+'use client';
+
 import { Arm, Body, Eyes, Hand, leftArm } from '@/app/ttobagi';
+import { screenTexts } from '@/lib/screen-texts';
+
+import { useTranslatedTexts } from '../../translated';
 
 // 사진 수업의 또박이. 모양은 docs/reference/ttobagi.html 그대로이고,
 // 사진 오른쪽에 서서 왼쪽 음식을 가리키도록 좌우를 뒤집어 그린다.
@@ -9,9 +14,9 @@ const ink = '#15262B';
 const green = '#0F6670';
 
 const labels: Record<LessonPose, string> = {
-  wave: '손을 흔들며 인사하는 또박이',
-  point: '지시봉으로 음식 사진을 가리키는 또박이',
-  cheer: '두 팔을 들고 기뻐하는 또박이',
+  wave: screenTexts.lessonLabels.poseWave,
+  point: screenTexts.lessonLabels.posePoint,
+  cheer: screenTexts.lessonLabels.poseCheer,
 };
 
 export function Ttobak({
@@ -27,10 +32,13 @@ export function Ttobak({
   moving: boolean;
   className?: string;
 }) {
+  const {
+    texts: [label],
+  } = useTranslatedTexts([labels[pose]]);
   return (
     <svg
       role="img"
-      aria-label={labels[pose]}
+      aria-label={label}
       viewBox="-24 -16 248 236"
       className={`pl-ttobak ${moving ? '' : 'pl-still'} ${className ?? ''}`}
     >

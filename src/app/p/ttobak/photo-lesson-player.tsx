@@ -116,6 +116,13 @@ export function PhotoLesson({
     ...subtitle.keys.map((key) => key.word),
   ]);
   const [lineText, ...keyWords] = spoken.texts;
+  const { video, choices, start, progress } = screenTexts.lessonLabels;
+  const { texts: labels } = useTranslatedTexts([
+    video,
+    choices,
+    start,
+    progress,
+  ]);
   const lineKeys = subtitle.keys.map((key, i) => ({
     ...key,
     word: keyWords[i],
@@ -268,7 +275,7 @@ export function PhotoLesson({
         className="flex flex-col gap-3.5"
       >
         <section
-          aria-label="또박이 선생님 사진 수업 영상"
+          aria-label={labels[0]}
           className={`pl-stage vf-fit ${designed ? 'pl-designed' : ''} ${designed && state.lesson < 2 ? 'pl-wide' : ''}`}
         >
           {state.started && designed && (
@@ -309,7 +316,7 @@ export function PhotoLesson({
               )}
             </p>
             {state.mode === 'quiz' && lesson.quiz && (
-              <div className="pl-choices" role="group" aria-label="답 고르기">
+              <div className="pl-choices" role="group" aria-label={labels[1]}>
                 {lesson.quiz.options.map((option, index) => (
                   <button
                     key={option}
@@ -339,7 +346,7 @@ export function PhotoLesson({
               <button
                 type="button"
                 onClick={play}
-                aria-label="수업 시작. 소리가 나와요."
+                aria-label={labels[2]}
                 className="pl-start-button"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -394,7 +401,7 @@ export function PhotoLesson({
           </button>
           <div
             role="progressbar"
-            aria-label="수업 진행"
+            aria-label={labels[3]}
             aria-valuemin={1}
             aria-valuemax={total}
             aria-valuenow={here + 1}

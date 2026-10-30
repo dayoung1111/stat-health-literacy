@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ComponentProps } from 'react';
 
+import { screenTexts } from '@/lib/screen-texts';
 import {
   isLessonPlace,
   newErrorNumber,
@@ -11,7 +12,7 @@ import {
   type ErrorKind,
 } from '@/lib/error-log';
 
-import { T } from '../translated';
+import { T, useTranslatedTexts } from '../translated';
 import { reportPatientError } from './error-actions';
 
 // 환자 화면에서 오류를 서버(error_logs)에 남기는 도구. 저장이 실패해도 화면은 그대로 둔다.
@@ -68,25 +69,29 @@ export function reportError({
  */
 export function SafeImage({ alt, ...props }: ComponentProps<typeof Image>) {
   const pathname = usePathname();
+  // 사진 설명(alt)은 화면 읽기 프로그램용이라 고른 언어로 바꿔 준다. 번역이 오기 전에는 한국어 원문이다.
+  const {
+    texts: [shownAlt, photoFailed],
+  } = useTranslatedTexts([alt, screenTexts.common.photoFailed]);
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
       <span
         role="img"
-        aria-label={`${alt} (사진을 불러오지 못했어요)`}
+        aria-label={`${shownAlt} (${photoFailed})`}
         className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-zinc-100 p-2 text-center text-base leading-snug font-semibold break-keep text-zinc-600"
       >
         <span aria-hidden="true" className="text-2xl">
           🖼️
         </span>
-        <T>사진을 불러오지 못했어요</T>
+        <T>{screenTexts.common.photoFailed}</T>
       </span>
     );
   }
   return (
     <Image
       {...props}
-      alt={alt}
+      alt={shownAlt}
       onError={(event) => {
         setFailed(true);
         reportError({

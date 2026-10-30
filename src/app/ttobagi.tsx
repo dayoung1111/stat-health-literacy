@@ -5,7 +5,8 @@ import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import { getMessages } from '@/lib/messages';
 import { forSpeech } from '@/lib/speech-names';
 
-import { useLanguage } from './language-provider';
+import { useIssuedLanguage } from './issued-language';
+import { useLanguageOr } from './language-provider';
 
 // S.T.A.T 캐릭터 "또박이". 그림은 docs/reference/ttobagi.html의 포즈 5개를 그대로 옮겼다.
 // 말투: 짧은 존댓말, 한 번에 한 가지만.
@@ -443,7 +444,7 @@ function setSoundOn(on: boolean) {
 // 오른쪽 위 작은 🔊/🔇 버튼. 끄면 다시 켤 때까지 자동으로 읽지 않는다.
 export function SoundToggle() {
   const on = useSoundOn();
-  const { t } = useLanguage();
+  const { t } = useLanguageOr(useIssuedLanguage());
   useFirstTouch();
   return (
     <button

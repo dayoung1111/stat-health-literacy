@@ -1,15 +1,11 @@
+import { screenTexts } from '@/lib/screen-texts';
+
 import { TtobagiFigure } from '../ttobagi';
 
 // 환자 화면 전체가 멈췄을 때 하얀 화면 대신 보여 주는 안내(그림·글자만. 기록 저장은 error.tsx가 한다).
-// 글자는 한국어 원문이며, error.tsx가 고른 언어로 바꿔 넣어 준다.
+// 글자는 한국어 원문(screen-texts.ts, 미리 번역 목록에 들어 있음)이며, error.tsx가 고른 언어로 바꿔 넣어 준다.
 
-export const errorScreenTexts = {
-  title: '잠깐 문제가 생겼어요',
-  body: '아래 "다시 시도" 버튼을 눌러 주세요.',
-  numberLabel: '오류 번호',
-  tellNurse: '간호사에게 이 번호를 알려 주세요',
-  retry: '다시 시도',
-};
+export const errorScreenTexts = screenTexts.errorScreen;
 
 export type ErrorScreenTexts = typeof errorScreenTexts;
 

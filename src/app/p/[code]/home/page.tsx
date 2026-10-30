@@ -6,7 +6,9 @@ import { guideCatalog, guideKinds } from '@/lib/guide-catalog';
 import { homeTexts } from '@/lib/home-texts';
 
 import { GuideIconSvg } from '../../../guide-icon';
-import { T, TranslatedTtobagi } from '../../../translated';
+import { screenTexts } from '@/lib/screen-texts';
+
+import { LabeledBox, T, TranslatedTtobagi } from '../../../translated';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
@@ -57,7 +59,11 @@ async function PatientHome({ code }: { code: string }) {
         message={homeTexts.guidesCame(guides.length)}
       />
 
-      <nav aria-label="받은 안내" className="mt-6 flex flex-col gap-4">
+      <LabeledBox
+        as="nav"
+        label={screenTexts.common.navReceivedGuides}
+        className="mt-6 flex flex-col gap-4"
+      >
         {guides.map((kind) => {
           const guide = guideCatalog[kind];
           return (
@@ -88,7 +94,7 @@ async function PatientHome({ code }: { code: string }) {
             </Link>
           );
         })}
-      </nav>
+      </LabeledBox>
       <CheckWithStaff />
     </>
   );

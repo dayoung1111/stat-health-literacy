@@ -2,7 +2,7 @@ import type { CardItem, KeyTone, LessonCard } from '@/lib/demo-guide';
 
 import { screenTexts } from '@/lib/screen-texts';
 
-import { T } from '../../translated';
+import { LabeledBox, T } from '../../translated';
 import { SafeImage } from '../error-report';
 import { Drawing } from '../pictures';
 import { FitText } from './fit-text';
@@ -97,8 +97,8 @@ const pictureNotesByCard: Record<string, PictureNote[]> = {
 };
 
 const drawingAlt: Record<string, string> = {
-  stoolCup: '뚜껑 달린 대변 검사 통 그림',
-  bottle: '약을 만든 1리터 통 그림',
+  stoolCup: screenTexts.lessonLabels.stoolCup,
+  bottle: screenTexts.lessonLabels.bottle,
 };
 
 export function CardScene({ card }: { card: LessonCard }) {
@@ -218,13 +218,14 @@ function ItemPicture({ item, wide }: { item: CardItem; wide: boolean }) {
   }
   if (!item.visual) return null;
   return (
-    <span
+    <LabeledBox
+      as="span"
       role="img"
-      aria-label={drawingAlt[item.visual.kind] ?? item.label}
+      label={drawingAlt[item.visual.kind] ?? item.label}
       className="pc-photo pc-drawing"
     >
       <Drawing visual={item.visual} />
-    </span>
+    </LabeledBox>
   );
 }
 

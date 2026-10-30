@@ -74,7 +74,7 @@ async function BirthDateStep({ code }: { code: string }) {
       <h1 className="mt-4 mb-8 text-3xl leading-snug font-bold break-keep">
         <EntryText name="birthOnlyTitle" language={language} />
       </h1>
-      <PatientEntryForm code={code} />
+      <PatientEntryForm code={code} language={language} />
     </>
   );
 }

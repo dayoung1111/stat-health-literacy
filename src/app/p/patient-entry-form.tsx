@@ -8,19 +8,26 @@ import {
   type Ref,
 } from 'react';
 
-import { useLanguage } from '../language-provider';
+import { useLanguageOr } from '../language-provider';
 import { enterPatient, type EntryState } from './actions';
 import { buttonClass } from './ui';
 
 // 코드가 주어지면(문자 링크) 생년월일 칸만 보여 준다.
 // 교육 번호 6칸과 생년월일 6칸은 하나로 이어진다: 다 채우면 다음 묶음으로, 빈 첫 칸에서 지우면 앞 묶음으로.
 // 생년월일까지 다 채우면 [확인] 버튼으로 옮겨 가기만 하고, 제출은 환자가 직접 누른다.
-export function PatientEntryForm({ code }: { code?: string }) {
+export function PatientEntryForm({
+  code,
+  language = 'ko',
+}: {
+  code?: string;
+  /** 의료진이 코드를 발급할 때 고른 언어. 환자가 직접 고른 언어가 있으면 그게 먼저다. */
+  language?: string;
+}) {
   const [state, formAction, pending] = useActionState<EntryState, FormData>(
     enterPatient,
     {},
   );
-  const { t } = useLanguage();
+  const { t } = useLanguageOr(language);
   const codeBoxes = useRef<DigitBoxesHandle>(null);
   const birthBoxes = useRef<DigitBoxesHandle>(null);
   const submit = useRef<HTMLButtonElement>(null);

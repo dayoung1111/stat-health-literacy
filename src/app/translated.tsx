@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  createContext,
   useContext,
   useEffect,
   useSyncExternalStore,
@@ -9,6 +8,10 @@ import {
   type ReactNode,
 } from 'react';
 
+import {
+  IssuedLanguageContext,
+  rememberIssuedLanguage,
+} from './issued-language';
 import { useLanguage } from './language-provider';
 import { translateForPatient } from './p/translate-actions';
 import { getMessages } from '@/lib/messages';
@@ -82,9 +85,6 @@ function request(language: string, texts: string[]) {
   if (waiting.size > 0 && timer === null) timer = setTimeout(flush, 15);
 }
 
-// 환자가 직접 고른 적이 없으면 의료진이 코드를 발급할 때 고른 언어를 쓴다(patient-page.tsx에서 넣어 준다).
-const IssuedLanguageContext = createContext('ko');
-
 export function IssuedLanguage({
   language,
   children,
@@ -93,6 +93,9 @@ export function IssuedLanguage({
   children: ReactNode;
 }) {
   const { language: picked, chosen } = useLanguage();
+  useEffect(() => {
+    rememberIssuedLanguage(language);
+  }, [language]);
   return (
     <IssuedLanguageContext value={language}>
       {/* 화면 글자의 언어 표시(lang). 일본어·중국어의 줄바꿈과 글꼴이 맞게 되고 화면 읽기 프로그램도 언어를 안다. */}
@@ -236,4 +239,31 @@ export function DateTemplate({
       <Fill template={template} values={{ date: day }} />
     </span>
   );
+}
+
+/** 화면 읽기 프로그램용 이름(aria-label)을 고른 언어로 바꿔 붙인 상자. 보이는 모양은 그대로다. */
+export function LabeledBox({
+  as: Tag = 'div',
+  label,
+  ...props
+}: Omit<ComponentProps<'div'>, 'aria-label'> & {
+  as?: 'div' | 'nav' | 'span';
+  /** 한국어 원문 이름(screen-texts.ts에 있어야 미리 번역된다) */
+  label: string;
+}) {
+  const {
+    texts: [translated],
+  } = useTranslatedTexts([label]);
+  return <Tag {...props} aria-label={translated} />;
+}
+
+/** 그림(SVG)의 화면 읽기 프로그램용 설명을 고른 언어로 바꿔 붙인 그림 상자. */
+export function LabeledSvg({
+  label,
+  ...props
+}: Omit<ComponentProps<'svg'>, 'aria-label' | 'role'> & { label: string }) {
+  const {
+    texts: [translated],
+  } = useTranslatedTexts([label]);
+  return <svg {...props} role="img" aria-label={translated} />;
 }

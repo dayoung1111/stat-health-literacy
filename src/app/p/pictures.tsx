@@ -75,16 +75,17 @@ function Pouch() {
         stroke="#0F6670"
         strokeWidth="3"
       />
-      <text
+      <FittedSvgText
         x="50"
         y="62"
         textAnchor="middle"
-        fontSize="20"
+        fontSize={20}
+        width={34}
         fontWeight="700"
         fill="#0F6670"
       >
-        약
-      </text>
+        {screenTexts.common.medicine}
+      </FittedSvgText>
     </svg>
   );
 }

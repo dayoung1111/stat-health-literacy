@@ -16,7 +16,12 @@ import { screenTexts } from '@/lib/screen-texts';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
 import { useLanguageOr } from '../../../language-provider';
-import { DateTemplate, T, TranslatedTtobagi } from '../../../translated';
+import {
+  DateTemplate,
+  T,
+  TranslatedTtobagi,
+  useTranslatedTexts,
+} from '../../../translated';
 import { Ttobagi } from '../../../ttobagi';
 import { Drawing } from '../../pictures';
 import { markGuideDone, useCompletedGuides } from '../../guide-done';
@@ -403,9 +408,12 @@ export function MedicationFlow({
 
 // 3화면 중 지금 어디인지: 판정 · 자세히 · 확인
 function ScreenDots({ current }: { current: number }) {
+  const {
+    texts: [label],
+  } = useTranslatedTexts([screenTexts.medication.stepOrder]);
   const names = screenTexts.medication.steps;
   return (
-    <ol aria-label="이 약의 순서" className="mt-3 flex gap-2 text-lg">
+    <ol aria-label={label} className="mt-3 flex gap-2 text-lg">
       {names.map((name, i) => (
         <li
           key={name}

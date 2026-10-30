@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { prepSteps } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 
-import { Fill, T } from '../../translated';
+import { Fill, T, useTranslatedTexts } from '../../translated';
 
 import { BigViewButton, useFullscreenFrame, VideoFrame } from '../video-frame';
 import { PrepScene } from './prep-scene';
@@ -105,6 +105,12 @@ function CupTimer() {
   const [drunk, setDrunk] = useState(0);
   const [lastAt, setLastAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const {
+    texts: [timerLabel, cupsLabel],
+  } = useTranslatedTexts([
+    screenTexts.lessonLabels.timer,
+    screenTexts.lessonLabels.drunkCups,
+  ]);
 
   useEffect(() => {
     if (lastAt === null || drunk >= CUPS) return;
@@ -125,10 +131,10 @@ function CupTimer() {
 
   return (
     <section
-      aria-label="15분 타이머"
+      aria-label={timerLabel}
       className="flex flex-col gap-4 rounded-3xl bg-[#FFF6D6] p-5"
     >
-      <ol className="flex justify-center gap-3" aria-label="마신 컵">
+      <ol className="flex justify-center gap-3" aria-label={cupsLabel}>
         {Array.from({ length: CUPS }, (_, i) => (
           <li
             key={i}

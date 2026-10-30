@@ -3,7 +3,12 @@ import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { prepSteps } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 
-import { FittedSvgText, T, useTranslatedTexts } from '../../translated';
+import {
+  FittedSvgText,
+  T,
+  useTranslatedTexts,
+  LabeledSvg,
+} from '../../translated';
 import { SafeImage } from '../error-report';
 import { Drawing } from '../pictures';
 import { getPhoto, type Lesson, type LessonStep } from './photo-lesson';
@@ -383,7 +388,7 @@ const lesson2: PhotoCard[] = [
   food('egg-tofu', screenTexts.design.foods.eggTofu),
   {
     src: '/images/foods/clear-soup.png',
-    alt: '그릇에 담긴 맑은 무국 사진',
+    alt: screenTexts.lessonLabels.photoSoup,
     name: screenTexts.design.foods.clearSoup,
     tone: 'ok',
     stepIds: ['ok-more'],
@@ -398,31 +403,31 @@ const lesson3: PhotoCard[] = [
 const lesson7: PhotoCard[] = [
   {
     src: '/images/foods/food-09-water.jpg',
-    alt: '유리컵에 담긴 물 사진',
+    alt: screenTexts.lessonLabels.photoWater,
     name: screenTexts.design.foods.water,
     tone: 'no',
   },
   {
     src: '/images/foods/food-10-pills.jpg',
-    alt: '알약과 캡슐 사진',
+    alt: screenTexts.lessonLabels.photoPill,
     name: screenTexts.design.foods.pills,
     tone: 'no',
   },
   {
     src: '/images/foods/food-13-gum.jpg',
-    alt: '포장을 벗긴 껌 사진',
+    alt: screenTexts.lessonLabels.photoGum,
     name: screenTexts.design.foods.gum,
     tone: 'no',
   },
   {
     src: '/images/foods/eundan.png',
-    alt: '병에 담긴 은단 사진',
+    alt: screenTexts.lessonLabels.photoMint,
     name: screenTexts.design.foods.eundan,
     tone: 'no',
   },
   {
     src: '/images/foods/food-11-smoking.jpg',
-    alt: '손가락에 든 불 붙은 담배 사진',
+    alt: screenTexts.lessonLabels.photoCigarette,
     name: screenTexts.design.foods.cigarette,
     tone: 'no',
   },
@@ -503,13 +508,13 @@ function StoolFlow({ cardIndex }: { cardIndex: number }) {
       no: 1,
       art: 'stoolCup',
       label: screenTexts.design.stool,
-      alt: '뚜껑 달린 대변 검사 통 그림',
+      alt: screenTexts.lessonLabels.stoolCup,
     },
     {
       no: 2,
       art: 'bottle',
       label: screenTexts.design.takeMed,
-      alt: '약을 만든 1리터 통 그림',
+      alt: screenTexts.lessonLabels.bottle,
     },
   ];
   return (
@@ -574,31 +579,36 @@ function Supplies() {
   return (
     <div className="ld-supplies">
       <figure>
-        <svg viewBox="0 0 100 145" role="img" aria-label="A제 약 봉지 그림">
+        <LabeledSvg
+          label={screenTexts.lessonLabels.pouchA}
+          viewBox="0 0 100 145"
+        >
           <Pouch x={0} y={2} letter="A" />
-        </svg>
+        </LabeledSvg>
         <figcaption className="ld-name">
           <T>{screenTexts.design.pouchA}</T>
         </figcaption>
       </figure>
       <figure>
-        <svg viewBox="0 0 100 145" role="img" aria-label="B제 약 봉지 그림">
+        <LabeledSvg
+          label={screenTexts.lessonLabels.pouchB}
+          viewBox="0 0 100 145"
+        >
           <Pouch x={0} y={2} letter="B" />
-        </svg>
+        </LabeledSvg>
         <figcaption className="ld-name">
           <T>{screenTexts.design.pouchB}</T>
         </figcaption>
       </figure>
       <Arrow />
       <figure>
-        <svg
+        <LabeledSvg
+          label={screenTexts.lessonLabels.emptyBottle}
           viewBox="0 0 160 290"
-          role="img"
-          aria-label="빨간 표시선이 있는 빈 1리터 통 그림"
           className="tall"
         >
           <Bottle x={0} y={2} level={0} />
-        </svg>
+        </LabeledSvg>
         <figcaption className="ld-name">
           <T>{screenTexts.design.bottle1L}</T>
         </figcaption>
@@ -611,10 +621,9 @@ function Supplies() {
 function Drinking() {
   return (
     <div className="ld-drink">
-      <svg
+      <LabeledSvg
+        label={screenTexts.lessonLabels.drinking}
         viewBox="0 0 830 330"
-        role="img"
-        aria-label="15분마다 한 컵씩 마시는 컵 네 개와 생수 500밀리리터 병 그림"
       >
         {[0, 1, 2, 3].map((i) => (
           <g key={i}>
@@ -649,7 +658,7 @@ function Drinking() {
         <g transform="translate(700 20) scale(0.98)">
           <WaterBottle x={0} y={0} />
         </g>
-      </svg>
+      </LabeledSvg>
       <p className="ld-caption">
         <T>{screenTexts.design.drinkCaption}</T>
       </p>
@@ -692,7 +701,10 @@ function PrepStepScene({ step, hour }: { step: LessonStep; hour: number }) {
 // 가소콜 1포 봉지(사진이 없어 다른 그림과 같은 선 색·굵기로 그렸다)
 function GasocolPack() {
   return (
-    <svg viewBox="0 0 120 170" role="img" aria-label="가소콜 1포 봉지 그림">
+    <LabeledSvg
+      label={screenTexts.lessonLabels.gasocolPack}
+      viewBox="0 0 120 170"
+    >
       <path
         d="M10 22 L18 10 L26 22 L34 10 L42 22 L50 10 L58 22 L66 10 L74 22 L82 10 L90 22 L98 10 L106 22 L110 22 L110 156 Q110 164 102 164 L18 164 Q10 164 10 156 Z"
         fill="#E4E8EB"
@@ -713,7 +725,7 @@ function GasocolPack() {
         strokeWidth="5"
         strokeLinejoin="round"
       />
-    </svg>
+    </LabeledSvg>
   );
 }
 
@@ -723,10 +735,9 @@ function SecondDose({ stepId }: { stepId: string }) {
   const boxes: { art: ReactNode; lines: ReactNode }[] = [
     {
       art: (
-        <svg
+        <LabeledSvg
+          label={screenTexts.lessonLabels.bottleAndCups}
           viewBox="0 0 260 300"
-          role="img"
-          aria-label="약을 만든 1리터 통과 작은 컵 네 개 그림"
         >
           <g transform="translate(66 0) scale(0.8)">
             <Bottle x={0} y={0} level={1} cap />
@@ -736,7 +747,7 @@ function SecondDose({ stepId }: { stepId: string }) {
               <Cup x={0} y={0} at={0} />
             </g>
           ))}
-        </svg>
+        </LabeledSvg>
       ),
       lines: (
         <>
@@ -756,13 +767,12 @@ function SecondDose({ stepId }: { stepId: string }) {
     },
     {
       art: (
-        <svg
+        <LabeledSvg
+          label={screenTexts.lessonLabels.waterBottle}
           viewBox="0 0 120 300"
-          role="img"
-          aria-label="생수 500밀리리터 병 그림"
         >
           <WaterBottle x={0} y={2} />
-        </svg>
+        </LabeledSvg>
       ),
       lines: (
         <FitText className="ld-name">{screenTexts.design.water500}</FitText>

@@ -1,7 +1,7 @@
 import type { PrepScene as SceneName } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 
-import { FittedSvgText } from '../../translated';
+import { FittedSvgText, LabeledSvg } from '../../translated';
 
 // 약 만들기 그림 애니메이션(5·6교시와 따라하기 화면). 외부 그림 없이 SVG로 그린다.
 // 애니메이션은 photo-lesson.css의 pp- 클래스. 움직임 줄이기 설정이면 마지막 모습만 보인다.
@@ -13,14 +13,14 @@ const water = '#9FD3D6';
 const delay = (s: number) => ({ animationDelay: `${s}s` });
 
 const labels: Record<SceneName, string> = {
-  supplies: 'A제 약 봉지, B제 약 봉지, 빈 1리터 통 그림',
-  add: 'A제와 B제 가루를 1리터 통에 붓는 그림',
-  fill: '1리터 통에 표시선까지 물을 붓는 그림',
-  shake: '뚜껑을 닫은 통을 흔드는 그림',
-  dissolved: '가루가 다 녹아 맑아진 1리터 통 그림',
-  cups: '시계와 15분마다 한 컵씩 마시는 컵 네 개 그림',
-  gasocol: '컵 네 개와 가소콜액 1포 봉지 그림',
-  water: '생수 500밀리리터 병 그림',
+  supplies: screenTexts.lessonLabels.sceneSupplies,
+  add: screenTexts.lessonLabels.sceneAdd,
+  fill: screenTexts.lessonLabels.sceneFill,
+  shake: screenTexts.lessonLabels.sceneShake,
+  dissolved: screenTexts.lessonLabels.sceneDissolved,
+  cups: screenTexts.lessonLabels.sceneCups,
+  gasocol: screenTexts.lessonLabels.sceneGasocol,
+  water: screenTexts.lessonLabels.sceneWater,
 };
 
 // 약 봉지(시안 C): 큰 동그라미 배지 + 무늬. A제는 초록 줄무늬, B제는 노랑 물방울.
@@ -332,9 +332,8 @@ export function PrepScene({
   plain?: boolean;
 }) {
   return (
-    <svg
-      role="img"
-      aria-label={labels[scene]}
+    <LabeledSvg
+      label={labels[scene]}
       viewBox="0 0 600 360"
       className="pp-scene"
     >
@@ -492,6 +491,6 @@ export function PrepScene({
           <WaterBottle x={240} y={40} />
         </g>
       )}
-    </svg>
+    </LabeledSvg>
   );
 }

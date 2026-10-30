@@ -5,7 +5,7 @@ import { guideSteps } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 import { ttobagiSays } from '@/lib/ttobagi-says';
 
-import { T, TranslatedTtobagi } from '../../../../translated';
+import { LabeledBox, T, TranslatedTtobagi } from '../../../../translated';
 import { PictureRow } from '../../../pictures';
 import { buttonClass, CheckWithStaff, PatientTopBar } from '../../../ui';
 import { PatientPage } from '../../patient-page';
@@ -79,8 +79,9 @@ async function GuideStep({
       </ConfusedLink>
       <CheckWithStaff />
 
-      <nav
-        aria-label="안내문 넘기기"
+      <LabeledBox
+        as="nav"
+        label={screenTexts.common.navGuidePager}
         className="fixed inset-x-0 bottom-0 rounded-t-3xl border-t border-stat-mint bg-white px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
       >
         <div className="mx-auto max-w-md">
@@ -125,7 +126,7 @@ async function GuideStep({
             </Link>
           </div>
         </div>
-      </nav>
+      </LabeledBox>
     </div>
   );
 }

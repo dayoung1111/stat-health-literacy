@@ -6,7 +6,12 @@ import { getDemoSchedule, requireDemoPatient } from '@/lib/demo-patient';
 import { homeTexts } from '@/lib/home-texts';
 import { screenTexts } from '@/lib/screen-texts';
 
-import { LocalDate, T, TranslatedTtobagi } from '../../../translated';
+import {
+  LabeledBox,
+  LocalDate,
+  T,
+  TranslatedTtobagi,
+} from '../../../translated';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 
@@ -56,7 +61,11 @@ async function ColonoscopyHome({ code }: { code: string }) {
         <TranslatedTtobagi pose="time" message={todo.speech} />
       </div>
 
-      <nav aria-label="환자 메뉴" className="mt-2 flex flex-col gap-4">
+      <LabeledBox
+        as="nav"
+        label={screenTexts.common.navPatientMenu}
+        className="mt-2 flex flex-col gap-4"
+      >
         <Link
           href={`/p/${code}/video`}
           className={`${menuClass} min-h-28 bg-stat-green text-3xl text-white`}
@@ -93,7 +102,7 @@ async function ColonoscopyHome({ code }: { code: string }) {
           </span>
           <T>{screenTexts.colonoscopy.danger}</T>
         </Link>
-      </nav>
+      </LabeledBox>
       <CheckWithStaff />
     </>
   );

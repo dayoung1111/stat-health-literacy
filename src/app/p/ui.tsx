@@ -5,7 +5,7 @@ import { hospital } from '@/lib/demo-guide';
 import { screenTexts } from '@/lib/screen-texts';
 
 import { BackButton, backButtonClass } from '../back-button';
-import { T } from '../translated';
+import { LabeledBox, T } from '../translated';
 import { SoundToggle } from '../ttobagi';
 
 // 환자 화면에서 반복되는 버튼·링크 모양. 글씨는 20px 이상, 둥근 모양을 유지한다.
@@ -83,8 +83,9 @@ export function PatientTopBar({
   showHome?: boolean;
 }) {
   return (
-    <nav
-      aria-label="화면 이동"
+    <LabeledBox
+      as="nav"
+      label={screenTexts.common.navScreen}
       className="mb-4 flex items-center justify-between"
     >
       <BackButton {...back} label={<T>{screenTexts.common.back}</T>} />
@@ -96,7 +97,7 @@ export function PatientTopBar({
           </Link>
         )}
       </div>
-    </nav>
+    </LabeledBox>
   );
 }
 
