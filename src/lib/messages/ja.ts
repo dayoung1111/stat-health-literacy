@@ -7,12 +7,14 @@ export const ja: Messages = {
   languagePicker: '言語の選択',
 
   home: {
-    hello: 'こんにちは、トバギです。',
+    hello: 'こんにちは、トバギです！',
     headline: 'むずかしい病院の案内を、\nやさしくお伝えします',
     enter: '患者として入る',
-    enterHint: '病院でもらった番号があります',
+    enterHint: '病院でもらった番号を入れてください',
     call: '番号がわからないときは病院に電話',
     staff: '医療スタッフのログイン',
+    howTitle: 'つかいかた',
+    how: ['番号を入れる', 'トバギの授業', 'とつぜんクイズ'],
   },
 
   ttobagi: {

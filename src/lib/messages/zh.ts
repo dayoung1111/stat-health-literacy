@@ -7,12 +7,14 @@ export const zh: Messages = {
   languagePicker: '选择语言',
 
   home: {
-    hello: '您好，我是小朵比。',
+    hello: '您好，我是小朵比！',
     headline: '难懂的医院说明，\n简单讲给您听',
     enter: '患者入口',
-    enterHint: '我有医院给的号码',
+    enterHint: '请输入医院给的号码',
     call: '不知道号码请致电医院',
     staff: '医护人员登录',
+    howTitle: '使用方法',
+    how: ['输入号码', '小朵比课堂', '突击小测验'],
   },
 
   ttobagi: {
