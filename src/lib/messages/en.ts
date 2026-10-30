@@ -39,7 +39,7 @@ export const en: Messages = {
     privacy:
       'We only use your date of birth to confirm it is you. We never ask your name.',
     checking: 'Checking…',
-    callHelp: '📞 Having trouble? Call the hospital',
+    callHelp: 'Having trouble? Call the hospital',
     typeCode: 'I will type the education number',
     badCode: 'Please check your code again',
     badCodeHint:

@@ -21,7 +21,15 @@ const line = {
 };
 
 export type LineIconName =
-  'home' | 'play' | 'book' | 'check' | 'alert' | 'lock' | 'clock' | 'chevron';
+  | 'home'
+  | 'play'
+  | 'book'
+  | 'check'
+  | 'alert'
+  | 'lock'
+  | 'clock'
+  | 'chevron'
+  | 'phone';
 
 /** 이모지 대신 쓰는 선 아이콘 */
 export function LineIcon({
@@ -80,6 +88,12 @@ export function LineIcon({
         </>
       )}
       {name === 'chevron' && <path d="m9 5 7 7-7 7" {...line} />}
+      {name === 'phone' && (
+        <path
+          d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 6.5 6.5l1.5-2 4 1.5V19a1.5 1.5 0 0 1-1.5 1.5A16.5 16.5 0 0 1 3.5 5.5 1.5 1.5 0 0 1 5 4z"
+          {...line}
+        />
+      )}
     </svg>
   );
 }
@@ -114,10 +128,10 @@ export function DesignTopBar({
   );
 }
 
-/** 또박이(기존 캐릭터 그대로) + 청록 말풍선 */
+/** 또박이(기존 캐릭터 그대로) + 청록 말풍선. 휴대폰 약 120px(말풍선 옆), PC 약 240px(말풍선 위). */
 export function TealTtobagi(props: ComponentProps<typeof TranslatedTtobagi>) {
   return (
-    <div className="sd sd-bubble">
+    <div className="sd sd-bubble sd-big">
       <TranslatedTtobagi {...props} />
     </div>
   );
