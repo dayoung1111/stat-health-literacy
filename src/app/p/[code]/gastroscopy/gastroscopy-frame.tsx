@@ -8,6 +8,7 @@ import {
   type GastroLessonTexts,
 } from '@/lib/gastro-lesson';
 import type { GuideKind } from '@/lib/guide-catalog';
+import { characterNames } from '@/lib/speech-names';
 
 import { useLanguageOr } from '../../../language-provider';
 import { GuideBoard } from '../../guide-board';
@@ -94,6 +95,11 @@ export function GastroscopyFrame({
         lesson: 'gastroscopy',
         language: shown,
         texts,
+        // 읽어 줄 때만 또박이 이름을 발음용 철자로 바꾼다(화면 글자는 그대로).
+        speechName:
+          shown in characterNames
+            ? characterNames[shown as keyof typeof characterNames]
+            : null,
       },
       window.location.origin,
     );

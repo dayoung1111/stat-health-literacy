@@ -28,6 +28,7 @@ import type { GuideKind } from '@/lib/guide-catalog';
 import { guideFinish } from '@/lib/guide-progress';
 
 import { screenTexts } from '@/lib/screen-texts';
+import { forSpeech } from '@/lib/speech-names';
 
 import { useLanguageOr } from '../../language-provider';
 import { T, useTranslatedTexts } from '../../translated';
@@ -178,7 +179,9 @@ export function PhotoLesson({
 
     const speech = getSpeech(speechLang);
     if (speech) {
-      const utterance = new SpeechSynthesisUtterance(lineText);
+      const utterance = new SpeechSynthesisUtterance(
+        forSpeech(lineText, speechLang),
+      );
       utterance.lang = speechLang;
       utterance.pitch = 1.3;
       utterance.rate = 0.88;
