@@ -46,7 +46,7 @@ async function PatientHome({ code }: { code: string }) {
       <h1 className="sr-only">
         <T>{homeTexts.greeting}</T>
       </h1>
-      <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-6">
+      <div className="mt-3 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
         <div className="sd-big-col">
           <TealTtobagi
             pose="hello"
