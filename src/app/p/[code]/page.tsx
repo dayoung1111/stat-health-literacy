@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
+import { isCodeShape } from '@/lib/code-shape';
 import { hasDemoSession, isOpenableCode } from '@/lib/demo-patient';
+import { findActiveCode } from '@/lib/education-store';
 
 import { EntryText } from '../entry-text';
 import { ReportOnce } from '../error-report';
@@ -17,18 +19,33 @@ export default function BirthDatePage({ params }: PageProps<'/p/[code]'>) {
           <BirthDateStep code={code} />
         ))}
       </Suspense>
-      <div className="mt-6 flex flex-col gap-4">
-        <CallButton variant="outline">
-          <EntryText name="callHelp" />
-        </CallButton>
-        <Link
-          href="/p"
-          className="py-2 text-center text-xl text-zinc-600 underline underline-offset-4"
-        >
-          <EntryText name="typeCode" />
-        </Link>
-      </div>
+      <Suspense fallback={<EntryLinks />}>
+        {params.then(async ({ code }) => (
+          <EntryLinks language={await issuedLanguage(code)} />
+        ))}
+      </Suspense>
     </>
+  );
+}
+
+// 간호사가 코드를 발급할 때 고른 언어. 없는 코드·만료 코드는 한국어로 둔다.
+async function issuedLanguage(code: string) {
+  return (isCodeShape(code) && (await findActiveCode(code))?.language) || 'ko';
+}
+
+function EntryLinks({ language }: { language?: string }) {
+  return (
+    <div className="mt-6 flex flex-col gap-4">
+      <CallButton variant="outline">
+        <EntryText name="callHelp" language={language} />
+      </CallButton>
+      <Link
+        href="/p"
+        className="py-2 text-center text-xl text-zinc-600 underline underline-offset-4"
+      >
+        <EntryText name="typeCode" language={language} />
+      </Link>
+    </div>
   );
 }
 
@@ -51,10 +68,11 @@ async function BirthDateStep({ code }: { code: string }) {
   if (await hasDemoSession(code)) {
     redirect(`/p/${code}/home`);
   }
+  const language = await issuedLanguage(code);
   return (
     <>
       <h1 className="mt-4 mb-8 text-3xl leading-snug font-bold break-keep">
-        <EntryText name="birthOnlyTitle" />
+        <EntryText name="birthOnlyTitle" language={language} />
       </h1>
       <PatientEntryForm code={code} />
     </>
