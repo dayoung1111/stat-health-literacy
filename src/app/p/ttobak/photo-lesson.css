@@ -528,6 +528,10 @@
 }
 /* 띠는 칸 아래 끝에 붙는다(칸 높이가 달라도 같은 위치). */
 .pc-picnote-band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
   align-self: stretch;
   margin-top: auto;
   padding: 0.6cqw 0.6cqw;
@@ -540,6 +544,16 @@
 }
 .pc-picnote.tell .pc-picnote-band {
   background: #0f6670;
+}
+/* 띠 안에서는 그림 기호 옆 남은 자리만 쓴다(글자 크기 맞춤은 fit-text.tsx). */
+.pc-picnote-band .fit-text {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 0;
+}
+.pc-picnote-situation {
+  width: 100%;
+  box-sizing: border-box;
 }
 /* 영상이 아주 좁을 때(전체 화면 전 휴대폰 세로, 너비 약 360~390px): 최소 크기를 더 줄여 칸이 자막에 가리지 않게 한다. */
 @container (max-width: 450px) {

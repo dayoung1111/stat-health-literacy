@@ -1,5 +1,6 @@
 import { photoLessons } from '../app/p/ttobak/photo-lesson';
 import * as demoGuideModule from './demo-guide';
+import { dayBeforeLessonKo } from './day-before-lesson';
 import { gastroLessonKo } from './gastro-lesson';
 import { guideCatalog } from './guide-catalog';
 import { homeSourceTexts } from './home-texts';
@@ -35,6 +36,7 @@ export function presetSourceTexts() {
       verdictLabels,
       guideCatalog,
       ttobagiSays,
+      dayBeforeLesson: dayBeforeLessonKo,
       gastroLesson: gastroLessonKo,
       home: homeSourceTexts,
       screenTexts,

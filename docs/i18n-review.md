@@ -54,3 +54,10 @@ X인 것은 표 맨 위에 따로 모은다.
 - 위내시경 수업(`public/lessons/gastroscopy.html`)의 화면 글자·읽어 주는 목소리를 5개 언어(ko/en/ja/zh/vi)로 보여 준다. 글자는 `src/lib/gastro-lesson.ts`가 원문이고, 번역은 위 파일과 같은 `translations/*.json`에 들어 있다.
 - 장면 14개 × 5개 언어 × 휴대폰(수업 칸 358px)·PC(1280px) = 140개 상태를 자동 점검해 글자 잘림·겹침·한국어 남음이 0개임을 확인했다(AI 번역이며 원어민 검수는 아직 없음).
 - 앞뒤 문맥이 없는 짧은 말(장면 이름표)은 번역이 어색해 몇 문장을 json에서 직접 고쳤다. `npm run translate:build`는 이미 있는 번역을 건드리지 않으므로 그대로 남는다.
+
+## 5. 검진 전날 수업 (2026-10-30)
+
+- 검진 전날 수업(`public/lessons/day-before.html`)의 화면 글자·읽어 주는 목소리도 5개 언어(ko/en/ja/zh/vi)로 보여 준다. 글자는 `src/lib/day-before-lesson.ts`가 원문이고, 번역은 위 파일과 같은 `translations/*.json`에 들어 있다(63문장 추가).
+- 상태 21개 × 5개 언어 × 휴대폰(390px)·PC(1280px) = 210개를 자동 점검해 글자 잘림·겹침·한국어 남음이 0개임을 확인했다(AI 번역이며 원어민 검수는 아직 없음).
+- 퀴즈 보기·장면 이름 같은 짧은 말은 json에서 직접 고친 것이 있다. `npm run translate:build`는 이미 있는 번역을 건드리지 않으므로 그대로 남는다.
+- 대장내시경 8교시 카드(`card-scene.tsx`)의 상황·색 띠 글자는 `fit-text`로 칸에 맞춰 줄어든다.
