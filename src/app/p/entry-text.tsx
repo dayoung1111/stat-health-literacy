@@ -36,7 +36,7 @@ export function EntryTtobagi({
 }) {
   const { language: shown, t } = useLanguageOr(language);
   return (
-    <div className="sd sd-bubble">
+    <div className="sd sd-bubble sd-big">
       <Ttobagi
         pose="hello"
         message={birthOnly ? t.entry.bubbleBirth : t.entry.bubble}
