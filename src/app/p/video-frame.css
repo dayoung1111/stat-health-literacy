@@ -1,0 +1,147 @@
+/* 전체 화면 영상 틀(video-frame.tsx). 모든 영상 화면이 같이 쓴다.
+   바탕은 검은색, 16:9 영상은 들어갈 수 있는 가장 큰 크기로 가운데. 세로로 들고 있으면 90도 돌려 꽉 채운다.
+   100vh 대신 100dvh/100dvw를 써서 주소창·툴바가 있어도 잘리지 않게 한다. */
+
+/* 전체 화면이 아닐 때 틀의 겹 상자는 자리를 차지하지 않는다(안쪽 내용이 원래 배치 그대로). */
+.vf-pass {
+  display: contents;
+}
+
+.vf-full {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100dvw;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: #000000;
+}
+.vf-rotor {
+  /* 노치·홈바(safe-area)를 피하는 여백. 이 상자 기준(돌리면 함께 돈다)의 위·오른쪽·아래·왼쪽 */
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
+  /* 앱 안 브라우저 회색 띠 자리 */
+  --vf-strip: 0px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100dvw;
+  height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: calc(var(--sa-t) + 8px) calc(var(--sa-r) + 8px)
+    calc(var(--sa-b) + 8px) calc(var(--sa-l) + 8px);
+  /* 안쪽 크기(cqw·cqh)를 이 상자 기준으로 잰다. */
+  container-type: size;
+}
+.vf-rotor.vf-inapp {
+  --vf-strip: 40px;
+}
+@media (orientation: portrait) {
+  /* 시계 방향으로 90도 돌린다. 휴대폰을 옆으로 눕혀 보면 똑바로 보인다.
+     돌린 상자의 왼쪽=화면 위, 위쪽=화면 오른쪽, 오른쪽=화면 아래, 아래쪽=화면 왼쪽 */
+  .vf-full .vf-rotor {
+    --sa-t: env(safe-area-inset-right, 0px);
+    --sa-r: env(safe-area-inset-bottom, 0px);
+    --sa-b: env(safe-area-inset-left, 0px);
+    --sa-l: env(safe-area-inset-top, 0px);
+    left: 100dvw;
+    width: 100dvh;
+    height: 100dvw;
+    transform-origin: top left;
+    transform: rotate(90deg);
+  }
+}
+
+/* 16:9 영상(과 버튼 줄)의 너비: 양옆 닫기 버튼 자리(68px씩)를 남기고,
+   높이에서 버튼 줄(--vf-below)·회색 띠를 뺀 16:9 중 작은 쪽 */
+.vf-full .vf-fit {
+  width: min(
+    calc(100cqw - 136px),
+    calc((100cqh - var(--vf-below, 0px) - var(--vf-strip)) * 16 / 9)
+  );
+}
+/* 수업 액자: 남은 칸을 채우고, 수업 파일이 그 안에서 16:9 영상과 버튼을 가장 크게 맞춘다. */
+.vf-full .vf-fill {
+  width: calc(100cqw - 136px);
+  height: auto;
+  min-height: 0;
+  flex: 1 1 0;
+}
+/* 세로 카드 모양 화면: 16:9 칸 안에 내용을 줄여 넣는다(video-frame.tsx CardFit). */
+.vf-full .vf-card {
+  position: relative;
+  flex: none;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fffdf8;
+}
+.vf-card-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+/* 오른쪽 위(검은 여백 쪽) 흰 동그라미 닫기 버튼 */
+.vf-close {
+  position: absolute;
+  z-index: 20;
+  top: calc(var(--sa-t) + 8px);
+  right: calc(var(--sa-r) + 8px);
+  display: flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #15262b;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.vf-close:focus-visible {
+  outline: 3px solid #fee500;
+  outline-offset: 3px;
+}
+
+/* 앱 안 브라우저에서만: "Safari나 크롬으로 열면 더 크게 볼 수 있어요" + 노란 열기 */
+.vf-open-outside {
+  display: flex;
+  height: 32px;
+  max-width: calc(100cqw - 136px);
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 0 14px;
+  border-radius: 999px;
+  background: #3a3f42;
+  color: #e4e7e8;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.vf-open-outside span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vf-open-outside button {
+  flex: none;
+  height: 24px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fee500;
+  color: #191919;
+  font-size: 13px;
+  font-weight: 700;
+}
