@@ -31,7 +31,11 @@ export const vi: Messages = {
     birthHint: 'Ví dụ: ngày 4 tháng 7 năm 1985 → 850704',
     codeDigit: (n) => `Mã số giáo dục, số thứ ${n}`,
     birthDigit: (n) => `Ngày sinh, số thứ ${n}`,
-    submit: 'Xác nhận ▶',
+    submit: 'Vào',
+    bubble: 'Hãy nhập số ghi trên tờ giấy',
+    bubbleBirth: 'Hãy nhập 6 số ngày sinh',
+    privacy:
+      'Ngày sinh chỉ dùng để xác nhận đúng là bạn, chúng tôi không hỏi tên.',
     checking: 'Đang kiểm tra…',
     callHelp: '📞 Gặp khó khăn? Gọi bệnh viện',
     typeCode: 'Tôi sẽ tự nhập mã số giáo dục',

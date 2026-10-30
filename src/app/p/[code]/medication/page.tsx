@@ -6,7 +6,8 @@ import { verdictLabels, type Verdict } from '@/lib/medication-guide';
 
 import { T } from '../../../translated';
 import { GuideBoard } from '../../guide-board';
-import { CheckWithStaff, PatientTopBar } from '../../ui';
+import { DesignTopBar } from '../../screen-design';
+import { CheckWithStaff } from '../../ui';
 import { PatientPage } from '../patient-page';
 import { VerdictMark } from './med-icons';
 import { MedicationFlow } from './medication-check';
@@ -49,7 +50,7 @@ async function Medication({ code }: { code: string }) {
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0">
             {/* 위쪽 버튼 줄도 약 내용 칸과 같은 폭이다. */}
-            <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
+            <DesignTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
             {/* 판정 그림 기준. 약 카드를 가리지 않도록 따라다니지 않고 맨 위에 둔다. */}
             <div
               aria-label="판정 그림 뜻"

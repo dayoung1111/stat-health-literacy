@@ -3,6 +3,8 @@
 import type { Messages } from '@/lib/messages';
 
 import { useLanguageOr } from '../language-provider';
+import { Ttobagi } from '../ttobagi';
+import './screen-design.css';
 
 type EntryTextName = {
   [K in keyof Messages['entry']]: Messages['entry'][K] extends string
@@ -22,4 +24,24 @@ export function EntryText({
 }) {
   const { t } = useLanguageOr(language);
   return <span className="whitespace-pre-line">{t.entry[name]}</span>;
+}
+
+// 번호 넣기 화면의 또박이(청록 말풍선). 문자 링크로 열면(생년월일만) 말이 달라진다.
+export function EntryTtobagi({
+  birthOnly = false,
+  language = 'ko',
+}: {
+  birthOnly?: boolean;
+  language?: string;
+}) {
+  const { language: shown, t } = useLanguageOr(language);
+  return (
+    <div className="sd sd-bubble">
+      <Ttobagi
+        pose="hello"
+        message={birthOnly ? t.entry.bubbleBirth : t.entry.bubble}
+        language={shown}
+      />
+    </div>
+  );
 }

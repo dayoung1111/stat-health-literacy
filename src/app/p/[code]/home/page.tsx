@@ -1,14 +1,14 @@
-import Link from 'next/link';
-
 import { hospital } from '@/lib/demo-guide';
 import { requireDemoPatient } from '@/lib/demo-patient';
+import { designTexts } from '@/lib/design-screen-texts';
 import { guideCatalog, guideKinds } from '@/lib/guide-catalog';
 import { homeTexts } from '@/lib/home-texts';
 
-import { GuideIconSvg } from '../../../guide-icon';
-import { T, TranslatedTtobagi } from '../../../translated';
-import { CheckWithStaff, PatientTopBar } from '../../ui';
+import { T } from '../../../translated';
+import { DesignTopBar, TealTtobagi, WideFrame } from '../../screen-design';
+import { CheckWithStaff } from '../../ui';
 import { PatientPage } from '../patient-page';
+import { GuideList } from './guide-list';
 
 // 환자 홈: 의료진이 코드 하나에 묶어 보낸 안내를 큰 카드로 보여 준다.
 export default function PatientHomePage({
@@ -31,65 +31,44 @@ const guideHref = (code: string, kind: (typeof guideKinds)[number]) => {
   return `/p/${code}/preparing/${kind}`;
 };
 
-const cardColor: Record<(typeof guideKinds)[number], string> = {
-  checkup: 'bg-stat-sun text-stat-ink',
-  colonoscopy: 'bg-stat-mint text-stat-green',
-  gastroscopy: 'bg-stat-mint text-stat-green',
-  medication: 'bg-white text-stat-ink border-2 border-stat-green',
-};
-
 async function PatientHome({ code }: { code: string }) {
   const issued = await requireDemoPatient(code);
   // 화면 순서는 안내 목록 순서를 따른다.
   const guides = guideKinds.filter((kind) => issued.guides.includes(kind));
 
+  // 휴대폰은 한 줄, PC는 카드 2×2.
   return (
-    <>
-      <PatientTopBar code={code} back={{ href: '/' }} showHome={false} />
+    <WideFrame>
+      <DesignTopBar code={code} back={{ href: '/' }} showHome={false} />
       <p className="text-xl text-zinc-700">
         <T>{hospital.name}</T>
       </p>
-      <h1 className="mt-2 mb-4 text-3xl leading-snug font-bold break-keep">
+      <h1 className="sr-only">
         <T>{homeTexts.greeting}</T>
       </h1>
-      <TranslatedTtobagi
-        pose="hello"
-        message={homeTexts.guidesCame(guides.length)}
-      />
-
-      <nav aria-label="받은 안내" className="mt-6 flex flex-col gap-4">
-        {guides.map((kind) => {
+      <div className="mt-3 mb-5">
+        <TealTtobagi
+          pose="hello"
+          message={designTexts.guidesCame(guides.length)}
+        />
+      </div>
+      <GuideList
+        code={code}
+        language={issued.language}
+        completed={issued.guideCompletions.map((c) => c.guide)}
+        items={guides.map((kind) => {
           const guide = guideCatalog[kind];
-          return (
-            <Link
-              key={kind}
-              href={guideHref(code, kind)}
-              className={`flex min-h-28 items-center gap-5 rounded-3xl px-6 py-5 shadow-sm focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-stat-green ${cardColor[kind]}`}
-            >
-              <GuideIconSvg name={guide.icon} className="size-14 shrink-0" />
-              <span className="flex flex-col gap-1">
-                <span className="text-2xl font-bold break-keep">
-                  <T>{guide.patientName ?? guide.name}</T>
-                </span>
-                {guide.hint && (
-                  <span className="text-xl break-keep text-zinc-700">
-                    <T>{guide.hint}</T>
-                  </span>
-                )}
-                {!guide.ready && (
-                  <span className="text-xl text-zinc-600">
-                    <T>{homeTexts.notReady}</T>
-                  </span>
-                )}
-              </span>
-              <span aria-hidden="true" className="ml-auto text-3xl">
-                ›
-              </span>
-            </Link>
-          );
+          return {
+            kind,
+            href: guideHref(code, kind),
+            name: guide.patientName ?? guide.name,
+            hint: guide.hint,
+            icon: guide.icon,
+            notReady: guide.ready ? undefined : homeTexts.notReady,
+          };
         })}
-      </nav>
+      />
       <CheckWithStaff />
-    </>
+    </WideFrame>
   );
 }

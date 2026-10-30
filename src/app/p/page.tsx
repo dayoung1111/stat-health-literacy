@@ -1,23 +1,34 @@
-import { EntryText } from './entry-text';
+import Link from 'next/link';
+
+import { EntryText, EntryTtobagi } from './entry-text';
 import { PatientEntryForm } from './patient-entry-form';
-import { BackLink, CallButton } from './ui';
+import { WideFrame } from './screen-design';
+import { CallButton } from './ui';
 
 // 번호 입력 화면. 글은 고른 언어(src/lib/messages/)로 보여 준다.
+// 휴대폰은 한 줄, PC는 왼쪽 또박이 · 오른쪽 입력 카드.
 export default function PatientEntryPage() {
   return (
-    <>
-      <BackLink href="/">
-        <EntryText name="back" />
-      </BackLink>
-      <h1 className="mt-4 mb-8 text-3xl leading-snug font-bold break-keep">
+    <WideFrame>
+      <nav aria-label="화면 이동" className="sd-top mb-5">
+        <Link href="/">
+          ← <EntryText name="back" />
+        </Link>
+      </nav>
+      <h1 className="sr-only">
         <EntryText name="title" />
       </h1>
-      <PatientEntryForm />
-      <div className="mt-6">
-        <CallButton variant="outline">
-          <EntryText name="callHelp" />
-        </CallButton>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
+        <EntryTtobagi />
+        <div>
+          <PatientEntryForm />
+          <div className="mt-6">
+            <CallButton variant="outline">
+              <EntryText name="callHelp" />
+            </CallButton>
+          </div>
+        </div>
       </div>
-    </>
+    </WideFrame>
   );
 }

@@ -6,7 +6,8 @@ import { screenTexts } from '@/lib/screen-texts';
 
 import { T } from '../../../translated';
 
-import { CheckWithStaff, PatientTopBar } from '../../ui';
+import { DesignTopBar } from '../../screen-design';
+import { CheckWithStaff } from '../../ui';
 import { PatientPage } from '../patient-page';
 import { DayBeforeFrame } from './day-before-frame';
 
@@ -26,7 +27,7 @@ async function DayBefore({ code }: { code: string }) {
 
   return (
     <>
-      <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
+      <DesignTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
       {/* 환자 화면 틀은 휴대폰 너비라서, PC에서는 수업이 넓게 보이도록 틀 밖으로 넓힌다(영상 수업과 같음). */}
       <div className="relative left-1/2 w-[min(calc(100vw-2rem),1280px)] -translate-x-1/2">
         <h1 className="mb-4 text-3xl leading-snug font-bold break-keep">
