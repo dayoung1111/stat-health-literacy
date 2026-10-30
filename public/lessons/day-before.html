@@ -589,7 +589,7 @@ function applyTexts(language,texts){
 const EMBED=new URLSearchParams(location.search).has('embed');
 function tellApp(msg){try{if(EMBED&&window.parent!==window)window.parent.postMessage(msg,location.origin)}catch(_){}}
 if(EMBED){$('backBtn').hidden=true;document.documentElement.classList.add('embed');}
-function sendHeight(){tellApp({type:'stat-lesson-height',lesson:'day-before',height:Math.ceil(document.documentElement.scrollHeight)})}
+function sendHeight(){tellApp({type:'stat-lesson-height',lesson:'day-before',height:Math.ceil(document.documentElement.scrollHeight),sideTop:Math.round(document.querySelector('.main').getBoundingClientRect().top+window.scrollY)})}
 window.addEventListener('load',sendHeight);window.addEventListener('resize',sendHeight);
 try{new ResizeObserver(()=>{sendHeight();fitSoon()}).observe(document.body)}catch(_){}
 setTimeout(sendHeight,300);
@@ -597,6 +597,8 @@ setTimeout(sendHeight,300);
 window.addEventListener('message',e=>{
   if(e.origin!==location.origin||e.source!==window.parent)return;
   const d=e.data;
+  // 앱이 받은 안내 칸을 오른쪽 칸 맨 위에 놓을 때, 이 목록을 그만큼 아래로 내린다.
+  if(d&&d.type==='stat-lesson-offset'&&d.lesson==='day-before'&&typeof d.offset==='number'){document.querySelector('aside').style.marginTop=Math.max(0,Math.round(d.offset))+'px';sendHeight();return}
   if(d&&d.type==='stat-lesson-texts'&&d.lesson==='day-before'&&d.texts&&Array.isArray(d.texts.scenes)){SPEECH_NAME=d.speechName&&d.speechName.written?d.speechName:null;applyTexts(d.language,d.texts)}
 });
 tellApp({type:'stat-lesson-ready',lesson:'day-before'});

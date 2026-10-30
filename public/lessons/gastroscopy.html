@@ -87,6 +87,9 @@ header h1{font-size:1.4rem;font-weight:700;margin:0}
   .fresh .bubble{visibility:hidden}
 }
 
+/* 시작 전에는 뒤의 번호 카드를 숨긴다("눌러서 수업 시작" 글자와 겹치지 않게). 시작하면 나타난다 */
+.fresh .scene .pop{visibility:hidden}
+
 /* 시작 덮개 */
 .start{position:absolute;inset:0;background:rgba(21,38,43,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:16px}
 .bigplay{width:clamp(72px,calc(var(--u) * 112),112px);height:clamp(72px,calc(var(--u) * 112),112px);border-radius:50%;border:none;background:#0F6670;display:flex;align-items:center;justify-content:center}
@@ -513,7 +516,7 @@ try{if(localStorage.getItem('stat-sound')==='off'){sound=false;showSound()}}catc
 const EMBED=new URLSearchParams(location.search).has('embed');
 function tellApp(msg){try{if(EMBED&&window.parent!==window)window.parent.postMessage(msg,location.origin)}catch(_){}}
 if(EMBED){$('backBtn').hidden=true;$('title').hidden=true;$('crumb').hidden=true;document.documentElement.classList.add('embed')}
-function sendHeight(){tellApp({type:'stat-lesson-height',lesson:'gastroscopy',height:Math.ceil(document.documentElement.scrollHeight)})}
+function sendHeight(){tellApp({type:'stat-lesson-height',lesson:'gastroscopy',height:Math.ceil(document.documentElement.scrollHeight),sideTop:Math.round(document.querySelector('.main').getBoundingClientRect().top+window.scrollY)})}
 window.addEventListener('load',sendHeight);window.addEventListener('resize',sendHeight);
 try{new ResizeObserver(sendHeight).observe(document.body)}catch(_){}
 setTimeout(sendHeight,300);
@@ -521,6 +524,8 @@ setTimeout(sendHeight,300);
 window.addEventListener('message',e=>{
   if(e.origin!==location.origin||e.source!==window.parent)return;
   const d=e.data;
+  // 앱이 받은 안내 칸을 오른쪽 칸 맨 위에 놓을 때, 이 목록을 그만큼 아래로 내린다.
+  if(d&&d.type==='stat-lesson-offset'&&d.lesson==='gastroscopy'&&typeof d.offset==='number'){document.querySelector('aside').style.marginTop=Math.max(0,Math.round(d.offset))+'px';sendHeight();return}
   if(d&&d.type==='stat-lesson-texts'&&d.lesson==='gastroscopy'&&d.texts&&Array.isArray(d.texts.lines)){SPEECH_NAME=d.speechName&&d.speechName.written?d.speechName:null;applyTexts(d.language,d.texts)}
 });
 tellApp({type:'stat-lesson-ready',lesson:'gastroscopy'});

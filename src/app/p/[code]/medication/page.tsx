@@ -6,6 +6,7 @@ import { verdictLabels, type Verdict } from '@/lib/medication-guide';
 
 import { T } from '../../../translated';
 import { GuideBoard } from '../../guide-board';
+import { LessonWithBoard } from '../../lesson-layout';
 import { CheckWithStaff, PatientTopBar } from '../../ui';
 import { PatientPage } from '../patient-page';
 import { VerdictMark } from './med-icons';
@@ -38,39 +39,47 @@ async function Medication({ code }: { code: string }) {
   const issued = await requireDemoPatient(code);
   if (!issued.guides.includes('medication')) notFound();
 
+  const guides = readyGuides(issued.guides);
+  const completed = issued.guideCompletions.map((c) => c.guide);
+
   return (
     <>
       <PatientTopBar code={code} back={{ fallback: `/p/${code}/home` }} />
-      {/* 판정 그림 기준을 화면 맨 위에 작게 고정한다. */}
-      <div
-        aria-label="판정 그림 뜻"
-        role="note"
-        className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-stat-mint bg-stat-paper/95 px-4 py-2 text-xl backdrop-blur"
-      >
-        {(['ok', 'stop', 'ask'] as Verdict[]).map((v) => (
-          <span key={v} className="flex items-center gap-1">
-            <VerdictMark verdict={v} className="size-7" />
-            <T>{verdictLabels[v]}</T>
-          </span>
-        ))}
-      </div>
-      <MedicationFlow
-        code={code}
-        saved={issued.medicationCheck?.medications ?? null}
-        stopDate={stopDate(issued.bloodThinnerStopDate)}
-        language={issued.language}
-        guides={readyGuides(issued.guides)}
-        completed={issued.guideCompletions.map((c) => c.guide)}
-      />
-      {/* 약 고르기·정리 화면 모두 아래에 받은 안내 현황판을 둔다. */}
-      <div className="mt-8">
-        <GuideBoard
-          code={code}
-          current="medication"
-          guides={readyGuides(issued.guides)}
-          completed={issued.guideCompletions.map((c) => c.guide)}
-          language={issued.language}
-        />
+      {/* 환자 화면 틀은 휴대폰 너비라서, PC에서는 대장내시경 수업처럼 틀 밖으로 넓혀 오른쪽 칸에 받은 안내를 둔다. */}
+      <div className="relative left-1/2 w-[min(calc(100vw-2rem),1280px)] -translate-x-1/2">
+        <LessonWithBoard
+          board={
+            <GuideBoard
+              code={code}
+              current="medication"
+              guides={guides}
+              completed={completed}
+              language={issued.language}
+            />
+          }
+        >
+          {/* 판정 그림 기준. 약 카드를 가리지 않도록 따라다니지 않고 맨 위에 둔다. */}
+          <div
+            aria-label="판정 그림 뜻"
+            role="note"
+            className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-stat-mint py-2 text-xl"
+          >
+            {(['ok', 'stop', 'ask'] as Verdict[]).map((v) => (
+              <span key={v} className="flex items-center gap-1">
+                <VerdictMark verdict={v} className="size-7" />
+                <T>{verdictLabels[v]}</T>
+              </span>
+            ))}
+          </div>
+          <MedicationFlow
+            code={code}
+            saved={issued.medicationCheck?.medications ?? null}
+            stopDate={stopDate(issued.bloodThinnerStopDate)}
+            language={issued.language}
+            guides={guides}
+            completed={completed}
+          />
+        </LessonWithBoard>
       </div>
       <CheckWithStaff />
     </>
