@@ -523,7 +523,8 @@ async function playFrom(i){
     done.add(s);renderSide();
     if(returnToQuiz!==null){const q=returnToQuiz;returnToQuiz=null;playing=false;setPlayUI();showQuiz(q);return}
   }
-  playing=false;setPlayUI();showQuiz(0);
+  // 퀴즈 없이 바로 끝낸다(퀴즈 글자·함수는 남겨 둠).
+  playing=false;setPlayUI();finish();
 }
 function stop(){token++;playing=false;try{speechSynthesis.cancel()}catch(e){}tt.classList.remove('speaking');setPlayUI();
   [...prog.children].forEach(b=>{if(b.className==='now')b.className=''});}
