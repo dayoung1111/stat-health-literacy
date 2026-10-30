@@ -7,12 +7,14 @@ export const en: Messages = {
   languagePicker: 'Language',
 
   home: {
-    hello: "Hello, I'm Ttobagi.",
+    hello: "Hello, I'm Ttobagi!",
     headline: 'Hard hospital instructions,\nmade easy',
     enter: 'Enter as a patient',
-    enterHint: 'I have a number from the hospital',
+    enterHint: 'Enter the number from the hospital',
     call: 'No number? Call the hospital',
     staff: 'Staff login',
+    howTitle: 'How it works',
+    how: ['Enter number', 'Ttobagi lesson', 'Pop quiz'],
   },
 
   ttobagi: {

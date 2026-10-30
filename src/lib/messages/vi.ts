@@ -7,12 +7,14 @@ export const vi: Messages = {
   languagePicker: 'Chọn ngôn ngữ',
 
   home: {
-    hello: 'Xin chào, tôi là Ttobagi.',
+    hello: 'Xin chào, tôi là Ttobagi!',
     headline: 'Hướng dẫn bệnh viện khó hiểu,\nnay thật dễ hiểu',
     enter: 'Vào dành cho bệnh nhân',
-    enterHint: 'Tôi có mã số từ bệnh viện',
+    enterHint: 'Hãy nhập mã số bệnh viện đã đưa',
     call: 'Không có mã số? Gọi bệnh viện',
     staff: 'Đăng nhập nhân viên y tế',
+    howTitle: 'Cách dùng',
+    how: ['Nhập mã số', 'Bài học Ttobagi', 'Câu đố nhanh'],
   },
 
   ttobagi: {
