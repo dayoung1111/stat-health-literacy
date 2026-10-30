@@ -1,0 +1,67 @@
+/*
+ * 첫 화면 전용 모양. 공통 부품(소리 버튼, 또박이)은 고치지 않고 이 화면에서만 겉모양을 바꾼다.
+ * @layer 밖에 두어 Tailwind 유틸리티보다 앞선다.
+ */
+
+/* 소리 버튼: 동그랗게, 이모지 대신 선 아이콘(누름 상태에 따라 켜짐/꺼짐 아이콘) */
+.stat-home-sound > button {
+  border-radius: 9999px;
+  border-color: rgb(15 102 112 / 0.3);
+  color: #0f6670;
+}
+.stat-home-sound > button:hover {
+  border-color: #0f6670;
+}
+.stat-home-sound > button > span {
+  visibility: hidden;
+}
+.stat-home-sound > svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  pointer-events: none;
+  color: #0f6670;
+}
+.stat-home-sound > button[aria-pressed='true'] ~ .stat-home-sound-off,
+.stat-home-sound > button[aria-pressed='false'] ~ .stat-home-sound-on {
+  display: none;
+}
+
+/* 또박이: 크게, 청록 말풍선을 위에 */
+.stat-home-ttobagi > button {
+  flex-direction: column-reverse;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+.stat-home-ttobagi > button > span:first-child {
+  width: min(56vw, 220px);
+}
+.stat-home-ttobagi > button > span:last-child {
+  margin-left: 0;
+  border-color: #0f6670;
+  background: #0f6670;
+  padding: 12px 22px;
+}
+.stat-home-ttobagi > button > span:last-child > span:first-child {
+  top: auto;
+  bottom: -9px;
+  left: 50%;
+  border-color: #0f6670;
+  background: #0f6670;
+  translate: -50% 0;
+  rotate: -45deg;
+}
+.stat-home-ttobagi > button > span:last-child > span:last-child {
+  color: #ffffff;
+  font-size: 1.375rem;
+}
+
+@media (min-width: 64rem) {
+  .stat-home-ttobagi > button > span:first-child {
+    width: 340px;
+  }
+  .stat-home-ttobagi > button > span:last-child > span:last-child {
+    font-size: 1.625rem;
+  }
+}
