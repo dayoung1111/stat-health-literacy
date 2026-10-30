@@ -17,6 +17,14 @@ export type FrameEnv = {
 
 export type FrameController = ReturnType<typeof createFrameController>;
 
+/** 전체 화면으로 보다가 다음 안내로 넘어갈 때 남기는 표시(그 기기 탭에만, 잠깐만 유효) */
+export const CARRY_KEY = 'stat-fullscreen-carry';
+const CARRY_MS = 10_000;
+
+/** 다음 안내 화면이 열릴 때, 방금 전체 화면으로 넘어왔는지(10초 안에 남긴 표시) */
+export const isCarried = (saved: string | null, now: number) =>
+  saved !== null && now - Number(saved) >= 0 && now - Number(saved) < CARRY_MS;
+
 export function createFrameController(
   env: FrameEnv,
   events: {

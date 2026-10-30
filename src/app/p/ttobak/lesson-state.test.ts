@@ -179,6 +179,107 @@ describe('수업 진행', () => {
   });
 });
 
+describe('교시 이동: 다음·이전·교시 목록·퀴즈 건너뛰기', () => {
+  const where = (state: LessonState) => `${state.lesson}-${state.step}`;
+  const everyStep = lessons.flatMap((lesson, l) =>
+    lesson.steps.map((_, s) => `${l}-${s}`),
+  );
+
+  it('다음 버튼으로 1교시부터 마지막 교시까지 모든 장면을 순서대로 지난다', () => {
+    let state = reduce(initialLessonState, { type: 'play' });
+    const seen = [where(state)];
+    for (let i = 1; i < totalSteps(lessons); i += 1) {
+      state = reduce(state, { type: 'next' });
+      seen.push(where(state));
+    }
+    assert.deepEqual(seen, everyStep);
+    // 교시의 마지막 장면에서 다음 → 다음 교시 첫 장면
+    const firstOfEach = seen.filter((at) => at.endsWith('-0'));
+    assert.deepEqual(
+      firstOfEach,
+      lessons.map((_, l) => `${l}-0`),
+    );
+  });
+
+  it('이전 버튼은 반대로: 교시 첫 장면에서 이전 → 앞 교시 마지막 장면', () => {
+    let state = reduce(
+      initialLessonState,
+      { type: 'play' },
+      { type: 'goLesson', lesson: lessons.length - 1 },
+      ...repeat({ type: 'next' }, lessons.at(-1)!.steps.length - 1),
+    );
+    const seen = [where(state)];
+    for (let i = 1; i < totalSteps(lessons); i += 1) {
+      state = reduce(state, { type: 'prev' });
+      seen.push(where(state));
+    }
+    assert.deepEqual(seen, [...everyStep].reverse());
+  });
+
+  it('교시 목록을 누르면 어느 교시든 그 교시 첫 장면으로 바로 간다', () => {
+    const middle = reduce(
+      initialLessonState,
+      { type: 'play' },
+      ...repeat({ type: 'next' }, 5),
+    );
+    lessons.forEach((_, lesson) => {
+      const state = reduce(middle, { type: 'goLesson', lesson });
+      assert.deepEqual(
+        [state.lesson, state.step, state.mode, state.started],
+        [lesson, 0, 'step', true],
+      );
+    });
+  });
+
+  it('돌발 퀴즈가 나와 있을 때 다음을 누르면 풀지 않아도 다음 교시로 넘어간다', () => {
+    const quiz = quizOf(0);
+    assert.equal(quiz.mode, 'quiz');
+    const skipped = reduce(quiz, { type: 'next' });
+    assert.deepEqual(
+      [skipped.lesson, skipped.step, skipped.mode],
+      [1, 0, 'step'],
+    );
+  });
+
+  it('틀려서 "다시 볼까요?"·다시 보는 중이거나 칭찬 중이어도 다음 → 다음 교시', () => {
+    const wrong = lessons[0].quiz!.answer === 0 ? 1 : 0;
+    const retrying = reduce(quizOf(0), { type: 'answer', index: wrong });
+    assert.equal(retrying.mode, 'retry');
+    const fromRetry = reduce(retrying, { type: 'next' });
+    assert.deepEqual([fromRetry.lesson, fromRetry.step], [1, 0]);
+    const praise = reduce(quizOf(0), {
+      type: 'answer',
+      index: lessons[0].quiz!.answer,
+    });
+    assert.equal(praise.mode, 'praise');
+    assert.equal(reduce(praise, { type: 'next' }).lesson, 1);
+  });
+
+  it('마지막 교시에서 다음을 누르면 수업 완료(다음 안내로 넘어갈 수 있는 상태)', () => {
+    const last = lessons.length - 1;
+    // 마지막 교시 마지막 장면에서 다음
+    const lastStep = reduce(
+      initialLessonState,
+      { type: 'play' },
+      { type: 'goLesson', lesson: last },
+      ...repeat({ type: 'next' }, lessons[last].steps.length - 1),
+    );
+    const done = reduce(lastStep, { type: 'next' });
+    assert.deepEqual([done.mode, done.playing], ['done', false]);
+    // 마지막 교시 퀴즈가 나와 있을 때 다음(퀴즈 건너뜀)
+    assert.equal(reduce(quizOf(last), { type: 'next' }).mode, 'done');
+    // 마지막 퀴즈를 맞히고 칭찬이 끝나도 수업 완료
+    const finished = reduce(
+      quizOf(last),
+      { type: 'answer', index: lessons[last].quiz!.answer },
+      ended,
+    );
+    assert.equal(finished.mode, 'done');
+    // 완료 뒤 다음은 그대로(두 번 완료하지 않음)
+    assert.equal(reduce(done, { type: 'next' }), done);
+  });
+});
+
 describe('자막', () => {
   it('강조 단어 색: 안 돼요는 빨강, 괜찮아요·드셔도 돼요는 초록', () => {
     assert.equal(keyTone('안 돼요'), 'no');

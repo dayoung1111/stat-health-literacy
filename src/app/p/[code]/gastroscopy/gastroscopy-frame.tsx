@@ -18,7 +18,7 @@ import { markGuideDone, useCompletedGuides } from '../../guide-done';
 import { GuideFinish } from '../../guide-finish';
 import { FrameWithBoard } from '../../lesson-layout';
 import { translateLesson } from '../../translate-lesson';
-import { useLessonFrame, VideoFrame } from '../../video-frame';
+import { carryFullscreen, useLessonFrame, VideoFrame } from '../../video-frame';
 
 // 위내시경 수업 액자. 검진 전날 수업 액자(day-before-frame.tsx)와 같은 방식이다.
 // 수업 파일과 앱이 주고받는 말. 수업 파일(public/lessons/gastroscopy.html)은 ?embed=1로 열면
@@ -73,6 +73,7 @@ export function GastroscopyFrame({
   const frameRef = useRef<HTMLIFrameElement>(null);
   // 전체 화면 영상 틀(공통 부품): 수업 안 재생 버튼·크게 보기와 이어진다.
   const fullscreen = useLessonFrame(frameRef, 'gastroscopy');
+  const { close: closeFullscreen } = fullscreen;
   const [height, setHeight] = useState(firstHeight);
   const [finished, setFinished] = useState(false);
   // 마친 안내: 서버 기록 + 이 브라우저 기록(새로고침·서버 재시작에도 남음)
@@ -150,14 +151,20 @@ export function GastroscopyFrame({
       }
       // 마지막 장면에서 "다음"을 누르면 "다 봤어요"를 기록하고 바로 다음 안내로 간다.
       if (event.data.type === 'stat-lesson-next') {
-        if (nextHref) router.push(nextHref);
+        if (nextHref) {
+          // 전체 화면으로 보고 있었으면 다음 안내도 전체 화면으로 연다.
+          carryFullscreen();
+          router.push(nextHref);
+        }
         return;
       }
       setFinished(true);
+      // 다음 안내가 없으면 전체 화면을 닫아 아래 "모든 안내를 다 봤어요"와 처음으로 버튼이 보이게 한다.
+      if (!nextHref) closeFullscreen();
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [code, nextHref, router]);
+  }, [code, nextHref, router, closeFullscreen]);
 
   return (
     <FrameWithBoard

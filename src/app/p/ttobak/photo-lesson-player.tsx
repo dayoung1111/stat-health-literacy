@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 
 import {
   advancesByItself,
@@ -31,7 +31,12 @@ import { T, useTranslatedTexts } from '../../translated';
 import { setLessonPlace } from '../error-report';
 import { GuideBoard } from '../guide-board';
 import { markGuideDone, useCompletedGuides } from '../guide-done';
-import { BigViewButton, useFullscreenFrame, VideoFrame } from '../video-frame';
+import {
+  BigViewButton,
+  carryFullscreen,
+  useFullscreenFrame,
+  VideoFrame,
+} from '../video-frame';
 import { CardScene } from './card-scene';
 import { designedLessonCount, LessonDesign } from './lesson-design';
 import { photoLessons } from './photo-lesson';
@@ -202,11 +207,23 @@ export function PhotoLesson({
     speechLang,
   ]);
 
-  // 마지막 교시까지 마치면 이 안내를 "완료"로 저장한다(브라우저 + 서버).
+  // 마지막 교시까지 마치면(마지막 퀴즈를 끝내거나 마지막 장면에서 "다음") 이 안내를 "완료"로 저장하고,
+  // 받은 안내 중 다음 안내가 있으면 바로 넘어간다(전체 화면이었으면 다음 안내도 전체 화면).
+  // 다음 안내가 없으면 "모든 안내를 다 봤어요"와 처음으로 버튼을 보여 준다.
   const finished = state.mode === 'done';
+  const leaving = useRef(false);
   useEffect(() => {
-    if (finished) markGuideDone(code, thisGuide);
-  }, [finished, code]);
+    if (!finished) {
+      leaving.current = false;
+      return;
+    }
+    markGuideDone(code, thisGuide);
+    if (nextHref && !leaving.current) {
+      leaving.current = true;
+      carryFullscreen();
+      router.push(nextHref);
+    }
+  }, [finished, code, nextHref, router]);
 
   // 다른 화면으로 나가면 음성을 멈춘다.
   useEffect(
@@ -324,13 +341,17 @@ export function PhotoLesson({
             )}
             {state.mode === 'done' &&
               (next && nextHref ? (
-                <Link href={nextHref} className="pl-replay pl-next-link">
+                <Link
+                  href={nextHref}
+                  onClick={carryFullscreen}
+                  className="pl-replay pl-next-link"
+                >
                   {t.nextButton(t.guides[next])}
                 </Link>
               ) : (
-                <button type="button" onClick={play} className="pl-replay">
-                  {t.restart}
-                </button>
+                <Link href={`/p/${code}/home`} className="pl-replay">
+                  🏠 <T>{screenTexts.common.home}</T>
+                </Link>
               ))}
           </div>
 
@@ -379,15 +400,11 @@ export function PhotoLesson({
             </T>
           </button>
           <BigViewButton frame={frame} className={controlClass} />
-          {/* 마지막 장면에서는 남은 안내가 있으면 그 안내로 간다. */}
+          {/* 다음: 교시 안에서는 다음 장면, 교시 끝(퀴즈 중 포함)이면 다음 교시, 마지막이면 수업 완료 → 다음 안내 */}
           <button
             type="button"
-            onClick={() =>
-              here === total - 1 && nextHref
-                ? router.push(nextHref)
-                : move('next')
-            }
-            disabled={here === total - 1 && !nextHref}
+            onClick={() => move('next')}
+            disabled={state.mode === 'done'}
             className={controlClass}
           >
             <T>{screenTexts.lesson.next}</T>

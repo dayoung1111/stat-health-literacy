@@ -12,7 +12,12 @@ import {
 
 import { T, useTranslatedTexts } from '../translated';
 import { inAppBrowser, kakaoOpenExternal, type InAppBrowser } from './in-app';
-import { createFrameController, type FrameEnv } from './video-frame-control';
+import {
+  CARRY_KEY,
+  createFrameController,
+  isCarried,
+  type FrameEnv,
+} from './video-frame-control';
 import './video-frame.css';
 
 // 전체 화면 영상 틀: 앱 안에서 재생되는 모든 영상 화면이 쓰는 공통 부품.
@@ -161,6 +166,19 @@ export type FullscreenFrame = {
   play: () => void;
 };
 
+// 지금 열려 있는 전체 화면 틀 수(다음 안내로 넘어갈 때 전체 화면을 이어 갈지 정한다)
+let openFrames = 0;
+
+/** 다음 안내로 넘어가기 직전에 부른다. 지금 전체 화면이면 다음 안내 화면도 전체 화면으로 열린다. */
+export function carryFullscreen() {
+  if (openFrames <= 0) return;
+  try {
+    sessionStorage.setItem(CARRY_KEY, String(Date.now()));
+  } catch {
+    // 저장소를 쓸 수 없으면 다음 안내는 보통 화면으로 열린다.
+  }
+}
+
 export function useFullscreenFrame({
   onClose,
 }: { onClose?: () => void } = {}): FullscreenFrame {
@@ -178,7 +196,10 @@ export function useFullscreenFrame({
       controller: createFrameController(
         frameEnv(() => el),
         {
-          onChange: setFullscreen,
+          onChange: (open) => {
+            openFrames += open ? 1 : -1;
+            setFullscreen(open);
+          },
           onClose: () => whenClosed?.(),
         },
       ),
@@ -217,6 +238,27 @@ export function useFullscreenFrame({
 
   // 화면을 떠날 때 열려 있으면 되돌린다.
   useEffect(() => () => controller.close(), [controller]);
+
+  // 앞 안내를 전체 화면으로 보다가 넘어왔으면 이 안내도 전체 화면으로 연다.
+  // (표시는 바로 지우지 않고 잠깐 뒤에 지워, 개발 모드에서 화면 준비가 두 번 돌아도 열린다.)
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage.getItem(CARRY_KEY);
+    } catch {
+      // 저장소를 쓸 수 없으면 넘겨받지 않는다.
+    }
+    if (!isCarried(saved, Date.now())) return;
+    controller.open();
+    const clear = setTimeout(() => {
+      try {
+        sessionStorage.removeItem(CARRY_KEY);
+      } catch {
+        // 지울 수 없어도 10초 뒤에는 쓰지 않는다.
+      }
+    }, 0);
+    return () => clearTimeout(clear);
+  }, [controller]);
 
   return {
     attach,
