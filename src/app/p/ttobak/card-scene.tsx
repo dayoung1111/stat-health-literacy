@@ -5,6 +5,7 @@ import { screenTexts } from '@/lib/screen-texts';
 import { T } from '../../translated';
 import { SafeImage } from '../error-report';
 import { Drawing } from '../pictures';
+import { FitText } from './fit-text';
 
 // 3·4·7·8교시 카드 장면: 위에 큰 안내 카드, 아래에 이름표 붙은 사진(그림) 카드.
 // 사진 위 X / O / 노란 ! 는 하나씩 차례로 그려진다.
@@ -136,12 +137,13 @@ export function CardScene({ card }: { card: LessonCard }) {
               <span aria-hidden="true" className="pc-picnote-emoji">
                 {note.emoji}
               </span>
+              {/* 번역으로 길어진 말(특히 베트남어)이 칸 밖으로 나가지 않게 글자 크기를 맞춘다. */}
               <span className="pc-picnote-situation">
-                <T>{note.situation}</T>
+                <FitText maxLines={1}>{note.situation}</FitText>
               </span>
               <span className="pc-picnote-band">
-                <span aria-hidden="true">{note.actionIcon} </span>
-                <T>{note.action}</T>
+                <span aria-hidden="true">{note.actionIcon}</span>
+                <FitText maxLines={1}>{note.action}</FitText>
               </span>
             </li>
           ))}
