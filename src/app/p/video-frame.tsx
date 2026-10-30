@@ -10,6 +10,8 @@ import {
   type RefObject,
 } from 'react';
 
+import { screenTexts } from '@/lib/screen-texts';
+
 import { T, useTranslatedTexts } from '../translated';
 import { inAppBrowser, kakaoOpenExternal, type InAppBrowser } from './in-app';
 import { createFrameController, type FrameEnv } from './video-frame-control';
@@ -252,6 +254,7 @@ export function VideoFrame({
 }) {
   const inApp = useInApp();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [closeLabel] = useTranslatedTexts([text.close]).texts;
 
   useEffect(() => {
     if (full) closeRef.current?.focus();
@@ -269,7 +272,7 @@ export function VideoFrame({
             ref={closeRef}
             type="button"
             onClick={close}
-            aria-label="전체 화면 닫기"
+            aria-label={closeLabel}
             className="vf-close"
           >
             ✕
@@ -302,7 +305,8 @@ export function BigViewButton({
   );
 }
 
-const BIG_VIEW = '크게 보기';
+const text = screenTexts.videoFrame;
+const BIG_VIEW = text.bigView;
 
 // 세로 카드 모양 화면: 896px 너비로 그린 내용을 16:9 틀에 맞게 줄여 가운데에 놓는다.
 const CARD_WIDTH = 896;
@@ -385,15 +389,15 @@ function OpenOutside({ app }: { app: InAppBrowser }) {
       <span>
         <T>
           {copied === 'yes'
-            ? '주소를 복사했어요. Safari나 크롬 주소창에 붙여 넣어 주세요.'
+            ? text.copied
             : copied === 'no'
-              ? '오른쪽 위 메뉴(⋯)에서 "다른 브라우저로 열기"를 눌러 주세요.'
-              : 'Safari나 크롬으로 열면 더 크게 볼 수 있어요'}
+              ? text.copyFailed
+              : text.openOutside}
         </T>
       </span>
       {copied === null && (
         <button type="button" onClick={open}>
-          <T>열기</T>
+          <T>{text.open}</T>
         </button>
       )}
     </div>

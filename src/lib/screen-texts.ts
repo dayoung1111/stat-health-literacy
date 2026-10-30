@@ -13,6 +13,15 @@ export const screenTexts = {
     checkWithStaff: '정확한 내용은 의료진에게 확인하세요.',
     mustNot: '하면 안 돼요: ',
   },
+  // 전체 화면 영상 틀(src/app/p/video-frame.tsx)의 글자
+  videoFrame: {
+    bigView: '크게 보기',
+    close: '전체 화면 닫기',
+    open: '열기',
+    copied: '주소를 복사했어요. Safari나 크롬 주소창에 붙여 넣어 주세요.',
+    copyFailed: '오른쪽 위 메뉴(⋯)에서 "다른 브라우저로 열기"를 눌러 주세요.',
+    openOutside: 'Safari나 크롬으로 열면 더 크게 볼 수 있어요',
+  },
   dayBefore: { title: '검진 전날 준비' },
   gastroscopy: {
     title: '위내시경 준비',
