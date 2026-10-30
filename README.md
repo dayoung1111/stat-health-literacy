@@ -62,11 +62,11 @@
 
 ## 2. 주요 기능
 
-| 과제의 꼭 있어야 하는 기능 | 화면(프론트엔드) | API(백엔드) |
+| 과제의 꼭 있어야 하는 기능 | 화면(프론트엔드) | API(백엔드) · 저장 |
 |---|---|---|
-| 1. 병원 안내문을 이해하기 쉬운 형태로 제공 | 환자 입장(`/p`) → 홈 "지금 할 일"(`/p/코드/home`) → 쉬운 안내문(`/guide`), 또박이 사진 수업(`/video`), 위험 신호(`/danger`), 복용약(`/medication`) | `enterPatient`(코드·생년월일 확인, 5회 실패 잠금), `translateForPatient`(Claude API 다국어 번역, 숫자 보존 검사), `recordConfusion`("헷갈려요" 기록) |
-| 2. 티치백으로 이해 여부 확인 | 티치백 화면(`/p/코드/check`): 3문제, 틀리면 다른 표현으로 다시 설명 후 재질문 | `recordTeachback`(정답 여부 저장), `saveMyMedications`·`recordMedicationQuiz`(복용약 체크·확인 문제 저장), `completeGuide`(안내 완료 기록) |
-| 3. 의료진이 환자별 안내를 지정하고 결과 확인 | 의료진 로그인(`/staff`) → 코드 발급(`/staff/new`) → 발급 완료·QR(`/staff/issued/코드`) → 내 코드 목록·결과 상세(`/staff/codes`) → 관리자(`/staff/admin`) | `loginStaff`·`logoutStaff`(의료진 로그인), `issueCode`(교육 코드 발급, 생년월일 해시 저장, 7일 만료) |
+| 1. 병원 안내문을 이해하기 쉬운 형태로 제공 | **① 넣기** 의료진이 환자별 안내(검사 종류·나이대·언어·검사일)를 골라 교육 코드 발급(`/staff/new`) → **② 목록** 내 코드 목록(`/staff/codes`)에 바로 보임 → **③ 남음** 새로고침·서버 재시작 후에도 유지 → **④ 고치기·지우기** 잠금 풀기·코드 폐기(`/staff/codes`, `/staff/admin`). 환자는 받은 코드로 쉬운 안내문(`/guide`), 또박이 사진 수업(대장내시경 `/video`, **검진 전날 `/day-before`, 위내시경 `/gastroscopy`**), 위험 신호(`/danger`)를 본다. **검진 전날·위내시경 수업을 포함한 화면 글자와 읽어 주는 목소리가 환자가 고른 5개 언어(한국어·영어·일본어·중국어·베트남어)로 나온다** | `issueCode` → `createEducationCode`(Supabase DB 저장, 생년월일 해시, 7일 만료), `listCodesForStaff`·`listAllCodes`(목록), `unlockCodeAction`·`discardCodeAction`(잠금 풀기·폐기), `translateForPatient`(미리 번역한 파일 → 저장된 번역 → Claude API 순서로 번역, 번역 뒤 숫자·시간·양이 원문과 같은지 검사하고 다르면 쓰지 않음) — `src/app/staff/actions.ts`, `src/lib/education-store.ts`, `src/app/p/translate-actions.ts` |
+| 2. 티치백으로 이해 여부 확인 | **① 넣기** 환자가 티치백 3문제에 답함(`/p/코드/check`), 틀리면 다른 표현으로 다시 설명 후 재질문 → **② 목록** 의료진 결과 화면에 문제별 정답·오답 표시 → **③ 남음** DB에 저장되어 새로고침해도 유지 → **④ 지우기** 시연 기록 초기화(`/staff/admin`) | `recordTeachback` → `saveTeachbackResult`, `recordConfusion` → `addConfusionMark`("헷갈려요"), `completeGuide` → `markGuideCompleted`(안내 완료), `resetDemoRecordsAction`(초기화) — `src/app/p/records.ts`, `src/lib/education-store.ts` |
+| 3. 의료진이 환자별 안내를 지정하고 결과 확인 | 의료진 로그인(`/staff`) → 코드 발급·QR(`/staff/issued/코드`) → 내 코드 목록·결과 상세(`/staff/codes`) → 관리자 통계(통과율, 많이 틀린 문제 TOP 3, "헷갈려요" 많은 곳)(`/staff/admin`). 간호사는 **자기가 발급한 코드만** 보고 고칠 수 있고(남의 코드·없는 코드는 404), 관리자는 모든 코드를 관리한다 | `loginStaff`·`logoutStaff`, `findCodeForStaff`(남의 코드는 찾지 못해 404), 코드를 바꾸는 모든 동작(발급·잠금 풀기·폐기·초기화)은 서버가 로그인한 계정의 역할을 다시 확인 — `src/app/staff/actions.ts`, `src/lib/code-access.ts` |
 
 **더 만든 기능**
 
